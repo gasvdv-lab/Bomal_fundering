@@ -10,7 +10,7 @@
 header{position:sticky;top:0;z-index:10;background:#161b22;border-bottom:1px solid #30363d;padding:16px 18px;display:flex;justify-content:space-between;align-items:center}
 h1{font-size:22px;margin:0}.sub{color:#9da7b3;margin-top:3px}.wrap{max-width:850px;margin:auto;padding:16px}
 button,.btn{border:0;border-radius:14px;padding:14px 18px;font-weight:750;font-size:16px;background:#303b46;color:#fff}
-.primary{background:#4ade80;color:#08110b}.tabs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.primary{background:#4ade80;color:#08110b}.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
 .tab.active{background:#4ade80;color:#08110b}.card{background:#161b22;border:1px solid #30363d;border-radius:20px;padding:18px;margin-bottom:16px}
 h2{margin:0 0 10px;font-size:24px}.muted{color:#9da7b3}.setup{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 label{display:block;color:#c8d1da;margin:8px 0}input{width:100%;background:#0d1117;color:#fff;border:1px solid #45515d;border-radius:12px;padding:13px;font-size:18px}
@@ -21,12 +21,18 @@ label{display:block;color:#c8d1da;margin:8px 0}input{width:100%;background:#0d11
 svg{width:100%;height:100%;display:block}.edge{stroke:#6e7681;stroke-width:3}.point{fill:#4ade80;stroke:#0d1117;stroke-width:3}.point.inactive{fill:#4b5563}.label{fill:#fff;font-size:15px;font-weight:700;paint-order:stroke;stroke:#0d1117;stroke-width:4px;stroke-linejoin:round}.origin{fill:#f2cc60}
 .hint{font-size:14px;color:#9da7b3;margin-top:10px}
 @media(max-width:560px){.row{grid-template-columns:105px 1fr 38px}.setup{grid-template-columns:1fr 1fr}.wrap{padding:12px}.card{padding:15px}.canvasWrap{height:60vh}}
+.geoGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+select{width:100%;background:#0d1117;color:#fff;border:1px solid #45515d;border-radius:12px;padding:13px;font-size:18px}
+.result{font-size:28px;font-weight:800;margin:14px 0 4px}.diag{stroke:#f2cc60;stroke-width:3;stroke-dasharray:9 7}
+.diagText,.dimText{fill:#fff;font-size:15px;font-weight:700;paint-order:stroke;stroke:#0d1117;stroke-width:4px}
+.dim{stroke:#58a6ff;stroke-width:2}
+@media(max-width:560px){.geoGrid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<header><div><h1>bomal_fundering</h1><div class="sub">v0.3.0 · Raster View</div></div><button id="newBtn">Nieuw</button></header>
+<header><div><h1>bomal_fundering</h1><div class="sub">v0.4.0 · Geometry Check</div></div><button id="newBtn">Nieuw</button></header>
 <main class="wrap">
-<div class="tabs"><button id="inputTab" class="tab active">Invoer</button><button id="viewTab" class="tab">Raster</button></div>
+<div class="tabs"><button id="inputTab" class="tab active">Invoer</button><button id="viewTab" class="tab">Raster</button><button id="geoTab" class="tab">Geometrie</button></div>
 
 <section id="inputPane">
 <div class="card">
@@ -43,16 +49,34 @@ svg{width:100%;height:100%;display:block}.edge{stroke:#6e7681;stroke-width:3}.po
 
 <section id="viewPane">
 <div class="card">
-<div class="toolbar"><button id="fitBtn">Centreer</button><button id="zoomIn">＋</button><button id="zoomOut">−</button><button id="labelsBtn">Labels aan/uit</button></div>
+<div class="toolbar"><button id="fitBtn">Centreer</button><button id="zoomIn">＋</button><button id="zoomOut">−</button><button id="labelsBtn">Labels aan/uit</button><button id="dimsBtn">Maten aan/uit</button></div>
 <div class="canvasWrap" id="canvasWrap"><svg id="svg" viewBox="0 0 800 600" aria-label="Rasterweergave"><g id="world"></g></svg></div>
 <div class="hint">Sleep om te verschuiven. Knijp met twee vingers om te zoomen. Tik op een punt om actief/leeg te wisselen.</div>
+</div>
+</section>
+
+<section id="geoPane" style="display:none">
+<div class="card">
+<h2>Geometriecontrole</h2>
+<p class="muted">Kies twee punten. De afstand is exact afgeleid uit het ingevoerde orthogonale raster.</p>
+<div class="geoGrid">
+<label>Punt A<select id="pointA"></select></label>
+<label>Punt B<select id="pointB"></select></label>
+</div>
+<div class="result" id="geoDistance">—</div>
+<div class="muted" id="geoDelta">—</div>
+<button id="diagBtn" class="primary" style="width:100%;margin-top:16px">Toon controlelijn in raster</button>
+</div>
+<div class="card">
+<h2>Belangrijk</h2>
+<p class="muted">De controlelijn/diagonaal is alleen een theoretische controlemaat. Ze wijzigt geen enkel rasterpunt.</p>
 </div>
 </section>
 </main>
 <script>
 (()=>{"use strict";
 const KEY="bomal_fundering_v030";
-let s={cols:5,rows:3,x:[1200,1200,1200,1200],y:[1500,1500],active:[],labels:true};
+let s={cols:5,rows:3,x:[1200,1200,1200,1200],y:[1500,1500],active:[],labels:true,dims:false,diag:false,a:0,b:14};
 let view={scale:1,tx:0,ty:0};
 const $=id=>document.getElementById(id);
 function normalize(){
@@ -73,6 +97,26 @@ function coords(){
  let xs=[0],ys=[0];for(let i=0;i<s.x.length;i++)xs.push(xs[i]+s.x[i]);for(let i=0;i<s.y.length;i++)ys.push(ys[i]+s.y[i]);
  let p=[];for(let r=0;r<s.rows;r++)for(let c=0;c<s.cols;c++)p.push({i:r*s.cols+c,c,r,x:xs[c],y:ys[r]});return p;
 }
+
+function populateGeo(){
+ const p=coords(), a=$("pointA"), b=$("pointB");
+ if(!p.length)return;
+ s.a=Math.max(0,Math.min(p.length-1,Number(s.a)||0));
+ s.b=Math.max(0,Math.min(p.length-1,Number.isFinite(Number(s.b))?Number(s.b):p.length-1));
+ a.innerHTML=""; b.innerHTML="";
+ p.forEach(q=>{
+   const name="P"+String(q.i).padStart(2,"0");
+   let oa=document.createElement("option");oa.value=q.i;oa.textContent=name;oa.selected=q.i===s.a;a.appendChild(oa);
+   let ob=document.createElement("option");ob.value=q.i;ob.textContent=name;ob.selected=q.i===s.b;b.appendChild(ob);
+ });
+ updateGeo();
+}
+function updateGeo(){
+ const p=coords(),a=p[s.a],b=p[s.b]; if(!a||!b)return;
+ const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy);
+ $("geoDistance").textContent=d.toFixed(1)+" mm";
+ $("geoDelta").textContent="ΔX = "+Math.abs(dx).toFixed(0)+" mm · ΔY = "+Math.abs(dy).toFixed(0)+" mm";
+}
 function renderRaster(){
  const g=$("world");g.innerHTML="";const p=coords(),NS="http://www.w3.org/2000/svg";
  const maxX=Math.max(1,...p.map(q=>q.x)),maxY=Math.max(1,...p.map(q=>q.y)),pad=70,W=800,H=600;
@@ -80,20 +124,38 @@ function renderRaster(){
  const xy=q=>[pad+q.x*k,H-pad-q.y*k];
  function line(a,b){let e=document.createElementNS(NS,"line"),A=xy(a),B=xy(b);e.setAttribute("x1",A[0]);e.setAttribute("y1",A[1]);e.setAttribute("x2",B[0]);e.setAttribute("y2",B[1]);e.setAttribute("class","edge");g.appendChild(e)}
  p.forEach(q=>{if(q.c<s.cols-1)line(q,p[q.i+1]);if(q.r<s.rows-1)line(q,p[q.i+s.cols])});
- p.forEach(q=>{let [x,y]=xy(q),c=document.createElementNS(NS,"circle");c.setAttribute("cx",x);c.setAttribute("cy",y);c.setAttribute("r",10);c.setAttribute("class","point "+(s.active[q.i]?"":"inactive"));c.onclick=()=>{s.active[q.i]=!s.active[q.i];save();renderRaster()};g.appendChild(c);
+ 
+if(s.dims){
+ for(let c=0;c<s.cols-1;c++){
+   let A=xy(p[c]),B=xy(p[c+1]),yy=A[1]+38;
+   let l=document.createElementNS(NS,"line");l.setAttribute("x1",A[0]);l.setAttribute("y1",yy);l.setAttribute("x2",B[0]);l.setAttribute("y2",yy);l.setAttribute("class","dim");g.appendChild(l);
+   let t=document.createElementNS(NS,"text");t.setAttribute("x",(A[0]+B[0])/2);t.setAttribute("y",yy+19);t.setAttribute("text-anchor","middle");t.setAttribute("class","dimText");t.textContent=s.x[c]+" mm";g.appendChild(t);
+ }
+ for(let r=0;r<s.rows-1;r++){
+   let A=xy(p[r*s.cols]),B=xy(p[(r+1)*s.cols]),xx=A[0]-38;
+   let l=document.createElementNS(NS,"line");l.setAttribute("x1",xx);l.setAttribute("y1",A[1]);l.setAttribute("x2",xx);l.setAttribute("y2",B[1]);l.setAttribute("class","dim");g.appendChild(l);
+   let t=document.createElementNS(NS,"text");t.setAttribute("x",xx-7);t.setAttribute("y",(A[1]+B[1])/2);t.setAttribute("text-anchor","end");t.setAttribute("class","dimText");t.textContent=s.y[r]+" mm";g.appendChild(t);
+ }
+}
+if(s.diag && p[s.a] && p[s.b]){
+ let A=xy(p[s.a]),B=xy(p[s.b]),d=Math.hypot(p[s.b].x-p[s.a].x,p[s.b].y-p[s.a].y);
+ let l=document.createElementNS(NS,"line");l.setAttribute("x1",A[0]);l.setAttribute("y1",A[1]);l.setAttribute("x2",B[0]);l.setAttribute("y2",B[1]);l.setAttribute("class","diag");g.appendChild(l);
+ let t=document.createElementNS(NS,"text");t.setAttribute("x",(A[0]+B[0])/2);t.setAttribute("y",(A[1]+B[1])/2-10);t.setAttribute("text-anchor","middle");t.setAttribute("class","diagText");t.textContent=d.toFixed(1)+" mm";g.appendChild(t);
+}
+p.forEach(q=>{let [x,y]=xy(q),c=document.createElementNS(NS,"circle");c.setAttribute("cx",x);c.setAttribute("cy",y);c.setAttribute("r",10);c.setAttribute("class","point "+(s.active[q.i]?"":"inactive"));c.onclick=()=>{s.active[q.i]=!s.active[q.i];save();renderRaster()};g.appendChild(c);
  if(s.labels){let t=document.createElementNS(NS,"text");t.setAttribute("x",x+13);t.setAttribute("y",y-12);t.setAttribute("class","label"+(q.i===0?" origin":""));t.textContent="P"+String(q.i).padStart(2,"0");g.appendChild(t)}});
  applyTransform();
 }
 function applyTransform(){$("world").setAttribute("transform",`translate(${view.tx} ${view.ty}) scale(${view.scale})`)}
 function fit(){view={scale:1,tx:0,ty:0};applyTransform()}
-function tab(which){$("inputPane").style.display=which==="input"?"block":"none";$("viewPane").style.display=which==="view"?"block":"none";$("inputTab").classList.toggle("active",which==="input");$("viewTab").classList.toggle("active",which==="view");if(which==="view"){renderRaster();fit()}}
+function tab(which){$("inputPane").style.display=which==="input"?"block":"none";$("viewPane").style.display=which==="view"?"block":"none";$("geoPane").style.display=which==="geo"?"block":"none";$("inputTab").classList.toggle("active",which==="input");$("viewTab").classList.toggle("active",which==="view");$("geoTab").classList.toggle("active",which==="geo");if(which==="view"){renderRaster();fit()}if(which==="geo"){populateGeo();updateGeo()}}
 $("makeBtn").onclick=()=>{s.cols=+$("cols").value;s.rows=+$("rows").value;s.x=[];s.y=[];s.active=[];normalize();renderInputs();renderRaster()};
 $("applyX").onclick=()=>{let v=Math.max(1,+$("allX").value||0);if(!v)return;s.x=s.x.map(()=>v);renderInputs();renderRaster()};
 $("applyY").onclick=()=>{let v=Math.max(1,+$("allY").value||0);if(!v)return;s.y=s.y.map(()=>v);renderInputs();renderRaster()};
-$("inputTab").onclick=()=>tab("input");$("viewTab").onclick=()=>tab("view");$("fitBtn").onclick=fit;
+$("inputTab").onclick=()=>tab("input");$("viewTab").onclick=()=>tab("view");$("geoTab").onclick=()=>tab("geo");$("fitBtn").onclick=fit;
 $("zoomIn").onclick=()=>{view.scale=Math.min(5,view.scale*1.2);applyTransform()};$("zoomOut").onclick=()=>{view.scale=Math.max(.35,view.scale/1.2);applyTransform()};
-$("labelsBtn").onclick=()=>{s.labels=!s.labels;save();renderRaster()};
-$("newBtn").onclick=()=>{if(confirm("Nieuw raster starten?")){localStorage.removeItem(KEY);s={cols:5,rows:3,x:[1200,1200,1200,1200],y:[1500,1500],active:[],labels:true};normalize();renderInputs();tab("input")}};
+$("labelsBtn").onclick=()=>{s.labels=!s.labels;save();renderRaster()};$("dimsBtn").onclick=()=>{s.dims=!s.dims;save();renderRaster()};
+$("pointA").onchange=e=>{s.a=+e.target.value;save();updateGeo();renderRaster()};$("pointB").onchange=e=>{s.b=+e.target.value;save();updateGeo();renderRaster()};$("diagBtn").onclick=()=>{s.diag=true;save();tab("view")};$("newBtn").onclick=()=>{if(confirm("Nieuw raster starten?")){localStorage.removeItem(KEY);s={cols:5,rows:3,x:[1200,1200,1200,1200],y:[1500,1500],active:[],labels:true,dims:false,diag:false,a:0,b:14};normalize();renderInputs();tab("input")}};
 let drag=null,pinch=null,wrap=$("canvasWrap");
 wrap.addEventListener("pointerdown",e=>{wrap.setPointerCapture(e.pointerId);drag={id:e.pointerId,x:e.clientX,y:e.clientY,tx:view.tx,ty:view.ty}});
 wrap.addEventListener("pointermove",e=>{if(drag&&drag.id===e.pointerId){view.tx=drag.tx+(e.clientX-drag.x);view.ty=drag.ty+(e.clientY-drag.y);applyTransform()}});
