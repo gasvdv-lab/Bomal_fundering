@@ -1,112 +1,105 @@
 <!doctype html>
 <html lang="nl">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#151a1f">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <title>bomal_fundering v0.2.3</title>
-  <link rel="manifest" href="./manifest.json?v=023">
-  <style>
-*{box-sizing:border-box}body{margin:0;background:#0d1115;color:#eef2f5;font-family:system-ui,-apple-system,Segoe UI,sans-serif}header{position:sticky;top:0;z-index:5;background:#151a1f;border-bottom:1px solid #303841;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}header strong{display:block;font-size:18px}header small,.muted{color:#9eabb5}main{max-width:760px;margin:auto;padding:14px}.card{background:#171d22;border:1px solid #303841;border-radius:14px;padding:16px;margin-bottom:12px}h1,h2{margin:0 0 8px}h1{font-size:24px}h2{font-size:18px}.two{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}label{font-size:13px;color:#b8c2ca}input{width:100%;margin-top:6px;background:#0e1317;border:1px solid #46515a;border-radius:9px;padding:12px;color:white;font-size:18px}button{border:0;border-radius:9px;padding:11px 14px;font-weight:700;background:#303a42;color:white}.primary{width:100%;background:#2d8f58}.ghost{background:#263038}.hidden{display:none!important}.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px}.tab.active{background:#2d8f58}.quick{display:grid;grid-template-columns:1fr auto;gap:8px;margin:10px 0}.quick input{margin:0}.distance-list{display:grid;gap:8px}.distance-row{display:grid;grid-template-columns:92px 1fr 32px;align-items:center;gap:8px}.distance-row input{margin:0;padding:10px;font-size:16px}.distance-row span{font-size:13px;color:#b8c2ca}.unit{color:#8f9aa3!important}.row-head{display:flex;justify-content:space-between;align-items:center}.canvas-wrap{width:100%;overflow:auto;background:#0b1013;border-radius:10px;border:1px solid #303841}svg{display:block;width:100%;min-width:320px;height:auto;touch-action:manipulation}.grid-line{stroke:#64717b;stroke-width:2}.point{fill:#42b873;stroke:#d8ffe8;stroke-width:2}.point.inactive{fill:#3c444b;stroke:#747f88}.point-label{fill:#eef2f5;font-size:12px;text-anchor:middle;pointer-events:none}.selection{margin-top:10px;padding:10px;background:#10161a;border-radius:8px}.summary{display:flex;justify-content:space-between;gap:10px;font-size:13px}.summary span{color:#7fcf9e}@media(max-width:430px){main{padding:10px}.card{padding:13px}.distance-row{grid-template-columns:78px 1fr 28px}}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d1117">
+<title>Bomal Fundering</title>
+<style>
+*{box-sizing:border-box} body{margin:0;background:#0d1117;color:#f0f3f6;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{position:sticky;top:0;z-index:10;background:#161b22;border-bottom:1px solid #30363d;padding:16px 18px;display:flex;justify-content:space-between;align-items:center}
+h1{font-size:22px;margin:0}.sub{color:#9da7b3;margin-top:3px}.wrap{max-width:850px;margin:auto;padding:16px}
+button,.btn{border:0;border-radius:14px;padding:14px 18px;font-weight:750;font-size:16px;background:#303b46;color:#fff}
+.primary{background:#4ade80;color:#08110b}.tabs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.tab.active{background:#4ade80;color:#08110b}.card{background:#161b22;border:1px solid #30363d;border-radius:20px;padding:18px;margin-bottom:16px}
+h2{margin:0 0 10px;font-size:24px}.muted{color:#9da7b3}.setup{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:block;color:#c8d1da;margin:8px 0}input{width:100%;background:#0d1117;color:#fff;border:1px solid #45515d;border-radius:12px;padding:13px;font-size:18px}
+.row{display:grid;grid-template-columns:145px 1fr 52px;gap:10px;align-items:center;margin:9px 0}.apply{display:grid;grid-template-columns:1fr 130px;gap:10px;margin:12px 0 16px}
+.status{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}.ok{color:#7ee2a8}
+#viewPane{display:none}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.toolbar button{padding:10px 13px}
+.canvasWrap{height:58vh;min-height:390px;overflow:hidden;background:#0b0f14;border:1px solid #30363d;border-radius:18px;touch-action:none;position:relative}
+svg{width:100%;height:100%;display:block}.edge{stroke:#6e7681;stroke-width:3}.point{fill:#4ade80;stroke:#0d1117;stroke-width:3}.point.inactive{fill:#4b5563}.label{fill:#fff;font-size:15px;font-weight:700;paint-order:stroke;stroke:#0d1117;stroke-width:4px;stroke-linejoin:round}.origin{fill:#f2cc60}
+.hint{font-size:14px;color:#9da7b3;margin-top:10px}
+@media(max-width:560px){.row{grid-template-columns:105px 1fr 38px}.setup{grid-template-columns:1fr 1fr}.wrap{padding:12px}.card{padding:15px}.canvasWrap{height:60vh}}
 </style>
 </head>
 <body>
-<header><div><strong>bomal_fundering</strong><small>v0.2.3 · Mobile Fix</small></div><button id="resetBtn" class="ghost" type="button">Nieuw</button></header>
-<main>
-<section class="card setup">
-  <h1>Raster opstellen</h1>
-  <p class="muted">Kies hoeveel middelpunten je horizontaal en verticaal wilt. P00 is links onderaan.</p>
-  <div class="two">
-    <label>Horizontaal<input id="cols" type="number" min="1" max="20" value="5"></label>
-    <label>Verticaal<input id="rows" type="number" min="1" max="20" value="3"></label>
-  </div>
-  <button id="makeBtn" class="primary" type="button">Raster maken</button>
+<header><div><h1>bomal_fundering</h1><div class="sub">v0.3.0 · Raster View</div></div><button id="newBtn">Nieuw</button></header>
+<main class="wrap">
+<div class="tabs"><button id="inputTab" class="tab active">Invoer</button><button id="viewTab" class="tab">Raster</button></div>
+
+<section id="inputPane">
+<div class="card">
+<h2>Raster opstellen</h2><p class="muted">Aantal middelpunten horizontaal en verticaal. P00 ligt links onderaan.</p>
+<div class="setup"><label>Horizontaal<input id="cols" type="number" min="1" max="20" value="5"></label><label>Verticaal<input id="rows" type="number" min="1" max="20" value="3"></label></div>
+<button id="makeBtn" class="primary" style="width:100%;margin-top:10px">Raster maken</button>
+</div>
+<div class="card"><h2>Horizontale afstanden</h2><p class="muted">Afstand tussen opeenvolgende kolommen.</p>
+<div class="apply"><input id="allX" type="number" min="1" placeholder="bv. 1200"><button id="applyX">Op alle</button></div><div id="xRows"></div></div>
+<div class="card"><h2>Verticale afstanden</h2><p class="muted">Afstand tussen opeenvolgende rijen.</p>
+<div class="apply"><input id="allY" type="number" min="1" placeholder="bv. 1500"><button id="applyY">Op alle</button></div><div id="yRows"></div></div>
+<div class="card status"><b id="count"></b><span class="ok">Lokaal opgeslagen</span></div>
 </section>
-<section id="editor" class="hidden">
-  <div class="tabs"><button class="tab active" data-tab="input" type="button">Invoer</button><button class="tab" data-tab="grid" type="button">Raster</button></div>
-  <div id="inputPanel" class="panel">
-    <section class="card"><h2>Horizontale afstanden</h2><p class="muted">Afstand tussen opeenvolgende kolommen.</p><div class="quick"><input id="hAll" inputmode="decimal" placeholder="bv. 1200"><button id="applyH" type="button">Op alle</button></div><div id="hDistances" class="distance-list"></div></section>
-    <section class="card"><h2>Verticale afstanden</h2><p class="muted">Afstand tussen opeenvolgende rijen.</p><div class="quick"><input id="vAll" inputmode="decimal" placeholder="bv. 1500"><button id="applyV" type="button">Op alle</button></div><div id="vDistances" class="distance-list"></div></section>
-  </div>
-  <div id="gridPanel" class="panel hidden"><section class="card"><div class="row-head"><h2>2D raster</h2><button id="fitBtn" class="ghost" type="button">Centreren</button></div><p class="muted">Tik een punt om die tegelpositie actief/leeg te zetten.</p><div class="canvas-wrap"><svg id="gridSvg" viewBox="0 0 600 420" aria-label="Raster"></svg></div><div id="selection" class="selection">Geen punt geselecteerd</div></section></div>
-  <section class="card summary"><strong id="summary"></strong><span id="saved">Lokaal opgeslagen</span></section>
+
+<section id="viewPane">
+<div class="card">
+<div class="toolbar"><button id="fitBtn">Centreer</button><button id="zoomIn">＋</button><button id="zoomOut">−</button><button id="labelsBtn">Labels aan/uit</button></div>
+<div class="canvasWrap" id="canvasWrap"><svg id="svg" viewBox="0 0 800 600" aria-label="Rasterweergave"><g id="world"></g></svg></div>
+<div class="hint">Sleep om te verschuiven. Knijp met twee vingers om te zoomen. Tik op een punt om actief/leeg te wisselen.</div>
+</div>
 </section>
 </main>
 <script>
-(function () {
-  'use strict';
-  var KEY = 'bomal_fundering.project.v23';
-  var OLD_KEY = 'bomal_fundering.project.v22';
-  function $(s) { return document.querySelector(s); }
-  function normalizeMm(v) { var n = Number(String(v).replace(',', '.')); return Number.isFinite(n) && n >= 0 ? Math.round(n) : 0; }
-  function coordinates(h, v) {
-    var xs=[0], ys=[0], i;
-    for(i=0;i<h.length;i++) xs.push(xs[xs.length-1]+normalizeMm(h[i]));
-    for(i=0;i<v.length;i++) ys.push(ys[ys.length-1]+normalizeMm(v[i]));
-    return {xs:xs,ys:ys};
-  }
-  function pointId(r,c,cols){ return 'P'+String(r*cols+c).padStart(2,'0'); }
-  function buildPoints(cols,rows,h,v,active){
-    var xy=coordinates(h,v), pts=[], r,c,id; active=active||{};
-    for(r=0;r<rows;r++) for(c=0;c<cols;c++){ id=pointId(r,c,cols); pts.push({id:id,row:r,col:c,x:xy.xs[c],y:xy.ys[r],active:active[id]!==false}); }
-    return pts;
-  }
-  function loadProject(){
-    try { var raw=localStorage.getItem(KEY)||localStorage.getItem(OLD_KEY); return raw?JSON.parse(raw):null; } catch(e){ return null; }
-  }
-  var project=loadProject(), saveTimer=null;
-  function fresh(cols,rows){ return {version:'0.2.2',cols:cols,rows:rows,h:Array(Math.max(0,cols-1)).fill(1000),v:Array(Math.max(0,rows-1)).fill(1000),active:{}}; }
-  function save(){
-    try { project.version='0.2.2'; localStorage.setItem(KEY,JSON.stringify(project)); }
-    catch(e){ $('#saved').textContent='Opslaan mislukt'; return; }
-    $('#saved').textContent='Lokaal opgeslagen ✓'; clearTimeout(saveTimer); saveTimer=setTimeout(function(){ $('#saved').textContent='Lokaal opgeslagen'; },800);
-  }
-  function makeDistanceRows(box,arr,prefix){
-    box.innerHTML=''; arr.forEach(function(n,i){
-      var d=document.createElement('div'); d.className='distance-row';
-      var label=document.createElement('span'); label.textContent=prefix+(i+1)+' → '+prefix+(i+2);
-      var input=document.createElement('input'); input.inputMode='decimal'; input.value=n; input.dataset.i=i;
-      var unit=document.createElement('span'); unit.className='unit'; unit.textContent='mm';
-      input.addEventListener('change',function(){ arr[i]=normalizeMm(input.value); input.value=arr[i]; save(); renderGrid(); });
-      d.appendChild(label); d.appendChild(input); d.appendChild(unit); box.appendChild(d);
-    });
-  }
-  function distanceRows(){ makeDistanceRows($('#hDistances'),project.h,'K'); makeDistanceRows($('#vDistances'),project.v,'R'); }
-  function renderGrid(){
-    if(!project) return;
-    var pts=buildPoints(project.cols,project.rows,project.h,project.v,project.active), svg=$('#gridSvg');
-    var maxX=Math.max.apply(null,pts.map(function(p){return p.x;} ).concat([1]));
-    var maxY=Math.max.apply(null,pts.map(function(p){return p.y;} ).concat([1]));
-    var pad=45,w=600,h=420,s=Math.min((w-2*pad)/maxX,(h-2*pad)/maxY);
-    function pos(p){ return [pad+p.x*s,h-pad-p.y*s]; }
-    svg.innerHTML='';
-    function line(a,b){ var p1=pos(a),p2=pos(b),el=document.createElementNS('http://www.w3.org/2000/svg','line'); el.setAttribute('class','grid-line'); el.setAttribute('x1',p1[0]);el.setAttribute('y1',p1[1]);el.setAttribute('x2',p2[0]);el.setAttribute('y2',p2[1]);svg.appendChild(el); }
-    var r,c,p,q;
-    for(r=0;r<project.rows;r++) for(c=0;c<project.cols;c++){
-      p=pts[r*project.cols+c]; if(c<project.cols-1) line(p,pts[r*project.cols+c+1]); if(r<project.rows-1) line(p,pts[(r+1)*project.cols+c]);
-    }
-    pts.forEach(function(pt){
-      var xy=pos(pt), circle=document.createElementNS('http://www.w3.org/2000/svg','circle'), text=document.createElementNS('http://www.w3.org/2000/svg','text');
-      circle.setAttribute('class','point'+(pt.active?'':' inactive')); circle.setAttribute('data-id',pt.id); circle.setAttribute('cx',xy[0]);circle.setAttribute('cy',xy[1]);circle.setAttribute('r','11');
-      text.setAttribute('class','point-label');text.setAttribute('x',xy[0]);text.setAttribute('y',xy[1]-16);text.textContent=pt.id;
-      circle.addEventListener('click',function(){ var id=pt.id; project.active[id]=project.active[id]===false; save(); renderGrid(); var now=buildPoints(project.cols,project.rows,project.h,project.v,project.active).filter(function(x){return x.id===id;})[0]; $('#selection').textContent=id+': X '+now.x+' mm · Y '+now.y+' mm · '+(now.active?'ACTIEF':'LEEG'); });
-      svg.appendChild(circle);svg.appendChild(text);
-    });
-    $('#summary').textContent=project.cols+' × '+project.rows+' = '+(project.cols*project.rows)+' posities · '+pts.filter(function(x){return x.active;}).length+' actief';
-  }
-  function openEditor(){ if(!project)return; $('#editor').classList.remove('hidden'); $('#cols').value=project.cols; $('#rows').value=project.rows; distanceRows(); renderGrid(); }
-  function init(){
-    $('#makeBtn').addEventListener('click',function(){ var c=Math.max(1,Math.min(20,Number($('#cols').value)||1)),r=Math.max(1,Math.min(20,Number($('#rows').value)||1)); project=fresh(c,r); save(); openEditor(); });
-    $('#applyH').addEventListener('click',function(){ if(!project)return; var n=normalizeMm($('#hAll').value); project.h=project.h.map(function(){return n;}); save();distanceRows();renderGrid(); });
-    $('#applyV').addEventListener('click',function(){ if(!project)return; var n=normalizeMm($('#vAll').value); project.v=project.v.map(function(){return n;}); save();distanceRows();renderGrid(); });
-    $('#resetBtn').addEventListener('click',function(){ if(confirm('Nieuw raster starten? Huidige lokale raster wordt gewist.')){ try{localStorage.removeItem(KEY);localStorage.removeItem(OLD_KEY);}catch(e){} project=null;$('#editor').classList.add('hidden');$('#cols').value=5;$('#rows').value=3; } });
-    document.querySelectorAll('.tab').forEach(function(b){ b.addEventListener('click',function(){ document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active');});b.classList.add('active');$('#inputPanel').classList.toggle('hidden',b.dataset.tab!=='input');$('#gridPanel').classList.toggle('hidden',b.dataset.tab!=='grid');if(b.dataset.tab==='grid')renderGrid(); }); });
-    $('#fitBtn').addEventListener('click',renderGrid);
-    if(project) openEditor();
-  }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+(()=>{"use strict";
+const KEY="bomal_fundering_v030";
+let s={cols:5,rows:3,x:[1200,1200,1200,1200],y:[1500,1500],active:[],labels:true};
+let view={scale:1,tx:0,ty:0};
+const $=id=>document.getElementById(id);
+function normalize(){
+ s.cols=Math.max(1,Math.min(20,Number(s.cols)||1)); s.rows=Math.max(1,Math.min(20,Number(s.rows)||1));
+ while(s.x.length<s.cols-1)s.x.push(1200); s.x=s.x.slice(0,Math.max(0,s.cols-1));
+ while(s.y.length<s.rows-1)s.y.push(1500); s.y=s.y.slice(0,Math.max(0,s.rows-1));
+ const n=s.cols*s.rows; while(s.active.length<n)s.active.push(true); s.active=s.active.slice(0,n);
+}
+function save(){normalize();localStorage.setItem(KEY,JSON.stringify(s));$("count").textContent=`${s.cols} × ${s.rows} = ${s.cols*s.rows} posities · ${s.active.filter(Boolean).length} actief`;}
+function load(){try{const v=JSON.parse(localStorage.getItem(KEY));if(v)Object.assign(s,v)}catch(e){}normalize()}
+function renderInputs(){
+ $("cols").value=s.cols;$("rows").value=s.rows;$("xRows").innerHTML="";$("yRows").innerHTML="";
+ s.x.forEach((v,i)=>{let d=document.createElement("div");d.className="row";d.innerHTML=`<span>K${i+1} → K${i+2}</span><input type="number" min="1" value="${v}"><span>mm</span>`;d.querySelector("input").onchange=e=>{s.x[i]=Math.max(1,+e.target.value||1);save();renderRaster()};$("xRows").appendChild(d)});
+ s.y.forEach((v,i)=>{let d=document.createElement("div");d.className="row";d.innerHTML=`<span>R${i+1} → R${i+2}</span><input type="number" min="1" value="${v}"><span>mm</span>`;d.querySelector("input").onchange=e=>{s.y[i]=Math.max(1,+e.target.value||1);save();renderRaster()};$("yRows").appendChild(d)});
+ save();
+}
+function coords(){
+ let xs=[0],ys=[0];for(let i=0;i<s.x.length;i++)xs.push(xs[i]+s.x[i]);for(let i=0;i<s.y.length;i++)ys.push(ys[i]+s.y[i]);
+ let p=[];for(let r=0;r<s.rows;r++)for(let c=0;c<s.cols;c++)p.push({i:r*s.cols+c,c,r,x:xs[c],y:ys[r]});return p;
+}
+function renderRaster(){
+ const g=$("world");g.innerHTML="";const p=coords(),NS="http://www.w3.org/2000/svg";
+ const maxX=Math.max(1,...p.map(q=>q.x)),maxY=Math.max(1,...p.map(q=>q.y)),pad=70,W=800,H=600;
+ const k=Math.min((W-2*pad)/maxX,(H-2*pad)/maxY);
+ const xy=q=>[pad+q.x*k,H-pad-q.y*k];
+ function line(a,b){let e=document.createElementNS(NS,"line"),A=xy(a),B=xy(b);e.setAttribute("x1",A[0]);e.setAttribute("y1",A[1]);e.setAttribute("x2",B[0]);e.setAttribute("y2",B[1]);e.setAttribute("class","edge");g.appendChild(e)}
+ p.forEach(q=>{if(q.c<s.cols-1)line(q,p[q.i+1]);if(q.r<s.rows-1)line(q,p[q.i+s.cols])});
+ p.forEach(q=>{let [x,y]=xy(q),c=document.createElementNS(NS,"circle");c.setAttribute("cx",x);c.setAttribute("cy",y);c.setAttribute("r",10);c.setAttribute("class","point "+(s.active[q.i]?"":"inactive"));c.onclick=()=>{s.active[q.i]=!s.active[q.i];save();renderRaster()};g.appendChild(c);
+ if(s.labels){let t=document.createElementNS(NS,"text");t.setAttribute("x",x+13);t.setAttribute("y",y-12);t.setAttribute("class","label"+(q.i===0?" origin":""));t.textContent="P"+String(q.i).padStart(2,"0");g.appendChild(t)}});
+ applyTransform();
+}
+function applyTransform(){$("world").setAttribute("transform",`translate(${view.tx} ${view.ty}) scale(${view.scale})`)}
+function fit(){view={scale:1,tx:0,ty:0};applyTransform()}
+function tab(which){$("inputPane").style.display=which==="input"?"block":"none";$("viewPane").style.display=which==="view"?"block":"none";$("inputTab").classList.toggle("active",which==="input");$("viewTab").classList.toggle("active",which==="view");if(which==="view"){renderRaster();fit()}}
+$("makeBtn").onclick=()=>{s.cols=+$("cols").value;s.rows=+$("rows").value;s.x=[];s.y=[];s.active=[];normalize();renderInputs();renderRaster()};
+$("applyX").onclick=()=>{let v=Math.max(1,+$("allX").value||0);if(!v)return;s.x=s.x.map(()=>v);renderInputs();renderRaster()};
+$("applyY").onclick=()=>{let v=Math.max(1,+$("allY").value||0);if(!v)return;s.y=s.y.map(()=>v);renderInputs();renderRaster()};
+$("inputTab").onclick=()=>tab("input");$("viewTab").onclick=()=>tab("view");$("fitBtn").onclick=fit;
+$("zoomIn").onclick=()=>{view.scale=Math.min(5,view.scale*1.2);applyTransform()};$("zoomOut").onclick=()=>{view.scale=Math.max(.35,view.scale/1.2);applyTransform()};
+$("labelsBtn").onclick=()=>{s.labels=!s.labels;save();renderRaster()};
+$("newBtn").onclick=()=>{if(confirm("Nieuw raster starten?")){localStorage.removeItem(KEY);s={cols:5,rows:3,x:[1200,1200,1200,1200],y:[1500,1500],active:[],labels:true};normalize();renderInputs();tab("input")}};
+let drag=null,pinch=null,wrap=$("canvasWrap");
+wrap.addEventListener("pointerdown",e=>{wrap.setPointerCapture(e.pointerId);drag={id:e.pointerId,x:e.clientX,y:e.clientY,tx:view.tx,ty:view.ty}});
+wrap.addEventListener("pointermove",e=>{if(drag&&drag.id===e.pointerId){view.tx=drag.tx+(e.clientX-drag.x);view.ty=drag.ty+(e.clientY-drag.y);applyTransform()}});
+wrap.addEventListener("pointerup",()=>drag=null);wrap.addEventListener("pointercancel",()=>drag=null);
+wrap.addEventListener("wheel",e=>{e.preventDefault();view.scale=Math.max(.35,Math.min(5,view.scale*(e.deltaY<0?1.1:.9)));applyTransform()},{passive:false});
+load();renderInputs();renderRaster();
 })();
-
 </script>
 </body></html>

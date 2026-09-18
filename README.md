@@ -1,21 +1,22 @@
-# bomal_fundering v0.2.3 — Smartphone Flat
+# bomal_fundering v0.3.0 — Raster View
 
 ## Live app / vaste testlink
 https://gasvdv-lab.github.io/Bomal_fundering/
 
-## Doel van deze release
-Smartphone-vriendelijke GitHub upload: geen css/, js/ of tests/ mappen nodig. De volledige app (HTML + CSS + JavaScript) zit in `index.html`.
+## Doel
+Exact orthogonaal raster van tegelmiddelpunten voorbereiden. De lasermeter blijft het definitieve meettoestel.
+
+## v0.3.0
+- Excel-achtige invoer behouden.
+- Grafische 2D-rasterweergave.
+- P00 links onderaan.
+- Puntlabels P00, P01, ...
+- Raster schaalt volgens ingevoerde afstanden.
+- Centreer, zoom en verschuiven.
+- Punt aantikken schakelt actief/leeg.
+- Lokale opslag.
+- Smartphone-flat: geen submappen of externe JavaScript/CSS-bestanden.
 
 ## Upload
-Upload alle bestanden uit deze ZIP rechtstreeks naar de root van de lege GitHub repository en commit rechtstreeks naar `main`.
-
-## Functionaliteit
-- Rastergrootte horizontaal × verticaal
-- P00 links onder op (0,0)
-- Horizontale en verticale afstanden
-- `Op alle` voor snelle invoer
-- 2D rasterweergave
-- Actief/leeg per punt
-- Lokale opslag
-
-De lasermeter blijft het definitieve meetinstrument. AR is nog niet aanwezig.
+Pak de ZIP uit en upload alle losse bestanden rechtstreeks naar de root van `main`.
+GitHub Pages: `main` + `/(root)`.

@@ -1,22 +1,15 @@
 # ROADMAP — bomal_fundering
 
-## v0.1.0 Foundation — afgerond
-Mobiele webbasis, lokaal datamodel en GitHub Pages-structuur.
-
-## v0.2.0 Raster Builder — afgerond
-Eerste orthogonale punt-per-punt geometrie.
-
-## v0.2.1 Grid Table UX — huidige release
-Raster sneller opbouwen als rijen × kolommen met Excel-achtige afstandsinvoer en eenvoudige 2D-preview.
-
-## Volgende stappen
-- v0.3.x: 2D-raster verfijnen en bewerken/undo.
-- v0.4.x: maatvoering en diagonalen/controleafstanden.
-- daarna: opslag/export en AR proof-of-concept.
-
-## Scope v1
-Exact ontworpen raster → AR plaatsen via P00 + oriëntatie → rigide vergrendelen → visueel controleren / tegel ongeveer plaatsen → laser als definitieve controle. Geen automatische tegelherkenning of automatische cm-afwijkingsmeting in v1.
-
-
-## v0.2.3 Smartphone Flat
-- App samengevoegd tot één zelfstandige index.html voor eenvoudige smartphone-upload naar GitHub.
+- [x] v0.1.0 Foundation
+- [x] v0.2.x Raster Builder / smartphone-flat
+- [x] v0.3.0 Raster View
+- [ ] v0.4.0 Geometry Check — maten en diagonalen
+- [ ] v0.5.0 Project Storage — JSON import/export
+- [ ] v0.6.0 AR Proof of Concept — P00/P01
+- [ ] v0.7.0 AR Raster
+- [ ] v0.8.0 Site Placement
+- [ ] v0.9.0 Site Verification
+- [ ] v0.10.0 Placement Assist
+- [ ] v0.11.0 Site Tools
+- [ ] v0.12.0 Field Test
+- [ ] v1.0
