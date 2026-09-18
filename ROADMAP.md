@@ -3,10 +3,11 @@
 - [x] v0.2.x Raster Builder
 - [x] v0.3.0 Raster View
 - [x] v0.4.0 Geometry Check
-- [ ] v0.5.0 Project Storage / JSON
-- [ ] v0.6.0 AR Proof of Concept
-- [ ] v0.7.0 AR Raster
-- [ ] v0.8.0 Site Placement
-- [ ] v0.9.0 Site Verification
-- [ ] v0.10.0 Placement Assist
+- [x] v0.5.0 Interactive Raster
+- [ ] v0.6.0 Project Storage / JSON
+- [ ] v0.7.0 AR Proof of Concept
+- [ ] v0.8.0 AR Raster
+- [ ] v0.9.0 Site Placement
+- [ ] v0.10.0 Site Verification
+- [ ] v0.11.0 Placement Assist
 - [ ] v1.0

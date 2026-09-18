@@ -1,24 +1,28 @@
-# TESTING — v0.4.0
+# TESTING — v0.5.0
 
-Automatische controles:
-- PASS: index.html vermeldt v0.4.0 Geometry Check.
-- PASS: Geometrie-tab aanwezig.
-- PASS: maatlijnen aanwezig.
-- PASS: diagonale controlelijn aanwezig.
-- PASS: afstand gebruikt Math.hypot(dx,dy).
-- PASS: geen externe JS/CSS.
-- PASS: 5 flat bestanden.
+Automatische/static controles:
+- PASS: v0.5.0 Interactive Raster marker aanwezig.
+- PASS: flat release met exact 5 bestanden.
+- PASS: geen externe JS/CSS en geen ES modules.
+- PASS: puntselectie A/B aanwezig.
+- PASS: afstand = Math.hypot(dx,dy).
+- PASS: fullscreen-achtige rastermodus aanwezig.
+- PASS: pan via Pointer Events.
+- PASS: pinch zoom-logica aanwezig.
+- PASS: actief/leeg is aparte knop.
+- PASS: labels en maatlijnen blijven toggles.
 
-Rekencontrole 5 × 3 met X=1200 mm en Y=1500 mm:
-P00 -> P14:
-ΔX = 4800 mm
-ΔY = 3000 mm
-afstand = 5660.3887 mm, dus weergegeven 5660.4 mm.
+Rekencontrole:
+5×3, horizontaal 1200 mm, verticaal 1500 mm:
+P00 -> P14 = sqrt(4800² + 3000²) = 5660.4 mm.
 
 Handmatig Android:
-1. Controleer versie v0.4.0.
-2. Open Geometrie.
-3. Kies P00 en P14.
-4. Bij 1200/1500 verwacht 5660.4 mm.
-5. Toon controlelijn.
-6. Zet Maten aan/uit in Raster.
+1. Open v0.5.0 en Raster.
+2. Raster moet het scherm domineren.
+3. Tik P00, daarna P14.
+4. Verwacht 5660.4 mm bij 1200/1500.
+5. Test ander punt als nieuwe A.
+6. Test Wis selectie.
+7. Test Actief/leeg.
+8. Test slepen en pinch-zoom.
+9. Test Labels en Maten.

@@ -1,167 +1,122 @@
 <!doctype html>
 <html lang="nl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0d1117">
-<title>Bomal Fundering</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d1117"><title>Bomal Fundering</title>
 <style>
-*{box-sizing:border-box} body{margin:0;background:#0d1117;color:#f0f3f6;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-header{position:sticky;top:0;z-index:10;background:#161b22;border-bottom:1px solid #30363d;padding:16px 18px;display:flex;justify-content:space-between;align-items:center}
-h1{font-size:22px;margin:0}.sub{color:#9da7b3;margin-top:3px}.wrap{max-width:850px;margin:auto;padding:16px}
-button,.btn{border:0;border-radius:14px;padding:14px 18px;font-weight:750;font-size:16px;background:#303b46;color:#fff}
-.primary{background:#4ade80;color:#08110b}.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
-.tab.active{background:#4ade80;color:#08110b}.card{background:#161b22;border:1px solid #30363d;border-radius:20px;padding:18px;margin-bottom:16px}
-h2{margin:0 0 10px;font-size:24px}.muted{color:#9da7b3}.setup{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-label{display:block;color:#c8d1da;margin:8px 0}input{width:100%;background:#0d1117;color:#fff;border:1px solid #45515d;border-radius:12px;padding:13px;font-size:18px}
-.row{display:grid;grid-template-columns:145px 1fr 52px;gap:10px;align-items:center;margin:9px 0}.apply{display:grid;grid-template-columns:1fr 130px;gap:10px;margin:12px 0 16px}
-.status{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}.ok{color:#7ee2a8}
-#viewPane{display:none}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.toolbar button{padding:10px 13px}
-.canvasWrap{height:58vh;min-height:390px;overflow:hidden;background:#0b0f14;border:1px solid #30363d;border-radius:18px;touch-action:none;position:relative}
-svg{width:100%;height:100%;display:block}.edge{stroke:#6e7681;stroke-width:3}.point{fill:#4ade80;stroke:#0d1117;stroke-width:3}.point.inactive{fill:#4b5563}.label{fill:#fff;font-size:15px;font-weight:700;paint-order:stroke;stroke:#0d1117;stroke-width:4px;stroke-linejoin:round}.origin{fill:#f2cc60}
-.hint{font-size:14px;color:#9da7b3;margin-top:10px}
-@media(max-width:560px){.row{grid-template-columns:105px 1fr 38px}.setup{grid-template-columns:1fr 1fr}.wrap{padding:12px}.card{padding:15px}.canvasWrap{height:60vh}}
-.geoGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-select{width:100%;background:#0d1117;color:#fff;border:1px solid #45515d;border-radius:12px;padding:13px;font-size:18px}
-.result{font-size:28px;font-weight:800;margin:14px 0 4px}.diag{stroke:#f2cc60;stroke-width:3;stroke-dasharray:9 7}
-.diagText,.dimText{fill:#fff;font-size:15px;font-weight:700;paint-order:stroke;stroke:#0d1117;stroke-width:4px}
-.dim{stroke:#58a6ff;stroke-width:2}
-@media(max-width:560px){.geoGrid{grid-template-columns:1fr}}
-</style>
-</head>
-<body>
-<header><div><h1>bomal_fundering</h1><div class="sub">v0.4.0 · Geometry Check</div></div><button id="newBtn">Nieuw</button></header>
-<main class="wrap">
-<div class="tabs"><button id="inputTab" class="tab active">Invoer</button><button id="viewTab" class="tab">Raster</button><button id="geoTab" class="tab">Geometrie</button></div>
+*{box-sizing:border-box}html,body{margin:0;background:#0d1117;color:#f0f3f6;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+body{min-height:100vh}header{background:#161b22;border-bottom:1px solid #30363d;padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
+h1{font-size:21px;margin:0}.sub,.muted{color:#9da7b3}.wrap{max-width:900px;margin:auto;padding:12px}
+button{border:0;border-radius:13px;min-height:46px;padding:11px 15px;font-weight:750;font-size:16px;background:#303b46;color:#fff}
+button.active,.primary{background:#4ade80;color:#08110b}.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.card{background:#161b22;border:1px solid #30363d;border-radius:19px;padding:15px;margin-bottom:13px}h2{margin:0 0 8px;font-size:22px}
+label{display:block;color:#c8d1da;margin:8px 0}input,select{width:100%;background:#0d1117;color:#fff;border:1px solid #45515d;border-radius:11px;padding:12px;font-size:17px}
+.setup,.geoGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.apply{display:grid;grid-template-columns:1fr 120px;gap:8px;margin:10px 0 13px}
+.row{display:grid;grid-template-columns:100px 1fr 38px;gap:7px;align-items:center;margin:7px 0}.pane{display:none}.pane.active{display:block}
+.status{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}.ok{color:#7ee2a8}
 
-<section id="inputPane">
-<div class="card">
-<h2>Raster opstellen</h2><p class="muted">Aantal middelpunten horizontaal en verticaal. P00 ligt links onderaan.</p>
-<div class="setup"><label>Horizontaal<input id="cols" type="number" min="1" max="20" value="5"></label><label>Verticaal<input id="rows" type="number" min="1" max="20" value="3"></label></div>
-<button id="makeBtn" class="primary" style="width:100%;margin-top:10px">Raster maken</button>
-</div>
-<div class="card"><h2>Horizontale afstanden</h2><p class="muted">Afstand tussen opeenvolgende kolommen.</p>
-<div class="apply"><input id="allX" type="number" min="1" placeholder="bv. 1200"><button id="applyX">Op alle</button></div><div id="xRows"></div></div>
-<div class="card"><h2>Verticale afstanden</h2><p class="muted">Afstand tussen opeenvolgende rijen.</p>
-<div class="apply"><input id="allY" type="number" min="1" placeholder="bv. 1500"><button id="applyY">Op alle</button></div><div id="yRows"></div></div>
+/* Raster is intentionally screen-dominant. */
+#rasterPane{padding:0}.rasterShell{position:relative;background:#090d12;min-height:calc(100vh - 88px);overflow:hidden}
+.rasterTop{position:absolute;z-index:4;left:8px;right:8px;top:8px;display:flex;gap:6px;flex-wrap:wrap;pointer-events:none}
+.rasterTop button{pointer-events:auto;min-height:42px;padding:8px 11px;font-size:14px;background:#25303b}
+.rasterTop button.active{background:#4ade80;color:#08110b}
+#canvasWrap{position:absolute;inset:0;touch-action:none;overflow:hidden}
+svg{width:100%;height:100%;display:block}.edge{stroke:#59636e;stroke-width:3}.point{fill:#4ade80;stroke:#0d1117;stroke-width:4;cursor:pointer}
+.point.inactive{fill:#4b5563}.point.selA{fill:#f2cc60}.point.selB{fill:#ff7b72}.label,.measureText,.dimText{fill:#fff;font-size:16px;font-weight:800;paint-order:stroke;stroke:#090d12;stroke-width:5px;stroke-linejoin:round}
+.measure{stroke:#f2cc60;stroke-width:4;stroke-dasharray:10 7}.dim{stroke:#58a6ff;stroke-width:2}
+.info{position:absolute;z-index:5;left:8px;right:8px;bottom:10px;background:rgba(22,27,34,.94);border:1px solid #3d4854;border-radius:16px;padding:11px 13px;display:none}
+.info.show{display:block}.infoTitle{font-weight:850;font-size:17px}.infoGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:5px;color:#c8d1da;font-size:14px}
+.infoActions{display:flex;gap:6px;margin-top:8px}.infoActions button{min-height:38px;padding:7px 10px;font-size:13px}
+.badge{position:absolute;z-index:5;right:9px;top:62px;background:rgba(22,27,34,.9);padding:7px 9px;border-radius:10px;color:#c8d1da;font-size:13px}
+.result{font-size:27px;font-weight:850;margin:12px 0 3px}
+@media(max-width:560px){.wrap{padding:10px}.tabs button{font-size:14px;padding:9px 5px}.geoGrid{grid-template-columns:1fr}.rasterShell{min-height:calc(100vh - 72px)}.infoGrid{grid-template-columns:1fr 1fr 1fr}}
+</style></head>
+<body>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.5.0 · Interactive Raster</div></div><button id="newBtn">Nieuw</button></header>
+<main id="normalMain" class="wrap">
+<div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button></div>
+<section id="inputPane" class="pane active">
+<div class="card"><h2>Raster opstellen</h2><p class="muted">P00 ligt links onderaan. Alle maten zijn millimeter.</p>
+<div class="setup"><label>Horizontaal<input id="cols" type="number" min="1" max="20"></label><label>Verticaal<input id="rows" type="number" min="1" max="20"></label></div>
+<button id="makeBtn" class="primary" style="width:100%;margin-top:8px">Raster maken</button></div>
+<div class="card"><h2>Horizontale afstanden</h2><div class="apply"><input id="allX" type="number" min="1" placeholder="bv. 1200"><button id="applyX">Op alle</button></div><div id="xRows"></div></div>
+<div class="card"><h2>Verticale afstanden</h2><div class="apply"><input id="allY" type="number" min="1" placeholder="bv. 1500"><button id="applyY">Op alle</button></div><div id="yRows"></div></div>
 <div class="card status"><b id="count"></b><span class="ok">Lokaal opgeslagen</span></div>
 </section>
-
-<section id="viewPane">
-<div class="card">
-<div class="toolbar"><button id="fitBtn">Centreer</button><button id="zoomIn">＋</button><button id="zoomOut">−</button><button id="labelsBtn">Labels aan/uit</button><button id="dimsBtn">Maten aan/uit</button></div>
-<div class="canvasWrap" id="canvasWrap"><svg id="svg" viewBox="0 0 800 600" aria-label="Rasterweergave"><g id="world"></g></svg></div>
-<div class="hint">Sleep om te verschuiven. Knijp met twee vingers om te zoomen. Tik op een punt om actief/leeg te wisselen.</div>
-</div>
-</section>
-
-<section id="geoPane" style="display:none">
-<div class="card">
-<h2>Geometriecontrole</h2>
-<p class="muted">Kies twee punten. De afstand is exact afgeleid uit het ingevoerde orthogonale raster.</p>
-<div class="geoGrid">
-<label>Punt A<select id="pointA"></select></label>
-<label>Punt B<select id="pointB"></select></label>
-</div>
-<div class="result" id="geoDistance">—</div>
-<div class="muted" id="geoDelta">—</div>
-<button id="diagBtn" class="primary" style="width:100%;margin-top:16px">Toon controlelijn in raster</button>
-</div>
-<div class="card">
-<h2>Belangrijk</h2>
-<p class="muted">De controlelijn/diagonaal is alleen een theoretische controlemaat. Ze wijzigt geen enkel rasterpunt.</p>
-</div>
+<section id="geoPane" class="pane">
+<div class="card"><h2>Geometriecontrole</h2><p class="muted">Selecteer twee punten hier, of veel sneller rechtstreeks in het raster.</p>
+<div class="geoGrid"><label>Punt A<select id="pointA"></select></label><label>Punt B<select id="pointB"></select></label></div>
+<div class="result" id="geoDistance">—</div><div class="muted" id="geoDelta">—</div>
+<button id="showLine" class="primary" style="width:100%;margin-top:14px">Toon in raster</button></div>
 </section>
 </main>
+
+<section id="rasterPane" class="pane">
+<div class="rasterShell" id="rasterShell">
+<div class="rasterTop">
+<button id="backBtn">← Invoer</button><button id="fitBtn">⊙ Centreer</button><button id="labelsBtn">Labels</button><button id="dimsBtn">Maten</button><button id="clearBtn">Wis selectie</button>
+</div>
+<div class="badge" id="selectHint">Tik punt A</div>
+<div id="canvasWrap"><svg id="svg" viewBox="0 0 800 600" aria-label="Interactief raster"><g id="world"></g></svg></div>
+<div class="info" id="info"><div class="infoTitle" id="infoTitle"></div><div class="infoGrid"><span id="dist"></span><span id="dx"></span><span id="dy"></span></div>
+<div class="infoActions"><button id="swapBtn">Wissel A/B</button><button id="inactiveBtn">Actief/leeg</button><button id="closeInfo">Sluit</button></div></div>
+</div>
+</section>
+
 <script>
 (()=>{"use strict";
-const KEY="bomal_fundering_v030";
-let s={cols:5,rows:3,x:[1200,1200,1200,1200],y:[1500,1500],active:[],labels:true,dims:false,diag:false,a:0,b:14};
-let view={scale:1,tx:0,ty:0};
+const KEY="bomal_fundering_state_v050", OLD=["bomal_fundering_state","bomal_fundering_v030"];
 const $=id=>document.getElementById(id);
-function normalize(){
- s.cols=Math.max(1,Math.min(20,Number(s.cols)||1)); s.rows=Math.max(1,Math.min(20,Number(s.rows)||1));
- while(s.x.length<s.cols-1)s.x.push(1200); s.x=s.x.slice(0,Math.max(0,s.cols-1));
- while(s.y.length<s.rows-1)s.y.push(1500); s.y=s.y.slice(0,Math.max(0,s.rows-1));
- const n=s.cols*s.rows; while(s.active.length<n)s.active.push(true); s.active=s.active.slice(0,n);
-}
-function save(){normalize();localStorage.setItem(KEY,JSON.stringify(s));$("count").textContent=`${s.cols} × ${s.rows} = ${s.cols*s.rows} posities · ${s.active.filter(Boolean).length} actief`;}
-function load(){try{const v=JSON.parse(localStorage.getItem(KEY));if(v)Object.assign(s,v)}catch(e){}normalize()}
-function renderInputs(){
- $("cols").value=s.cols;$("rows").value=s.rows;$("xRows").innerHTML="";$("yRows").innerHTML="";
- s.x.forEach((v,i)=>{let d=document.createElement("div");d.className="row";d.innerHTML=`<span>K${i+1} → K${i+2}</span><input type="number" min="1" value="${v}"><span>mm</span>`;d.querySelector("input").onchange=e=>{s.x[i]=Math.max(1,+e.target.value||1);save();renderRaster()};$("xRows").appendChild(d)});
- s.y.forEach((v,i)=>{let d=document.createElement("div");d.className="row";d.innerHTML=`<span>R${i+1} → R${i+2}</span><input type="number" min="1" value="${v}"><span>mm</span>`;d.querySelector("input").onchange=e=>{s.y[i]=Math.max(1,+e.target.value||1);save();renderRaster()};$("yRows").appendChild(d)});
- save();
-}
-function coords(){
- let xs=[0],ys=[0];for(let i=0;i<s.x.length;i++)xs.push(xs[i]+s.x[i]);for(let i=0;i<s.y.length;i++)ys.push(ys[i]+s.y[i]);
- let p=[];for(let r=0;r<s.rows;r++)for(let c=0;c<s.cols;c++)p.push({i:r*s.cols+c,c,r,x:xs[c],y:ys[r]});return p;
-}
+let s={cols:5,rows:3,x:[1200,1200,1200,1200],y:[1500,1500],active:[],labels:true,dims:false,a:null,b:null};
+let view={scale:1,tx:0,ty:0},drag=null,moved=false,pointers=new Map(),pinch=null;
 
-function populateGeo(){
- const p=coords(), a=$("pointA"), b=$("pointB");
- if(!p.length)return;
- s.a=Math.max(0,Math.min(p.length-1,Number(s.a)||0));
- s.b=Math.max(0,Math.min(p.length-1,Number.isFinite(Number(s.b))?Number(s.b):p.length-1));
- a.innerHTML=""; b.innerHTML="";
- p.forEach(q=>{
-   const name="P"+String(q.i).padStart(2,"0");
-   let oa=document.createElement("option");oa.value=q.i;oa.textContent=name;oa.selected=q.i===s.a;a.appendChild(oa);
-   let ob=document.createElement("option");ob.value=q.i;ob.textContent=name;ob.selected=q.i===s.b;b.appendChild(ob);
- });
- updateGeo();
-}
-function updateGeo(){
- const p=coords(),a=p[s.a],b=p[s.b]; if(!a||!b)return;
- const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy);
- $("geoDistance").textContent=d.toFixed(1)+" mm";
- $("geoDelta").textContent="ΔX = "+Math.abs(dx).toFixed(0)+" mm · ΔY = "+Math.abs(dy).toFixed(0)+" mm";
-}
-function renderRaster(){
- const g=$("world");g.innerHTML="";const p=coords(),NS="http://www.w3.org/2000/svg";
- const maxX=Math.max(1,...p.map(q=>q.x)),maxY=Math.max(1,...p.map(q=>q.y)),pad=70,W=800,H=600;
- const k=Math.min((W-2*pad)/maxX,(H-2*pad)/maxY);
- const xy=q=>[pad+q.x*k,H-pad-q.y*k];
- function line(a,b){let e=document.createElementNS(NS,"line"),A=xy(a),B=xy(b);e.setAttribute("x1",A[0]);e.setAttribute("y1",A[1]);e.setAttribute("x2",B[0]);e.setAttribute("y2",B[1]);e.setAttribute("class","edge");g.appendChild(e)}
- p.forEach(q=>{if(q.c<s.cols-1)line(q,p[q.i+1]);if(q.r<s.rows-1)line(q,p[q.i+s.cols])});
- 
-if(s.dims){
- for(let c=0;c<s.cols-1;c++){
-   let A=xy(p[c]),B=xy(p[c+1]),yy=A[1]+38;
-   let l=document.createElementNS(NS,"line");l.setAttribute("x1",A[0]);l.setAttribute("y1",yy);l.setAttribute("x2",B[0]);l.setAttribute("y2",yy);l.setAttribute("class","dim");g.appendChild(l);
-   let t=document.createElementNS(NS,"text");t.setAttribute("x",(A[0]+B[0])/2);t.setAttribute("y",yy+19);t.setAttribute("text-anchor","middle");t.setAttribute("class","dimText");t.textContent=s.x[c]+" mm";g.appendChild(t);
- }
- for(let r=0;r<s.rows-1;r++){
-   let A=xy(p[r*s.cols]),B=xy(p[(r+1)*s.cols]),xx=A[0]-38;
-   let l=document.createElementNS(NS,"line");l.setAttribute("x1",xx);l.setAttribute("y1",A[1]);l.setAttribute("x2",xx);l.setAttribute("y2",B[1]);l.setAttribute("class","dim");g.appendChild(l);
-   let t=document.createElementNS(NS,"text");t.setAttribute("x",xx-7);t.setAttribute("y",(A[1]+B[1])/2);t.setAttribute("text-anchor","end");t.setAttribute("class","dimText");t.textContent=s.y[r]+" mm";g.appendChild(t);
- }
-}
-if(s.diag && p[s.a] && p[s.b]){
- let A=xy(p[s.a]),B=xy(p[s.b]),d=Math.hypot(p[s.b].x-p[s.a].x,p[s.b].y-p[s.a].y);
- let l=document.createElementNS(NS,"line");l.setAttribute("x1",A[0]);l.setAttribute("y1",A[1]);l.setAttribute("x2",B[0]);l.setAttribute("y2",B[1]);l.setAttribute("class","diag");g.appendChild(l);
- let t=document.createElementNS(NS,"text");t.setAttribute("x",(A[0]+B[0])/2);t.setAttribute("y",(A[1]+B[1])/2-10);t.setAttribute("text-anchor","middle");t.setAttribute("class","diagText");t.textContent=d.toFixed(1)+" mm";g.appendChild(t);
-}
-p.forEach(q=>{let [x,y]=xy(q),c=document.createElementNS(NS,"circle");c.setAttribute("cx",x);c.setAttribute("cy",y);c.setAttribute("r",10);c.setAttribute("class","point "+(s.active[q.i]?"":"inactive"));c.onclick=()=>{s.active[q.i]=!s.active[q.i];save();renderRaster()};g.appendChild(c);
- if(s.labels){let t=document.createElementNS(NS,"text");t.setAttribute("x",x+13);t.setAttribute("y",y-12);t.setAttribute("class","label"+(q.i===0?" origin":""));t.textContent="P"+String(q.i).padStart(2,"0");g.appendChild(t)}});
- applyTransform();
-}
-function applyTransform(){$("world").setAttribute("transform",`translate(${view.tx} ${view.ty}) scale(${view.scale})`)}
+function norm(){s.cols=Math.max(1,Math.min(20,+s.cols||1));s.rows=Math.max(1,Math.min(20,+s.rows||1));
+while(s.x.length<s.cols-1)s.x.push(1200);s.x=s.x.slice(0,s.cols-1);while(s.y.length<s.rows-1)s.y.push(1500);s.y=s.y.slice(0,s.rows-1);
+let n=s.cols*s.rows;while(s.active.length<n)s.active.push(true);s.active=s.active.slice(0,n);
+if(s.a!==null&&(s.a<0||s.a>=n))s.a=null;if(s.b!==null&&(s.b<0||s.b>=n))s.b=null}
+function save(){norm();localStorage.setItem(KEY,JSON.stringify(s));$("count").textContent=`${s.cols} × ${s.rows} = ${s.cols*s.rows} posities · ${s.active.filter(Boolean).length} actief`}
+function load(){try{let v=JSON.parse(localStorage.getItem(KEY));if(!v){for(let k of OLD){v=JSON.parse(localStorage.getItem(k));if(v)break}}if(v)Object.assign(s,v)}catch(e){}norm()}
+function coords(){let xs=[0],ys=[0];for(let v of s.x)xs.push(xs.at(-1)+(+v||0));for(let v of s.y)ys.push(ys.at(-1)+(+v||0));let p=[];for(let r=0;r<s.rows;r++)for(let c=0;c<s.cols;c++)p.push({i:r*s.cols+c,c,r,x:xs[c],y:ys[r]});return p}
+function addRow(parent,name,val,set){let d=document.createElement("div");d.className="row";d.innerHTML=`<span>${name}</span><input type="number" min="1" value="${val}"><span>mm</span>`;d.querySelector("input").onchange=e=>{set(Math.max(1,+e.target.value||1));save();refreshGeo();render()};$(parent).appendChild(d)}
+function renderInputs(){$("cols").value=s.cols;$("rows").value=s.rows;$("xRows").innerHTML="";$("yRows").innerHTML="";
+s.x.forEach((v,i)=>addRow("xRows",`K${i+1} → K${i+2}`,v,n=>s.x[i]=n));s.y.forEach((v,i)=>addRow("yRows",`R${i+1} → R${i+2}`,v,n=>s.y[i]=n));save();populateSelects()}
+function populateSelects(){let p=coords();["pointA","pointB"].forEach((id,j)=>{let el=$(id);el.innerHTML='<option value="">— kies punt —</option>';p.forEach(q=>{let o=document.createElement("option");o.value=q.i;o.textContent="P"+String(q.i).padStart(2,"0");if((j? s.b:s.a)===q.i)o.selected=true;el.appendChild(o)})});refreshGeo()}
+function measure(){let p=coords();if(s.a===null||s.b===null||!p[s.a]||!p[s.b])return null;let A=p[s.a],B=p[s.b],dx=B.x-A.x,dy=B.y-A.y;return{A,B,dx,dy,d:Math.hypot(dx,dy)}}
+function refreshGeo(){let m=measure();$("geoDistance").textContent=m?m.d.toFixed(1)+" mm":"—";$("geoDelta").textContent=m?`ΔX = ${Math.abs(m.dx).toFixed(0)} mm · ΔY = ${Math.abs(m.dy).toFixed(0)} mm`:"Kies twee punten.";
+let info=$("info");if(m){$("infoTitle").textContent=`P${String(s.a).padStart(2,"0")} → P${String(s.b).padStart(2,"0")}`;$("dist").textContent=`↗ ${m.d.toFixed(1)} mm`;$("dx").textContent=`ΔX ${Math.abs(m.dx).toFixed(0)}`;$("dy").textContent=`ΔY ${Math.abs(m.dy).toFixed(0)}`;info.classList.add("show");$("selectHint").textContent="Tik nieuw punt A of wis selectie"}else{info.classList.remove("show");$("selectHint").textContent=s.a===null?"Tik punt A":"Tik punt B"}}
 function fit(){view={scale:1,tx:0,ty:0};applyTransform()}
-function tab(which){$("inputPane").style.display=which==="input"?"block":"none";$("viewPane").style.display=which==="view"?"block":"none";$("geoPane").style.display=which==="geo"?"block":"none";$("inputTab").classList.toggle("active",which==="input");$("viewTab").classList.toggle("active",which==="view");$("geoTab").classList.toggle("active",which==="geo");if(which==="view"){renderRaster();fit()}if(which==="geo"){populateGeo();updateGeo()}}
-$("makeBtn").onclick=()=>{s.cols=+$("cols").value;s.rows=+$("rows").value;s.x=[];s.y=[];s.active=[];normalize();renderInputs();renderRaster()};
-$("applyX").onclick=()=>{let v=Math.max(1,+$("allX").value||0);if(!v)return;s.x=s.x.map(()=>v);renderInputs();renderRaster()};
-$("applyY").onclick=()=>{let v=Math.max(1,+$("allY").value||0);if(!v)return;s.y=s.y.map(()=>v);renderInputs();renderRaster()};
-$("inputTab").onclick=()=>tab("input");$("viewTab").onclick=()=>tab("view");$("geoTab").onclick=()=>tab("geo");$("fitBtn").onclick=fit;
-$("zoomIn").onclick=()=>{view.scale=Math.min(5,view.scale*1.2);applyTransform()};$("zoomOut").onclick=()=>{view.scale=Math.max(.35,view.scale/1.2);applyTransform()};
-$("labelsBtn").onclick=()=>{s.labels=!s.labels;save();renderRaster()};$("dimsBtn").onclick=()=>{s.dims=!s.dims;save();renderRaster()};
-$("pointA").onchange=e=>{s.a=+e.target.value;save();updateGeo();renderRaster()};$("pointB").onchange=e=>{s.b=+e.target.value;save();updateGeo();renderRaster()};$("diagBtn").onclick=()=>{s.diag=true;save();tab("view")};$("newBtn").onclick=()=>{if(confirm("Nieuw raster starten?")){localStorage.removeItem(KEY);s={cols:5,rows:3,x:[1200,1200,1200,1200],y:[1500,1500],active:[],labels:true,dims:false,diag:false,a:0,b:14};normalize();renderInputs();tab("input")}};
-let drag=null,pinch=null,wrap=$("canvasWrap");
-wrap.addEventListener("pointerdown",e=>{wrap.setPointerCapture(e.pointerId);drag={id:e.pointerId,x:e.clientX,y:e.clientY,tx:view.tx,ty:view.ty}});
-wrap.addEventListener("pointermove",e=>{if(drag&&drag.id===e.pointerId){view.tx=drag.tx+(e.clientX-drag.x);view.ty=drag.ty+(e.clientY-drag.y);applyTransform()}});
-wrap.addEventListener("pointerup",()=>drag=null);wrap.addEventListener("pointercancel",()=>drag=null);
-wrap.addEventListener("wheel",e=>{e.preventDefault();view.scale=Math.max(.35,Math.min(5,view.scale*(e.deltaY<0?1.1:.9)));applyTransform()},{passive:false});
-load();renderInputs();renderRaster();
+function applyTransform(){$("world").setAttribute("transform",`translate(${view.tx} ${view.ty}) scale(${view.scale})`)}
+function render(){let g=$("world");g.innerHTML="";let p=coords(),NS="http://www.w3.org/2000/svg",W=800,H=600;
+let maxX=Math.max(1,...p.map(q=>q.x)),maxY=Math.max(1,...p.map(q=>q.y)),pad=80,k=Math.min((W-2*pad)/maxX,(H-2*pad)/maxY);if(!isFinite(k)||k<=0)k=1;
+let usedW=maxX*k,usedH=maxY*k,ox=(W-usedW)/2,oy=(H-usedH)/2,xy=q=>[ox+q.x*k,H-(oy+q.y*k)];
+function add(type,attrs,cls,text){let e=document.createElementNS(NS,type);Object.entries(attrs).forEach(([a,v])=>e.setAttribute(a,v));if(cls)e.setAttribute("class",cls);if(text!==undefined)e.textContent=text;g.appendChild(e);return e}
+function line(a,b,cls){let A=xy(a),B=xy(b);return add("line",{x1:A[0],y1:A[1],x2:B[0],y2:B[1]},cls)}
+p.forEach(q=>{if(q.c<s.cols-1)line(q,p[q.i+1],"edge");if(q.r<s.rows-1)line(q,p[q.i+s.cols],"edge")});
+if(s.dims){for(let c=0;c<s.cols-1;c++){let A=xy(p[c]),B=xy(p[c+1]),y=A[1]+32;add("line",{x1:A[0],y1:y,x2:B[0],y2:y},"dim");add("text",{x:(A[0]+B[0])/2,y:y+18,"text-anchor":"middle"},"dimText",s.x[c]+" mm")}
+for(let r=0;r<s.rows-1;r++){let A=xy(p[r*s.cols]),B=xy(p[(r+1)*s.cols]),x=A[0]-32;add("line",{x1:x,y1:A[1],x2:x,y2:B[1]},"dim");add("text",{x:x-6,y:(A[1]+B[1])/2,"text-anchor":"end"},"dimText",s.y[r]+" mm")}}
+let m=measure();if(m){line(m.A,m.B,"measure");let A=xy(m.A),B=xy(m.B);add("text",{x:(A[0]+B[0])/2,y:(A[1]+B[1])/2-12,"text-anchor":"middle"},"measureText",m.d.toFixed(1)+" mm")}
+p.forEach(q=>{let [x,y]=xy(q),cls="point"+(!s.active[q.i]?" inactive":"")+(s.a===q.i?" selA":"")+(s.b===q.i?" selB":"");let c=add("circle",{cx:x,cy:y,r:(s.a===q.i||s.b===q.i)?15:12,"data-i":q.i},cls);c.addEventListener("pointerup",e=>{e.stopPropagation();if(!moved)selectPoint(q.i)});if(s.labels)add("text",{x:x+15,y:y-13},"label","P"+String(q.i).padStart(2,"0"))});
+applyTransform();refreshGeo();$("labelsBtn").classList.toggle("active",s.labels);$("dimsBtn").classList.toggle("active",s.dims)}
+function selectPoint(i){if(s.a===null){s.a=i;s.b=null}else if(s.b===null&&i!==s.a){s.b=i}else{s.a=i;s.b=null}save();populateSelects();render()}
+function showTab(t){$("normalMain").style.display=t==="raster"?"none":"block";$("mainHeader").style.display=t==="raster"?"none":"flex";$("rasterPane").classList.toggle("active",t==="raster");
+document.querySelectorAll(".pane:not(#rasterPane)").forEach(x=>x.classList.toggle("active",x.id===(t==="input"?"inputPane":"geoPane")));document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===t));
+if(t==="raster"){render();fit()}if(t==="geo")populateSelects()}
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+$("backBtn").onclick=()=>showTab("input");$("fitBtn").onclick=fit;$("labelsBtn").onclick=()=>{s.labels=!s.labels;save();render()};$("dimsBtn").onclick=()=>{s.dims=!s.dims;save();render()};
+$("clearBtn").onclick=()=>{s.a=s.b=null;save();populateSelects();render()};$("closeInfo").onclick=()=>{s.a=s.b=null;save();populateSelects();render()};
+$("swapBtn").onclick=()=>{let t=s.a;s.a=s.b;s.b=t;save();populateSelects();render()};$("inactiveBtn").onclick=()=>{let i=s.b!==null?s.b:s.a;if(i!==null){s.active[i]=!s.active[i];save();render()}};
+$("pointA").onchange=e=>{s.a=e.target.value===""?null:+e.target.value;save();refreshGeo();render()};$("pointB").onchange=e=>{s.b=e.target.value===""?null:+e.target.value;save();refreshGeo();render()};
+$("showLine").onclick=()=>showTab("raster");
+$("makeBtn").onclick=()=>{s.cols=+$("cols").value;s.rows=+$("rows").value;s.x=[];s.y=[];s.active=[];s.a=s.b=null;norm();renderInputs();render()};
+$("applyX").onclick=()=>{let v=+$("allX").value;if(v>0){s.x=s.x.map(()=>v);renderInputs();render()}};$("applyY").onclick=()=>{let v=+$("allY").value;if(v>0){s.y=s.y.map(()=>v);renderInputs();render()}};
+$("newBtn").onclick=()=>{if(confirm("Nieuw raster starten?")){localStorage.removeItem(KEY);s={cols:5,rows:3,x:[1200,1200,1200,1200],y:[1500,1500],active:[],labels:true,dims:false,a:null,b:null};norm();renderInputs();render();showTab("input")}};
+
+let wrap=$("canvasWrap");
+wrap.addEventListener("pointerdown",e=>{pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});wrap.setPointerCapture(e.pointerId);moved=false;if(pointers.size===1)drag={id:e.pointerId,x:e.clientX,y:e.clientY,tx:view.tx,ty:view.ty};if(pointers.size===2){let a=[...pointers.values()];pinch={d:Math.hypot(a[1].x-a[0].x,a[1].y-a[0].y),scale:view.scale};drag=null}});
+wrap.addEventListener("pointermove",e=>{if(!pointers.has(e.pointerId))return;let old=pointers.get(e.pointerId);if(Math.hypot(e.clientX-old.x,e.clientY-old.y)>2)moved=true;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+if(pointers.size===2&&pinch){let a=[...pointers.values()],d=Math.hypot(a[1].x-a[0].x,a[1].y-a[0].y);view.scale=Math.max(.35,Math.min(5,pinch.scale*d/pinch.d));applyTransform()}
+else if(drag&&drag.id===e.pointerId){if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>5)moved=true;view.tx=drag.tx+e.clientX-drag.x;view.ty=drag.ty+e.clientY-drag.y;applyTransform()}});
+function end(e){pointers.delete(e.pointerId);if(pointers.size<2)pinch=null;if(!pointers.size)drag=null}wrap.addEventListener("pointerup",end);wrap.addEventListener("pointercancel",end);
+load();renderInputs();render();
 })();
-</script>
-</body></html>
+</script></body></html>
