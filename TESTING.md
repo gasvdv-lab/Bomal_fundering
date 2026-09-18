@@ -30,3 +30,9 @@ Verwacht: `PASS: v0.2.1 grid table geometry tests`
 - [ ] Fysiek testen op Android/Chrome: Raster maken
 - [ ] Fysiek testen: Op alle horizontaal/verticaal
 - [ ] Fysiek testen: tab Raster en punt ACTIEF/LEEG
+
+
+## v0.2.3
+- Controle: index.html bevat inline CSS en inline JavaScript.
+- Geen externe lokale css/js afhankelijkheden.
+- Handmatig op Android testen: Raster maken, Op alle, Invoer/Raster tabs, Nieuw.

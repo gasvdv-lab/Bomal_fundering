@@ -16,3 +16,7 @@ Raster sneller opbouwen als rijen × kolommen met Excel-achtige afstandsinvoer e
 
 ## Scope v1
 Exact ontworpen raster → AR plaatsen via P00 + oriëntatie → rigide vergrendelen → visueel controleren / tegel ongeveer plaatsen → laser als definitieve controle. Geen automatische tegelherkenning of automatische cm-afwijkingsmeting in v1.
+
+
+## v0.2.3 Smartphone Flat
+- App samengevoegd tot één zelfstandige index.html voor eenvoudige smartphone-upload naar GitHub.

@@ -5,12 +5,14 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#151a1f">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <title>bomal_fundering v0.2.2</title>
-  <link rel="manifest" href="./manifest.json?v=022">
-  <link rel="stylesheet" href="./css/app.css?v=022">
+  <title>bomal_fundering v0.2.3</title>
+  <link rel="manifest" href="./manifest.json?v=023">
+  <style>
+*{box-sizing:border-box}body{margin:0;background:#0d1115;color:#eef2f5;font-family:system-ui,-apple-system,Segoe UI,sans-serif}header{position:sticky;top:0;z-index:5;background:#151a1f;border-bottom:1px solid #303841;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}header strong{display:block;font-size:18px}header small,.muted{color:#9eabb5}main{max-width:760px;margin:auto;padding:14px}.card{background:#171d22;border:1px solid #303841;border-radius:14px;padding:16px;margin-bottom:12px}h1,h2{margin:0 0 8px}h1{font-size:24px}h2{font-size:18px}.two{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}label{font-size:13px;color:#b8c2ca}input{width:100%;margin-top:6px;background:#0e1317;border:1px solid #46515a;border-radius:9px;padding:12px;color:white;font-size:18px}button{border:0;border-radius:9px;padding:11px 14px;font-weight:700;background:#303a42;color:white}.primary{width:100%;background:#2d8f58}.ghost{background:#263038}.hidden{display:none!important}.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px}.tab.active{background:#2d8f58}.quick{display:grid;grid-template-columns:1fr auto;gap:8px;margin:10px 0}.quick input{margin:0}.distance-list{display:grid;gap:8px}.distance-row{display:grid;grid-template-columns:92px 1fr 32px;align-items:center;gap:8px}.distance-row input{margin:0;padding:10px;font-size:16px}.distance-row span{font-size:13px;color:#b8c2ca}.unit{color:#8f9aa3!important}.row-head{display:flex;justify-content:space-between;align-items:center}.canvas-wrap{width:100%;overflow:auto;background:#0b1013;border-radius:10px;border:1px solid #303841}svg{display:block;width:100%;min-width:320px;height:auto;touch-action:manipulation}.grid-line{stroke:#64717b;stroke-width:2}.point{fill:#42b873;stroke:#d8ffe8;stroke-width:2}.point.inactive{fill:#3c444b;stroke:#747f88}.point-label{fill:#eef2f5;font-size:12px;text-anchor:middle;pointer-events:none}.selection{margin-top:10px;padding:10px;background:#10161a;border-radius:8px}.summary{display:flex;justify-content:space-between;gap:10px;font-size:13px}.summary span{color:#7fcf9e}@media(max-width:430px){main{padding:10px}.card{padding:13px}.distance-row{grid-template-columns:78px 1fr 28px}}
+</style>
 </head>
 <body>
-<header><div><strong>bomal_fundering</strong><small>v0.2.2 · Mobile Fix</small></div><button id="resetBtn" class="ghost" type="button">Nieuw</button></header>
+<header><div><strong>bomal_fundering</strong><small>v0.2.3 · Mobile Fix</small></div><button id="resetBtn" class="ghost" type="button">Nieuw</button></header>
 <main>
 <section class="card setup">
   <h1>Raster opstellen</h1>
@@ -31,5 +33,80 @@
   <section class="card summary"><strong id="summary"></strong><span id="saved">Lokaal opgeslagen</span></section>
 </section>
 </main>
-<script src="./js/app.js?v=022" defer></script>
+<script>
+(function () {
+  'use strict';
+  var KEY = 'bomal_fundering.project.v23';
+  var OLD_KEY = 'bomal_fundering.project.v22';
+  function $(s) { return document.querySelector(s); }
+  function normalizeMm(v) { var n = Number(String(v).replace(',', '.')); return Number.isFinite(n) && n >= 0 ? Math.round(n) : 0; }
+  function coordinates(h, v) {
+    var xs=[0], ys=[0], i;
+    for(i=0;i<h.length;i++) xs.push(xs[xs.length-1]+normalizeMm(h[i]));
+    for(i=0;i<v.length;i++) ys.push(ys[ys.length-1]+normalizeMm(v[i]));
+    return {xs:xs,ys:ys};
+  }
+  function pointId(r,c,cols){ return 'P'+String(r*cols+c).padStart(2,'0'); }
+  function buildPoints(cols,rows,h,v,active){
+    var xy=coordinates(h,v), pts=[], r,c,id; active=active||{};
+    for(r=0;r<rows;r++) for(c=0;c<cols;c++){ id=pointId(r,c,cols); pts.push({id:id,row:r,col:c,x:xy.xs[c],y:xy.ys[r],active:active[id]!==false}); }
+    return pts;
+  }
+  function loadProject(){
+    try { var raw=localStorage.getItem(KEY)||localStorage.getItem(OLD_KEY); return raw?JSON.parse(raw):null; } catch(e){ return null; }
+  }
+  var project=loadProject(), saveTimer=null;
+  function fresh(cols,rows){ return {version:'0.2.2',cols:cols,rows:rows,h:Array(Math.max(0,cols-1)).fill(1000),v:Array(Math.max(0,rows-1)).fill(1000),active:{}}; }
+  function save(){
+    try { project.version='0.2.2'; localStorage.setItem(KEY,JSON.stringify(project)); }
+    catch(e){ $('#saved').textContent='Opslaan mislukt'; return; }
+    $('#saved').textContent='Lokaal opgeslagen ✓'; clearTimeout(saveTimer); saveTimer=setTimeout(function(){ $('#saved').textContent='Lokaal opgeslagen'; },800);
+  }
+  function makeDistanceRows(box,arr,prefix){
+    box.innerHTML=''; arr.forEach(function(n,i){
+      var d=document.createElement('div'); d.className='distance-row';
+      var label=document.createElement('span'); label.textContent=prefix+(i+1)+' → '+prefix+(i+2);
+      var input=document.createElement('input'); input.inputMode='decimal'; input.value=n; input.dataset.i=i;
+      var unit=document.createElement('span'); unit.className='unit'; unit.textContent='mm';
+      input.addEventListener('change',function(){ arr[i]=normalizeMm(input.value); input.value=arr[i]; save(); renderGrid(); });
+      d.appendChild(label); d.appendChild(input); d.appendChild(unit); box.appendChild(d);
+    });
+  }
+  function distanceRows(){ makeDistanceRows($('#hDistances'),project.h,'K'); makeDistanceRows($('#vDistances'),project.v,'R'); }
+  function renderGrid(){
+    if(!project) return;
+    var pts=buildPoints(project.cols,project.rows,project.h,project.v,project.active), svg=$('#gridSvg');
+    var maxX=Math.max.apply(null,pts.map(function(p){return p.x;} ).concat([1]));
+    var maxY=Math.max.apply(null,pts.map(function(p){return p.y;} ).concat([1]));
+    var pad=45,w=600,h=420,s=Math.min((w-2*pad)/maxX,(h-2*pad)/maxY);
+    function pos(p){ return [pad+p.x*s,h-pad-p.y*s]; }
+    svg.innerHTML='';
+    function line(a,b){ var p1=pos(a),p2=pos(b),el=document.createElementNS('http://www.w3.org/2000/svg','line'); el.setAttribute('class','grid-line'); el.setAttribute('x1',p1[0]);el.setAttribute('y1',p1[1]);el.setAttribute('x2',p2[0]);el.setAttribute('y2',p2[1]);svg.appendChild(el); }
+    var r,c,p,q;
+    for(r=0;r<project.rows;r++) for(c=0;c<project.cols;c++){
+      p=pts[r*project.cols+c]; if(c<project.cols-1) line(p,pts[r*project.cols+c+1]); if(r<project.rows-1) line(p,pts[(r+1)*project.cols+c]);
+    }
+    pts.forEach(function(pt){
+      var xy=pos(pt), circle=document.createElementNS('http://www.w3.org/2000/svg','circle'), text=document.createElementNS('http://www.w3.org/2000/svg','text');
+      circle.setAttribute('class','point'+(pt.active?'':' inactive')); circle.setAttribute('data-id',pt.id); circle.setAttribute('cx',xy[0]);circle.setAttribute('cy',xy[1]);circle.setAttribute('r','11');
+      text.setAttribute('class','point-label');text.setAttribute('x',xy[0]);text.setAttribute('y',xy[1]-16);text.textContent=pt.id;
+      circle.addEventListener('click',function(){ var id=pt.id; project.active[id]=project.active[id]===false; save(); renderGrid(); var now=buildPoints(project.cols,project.rows,project.h,project.v,project.active).filter(function(x){return x.id===id;})[0]; $('#selection').textContent=id+': X '+now.x+' mm · Y '+now.y+' mm · '+(now.active?'ACTIEF':'LEEG'); });
+      svg.appendChild(circle);svg.appendChild(text);
+    });
+    $('#summary').textContent=project.cols+' × '+project.rows+' = '+(project.cols*project.rows)+' posities · '+pts.filter(function(x){return x.active;}).length+' actief';
+  }
+  function openEditor(){ if(!project)return; $('#editor').classList.remove('hidden'); $('#cols').value=project.cols; $('#rows').value=project.rows; distanceRows(); renderGrid(); }
+  function init(){
+    $('#makeBtn').addEventListener('click',function(){ var c=Math.max(1,Math.min(20,Number($('#cols').value)||1)),r=Math.max(1,Math.min(20,Number($('#rows').value)||1)); project=fresh(c,r); save(); openEditor(); });
+    $('#applyH').addEventListener('click',function(){ if(!project)return; var n=normalizeMm($('#hAll').value); project.h=project.h.map(function(){return n;}); save();distanceRows();renderGrid(); });
+    $('#applyV').addEventListener('click',function(){ if(!project)return; var n=normalizeMm($('#vAll').value); project.v=project.v.map(function(){return n;}); save();distanceRows();renderGrid(); });
+    $('#resetBtn').addEventListener('click',function(){ if(confirm('Nieuw raster starten? Huidige lokale raster wordt gewist.')){ try{localStorage.removeItem(KEY);localStorage.removeItem(OLD_KEY);}catch(e){} project=null;$('#editor').classList.add('hidden');$('#cols').value=5;$('#rows').value=3; } });
+    document.querySelectorAll('.tab').forEach(function(b){ b.addEventListener('click',function(){ document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active');});b.classList.add('active');$('#inputPanel').classList.toggle('hidden',b.dataset.tab!=='input');$('#gridPanel').classList.toggle('hidden',b.dataset.tab!=='grid');if(b.dataset.tab==='grid')renderGrid(); }); });
+    $('#fitBtn').addEventListener('click',renderGrid);
+    if(project) openEditor();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
+
+</script>
 </body></html>
