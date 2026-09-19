@@ -67,7 +67,7 @@ body.ar-mode #arCanvas{display:block!important}
 
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.9.5 · Offset Zero Fix</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.9.6 · Offset Zero Fix</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -141,7 +141,7 @@ body.ar-mode #arCanvas{display:block!important}
  <button id="heightAssistBtn">HOOGTEHULP: UIT</button>
  <button id="undoARBtn" disabled>↶ UNDO</button><div id="arCross"></div><button id="placeP00Btn" disabled>● P00 PRECISIE VASTZETTEN</button><div id="visualHeightControl">
  <button id="visualHeightMinus" type="button">−</button>
- <span id="visualHeightValue">HOOGTE 0 mm</span>
+ <span id="visualHeightValue">OFFSET 0 mm</span>
  <button id="visualHeightPlus" type="button">+</button>
 </div>
 <div id="arVisualBottom">Zoek een oppervlak…</div></div>
@@ -315,20 +315,29 @@ function drawHeightAssist(view,p0,p3){
 
 function drawFullRaster(view,p0,p3){
  const pts=coords().filter(p=>s.active[p.i]); if(!pts.length)return;
- let x0,y0,z0,uyx,uyz,uxx,uxz;
+ let x0,y0,z0,uyx,uyy,uyz,uxx,uxy,uxz,nx,ny,nz;
  if(rigidRasterFrame){
-  ({x0,y0,z0,uyx,uyz,uxx,uxz}=rigidRasterFrame); y0+=visualHeightOffset;
+  ({x0,y0,z0,uyx,uyy,uyz,uxx,uxy,uxz,nx,ny,nz}=rigidRasterFrame);
  }else{
-  x0=p0.transform.position.x;y0=p0.transform.position.y+visualHeightOffset;z0=p0.transform.position.z;
-  const dx=p3.transform.position.x-x0,dz=p3.transform.position.z-z0,L=Math.hypot(dx,dz);if(L<.05)return;
-  uyx=dx/L;uyz=dz/L;uxx=-uyz;uxz=uyx;
+  x0=p0.transform.position.x;y0=p0.transform.position.y;z0=p0.transform.position.z;
+  const dx=p3.transform.position.x-x0,dy=p3.transform.position.y-y0,dz=p3.transform.position.z-z0;
+  const L=Math.hypot(dx,dy,dz),h=Math.hypot(dx,dz);if(L<.05||h<.02)return;
+  uyx=dx/L;uyy=dy/L;uyz=dz/L;
+  uxx=-dz/h;uxy=0;uxz=dx/h;
+  nx=uxy*uyz-uxz*uyy;ny=uxz*uyx-uxx*uyz;nz=uxx*uyy-uxy*uyx;
+  const nL=Math.hypot(nx,ny,nz)||1;nx/=nL;ny/=nL;nz/=nL;
+  if(ny<0){nx=-nx;ny=-ny;nz=-nz;}
  }
  const byIndex=new Map(pts.map(q=>[q.i,q]));
  const verts=[];
 
  function world(q){
-   const xm=q.x/1000, ym=q.y/1000;
-   return [x0 + uxx*xm + uyx*ym, y0, z0 + uxz*xm + uyz*ym];
+   const xm=q.x/1000, ym=q.y/1000, off=visualHeightOffset;
+   return [
+    x0 + uxx*xm + uyx*ym + nx*off,
+    y0 + uxy*xm + uyy*ym + ny*off,
+    z0 + uxz*xm + uyz*ym + nz*off
+   ];
  }
  function line(a,b){
    verts.push(a[0],a[1],a[2],b[0],b[1],b[2]);
@@ -501,10 +510,33 @@ function onXRFrame(t,frame){
  let ap03=p03Anchor?frame.getPose(p03Anchor.anchorSpace,xrRef):null;
  if(ap&&ap03&&!rigidRasterFrame){
   const x0=ap.transform.position.x,y0=ap.transform.position.y,z0=ap.transform.position.z;
-  const dx=ap03.transform.position.x-x0,dz=ap03.transform.position.z-z0,L=Math.hypot(dx,dz);
-  if(L>=.05){const uyx=dx/L,uyz=dz/L;rigidRasterFrame={x0,y0,z0,uyx,uyz,uxx:-uyz,uxz:uyx};
-   arVisualMsg.textContent="✓ RASTER VERGRENDELD";
-   arVisualBottom.textContent="P00–P14 vormen één rigide raster.";
+  const dx=ap03.transform.position.x-x0;
+  const dy=ap03.transform.position.y-y0;
+  const dz=ap03.transform.position.z-z0;
+  const L=Math.hypot(dx,dy,dz);
+  if(L>=.05){
+   // Raster-Y follows the complete P00→P03 3D direction.
+   const uyx=dx/L,uyy=dy/L,uyz=dz/L;
+
+   // Raster-X is horizontal and perpendicular to the horizontal projection
+   // of P00→P03. This keeps the design orthogonal without per-point correction.
+   const h=Math.hypot(dx,dz);
+   if(h>=.02){
+    const uxx=-dz/h,uxy=0,uxz=dx/h;
+
+    // One normal for ONE rigid raster. OFFSET moves every point equally
+    // along this normal: P00..P14 always have exactly the same offset.
+    let nx=uxy*uyz-uxz*uyy;
+    let ny=uxz*uyx-uxx*uyz;
+    let nz=uxx*uyy-uxy*uyx;
+    const nL=Math.hypot(nx,ny,nz)||1;
+    nx/=nL;ny/=nL;nz/=nL;
+    if(ny<0){nx=-nx;ny=-ny;nz=-nz;}
+
+    rigidRasterFrame={x0,y0,z0,uyx,uyy,uyz,uxx,uxy,uxz,nx,ny,nz};
+    arVisualMsg.textContent="✓ RASTER VERGRENDELD";
+    arVisualBottom.textContent="P00–P14 · één raster · OFFSET 0 mm";
+   }
   }
  }
 
@@ -534,7 +566,7 @@ $("heightAssistBtn").onclick=()=>{
 
 function updateVisualHeightUI(){
  const mm=Math.round(visualHeightOffset*1000);
- $("visualHeightValue").textContent="HOOGTE "+(mm>0?"+":"")+mm+" mm";
+ $("visualHeightValue").textContent="OFFSET "+(mm>0?"+":"")+mm+" mm";
  $("visualHeightMinus").disabled=visualHeightOffset<=VISUAL_HEIGHT_MIN+1e-9;
  $("visualHeightPlus").disabled=visualHeightOffset>=VISUAL_HEIGHT_MAX-1e-9;
 }
