@@ -9,3 +9,6 @@
 - [ ] sitecontrole
 
 - [x] v0.7.0.2 WebGL Raster Render Fix
+
+- [x] v0.7.1 AR-labels P00/P01/... + groene doelwitten
+- [ ] Referentiepunt kiezen en rasterrichting via tweede fysieke tegel bepalen

@@ -40,6 +40,8 @@ svg{width:100%;height:100%;display:block}.edge{stroke:#59636e;stroke-width:3}.po
 #arCross:before,#arCross:after{content:"";position:absolute;left:50%;top:50%;background:currentColor;transform:translate(-50%,-50%)}#arCross:before{width:28px;height:3px}#arCross:after{width:3px;height:28px}
 #arCross.hit{border-color:#4ade80;color:#4ade80}#arVisualMsg{position:absolute;top:12px;left:10px;right:95px;background:rgba(8,12,17,.82);padding:11px;border-radius:13px;font-weight:800;color:#fff}
 #stopAR{position:absolute;right:10px;top:10px;pointer-events:auto;background:#b42318;color:#fff}
+#arLabels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.arPointLabel{position:absolute;transform:translate(-50%,-115%);padding:4px 7px;border-radius:8px;background:rgba(8,18,12,.82);border:1px solid rgba(74,222,128,.9);color:#7ee2a8;font-size:13px;font-weight:900;white-space:nowrap;text-shadow:0 1px 2px #000}
 #arVisualBottom{position:absolute;left:10px;right:10px;bottom:12px;background:rgba(8,12,17,.82);padding:11px;border-radius:13px;text-align:center;font-weight:800;color:#fff}
 
 body.ar-mode #mainHeader,body.ar-mode #normalMain{display:none!important}
@@ -49,7 +51,7 @@ body.ar-mode #arCanvas{display:block!important}
 #arVisualBottom{font-size:14px}
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.0.2 · WebGL Raster Render Fix</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.1 · AR Labels + Green Targets</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -114,7 +116,7 @@ body.ar-mode #arCanvas{display:block!important}
 </div>
 </section>
 
-<div id="arVisual"><div id="arVisualMsg">AR starten…</div><button id="stopAR">Stop</button><div id="arCross"></div><div id="arVisualBottom">Zoek een oppervlak…</div></div>
+<div id="arVisual"><div id="arLabels"></div><div id="arVisualMsg">AR starten…</div><button id="stopAR">Stop</button><div id="arCross"></div><div id="arVisualBottom">Zoek een oppervlak…</div></div>
 <script>
 (()=>{"use strict";
 const KEY="bomal_fundering_state_v050", OLD=["bomal_fundering_state","bomal_fundering_v030"];
@@ -218,7 +220,7 @@ function drawMarker(view,pos,index){
  xrGL.uniformMatrix4fv(xrGL.getUniformLocation(markerProgram,"vp"),false,mvp);
  xrGL.uniform3f(xrGL.getUniformLocation(markerProgram,"origin"),pos.x,pos.y,pos.z);
  xrGL.uniform1f(xrGL.getUniformLocation(markerProgram,"size"),sz);
- xrGL.uniform4f(xrGL.getUniformLocation(markerProgram,"color"),1.0,0.15,0.05,1.0);
+ xrGL.uniform4f(xrGL.getUniformLocation(markerProgram,"color"),0.15,1.0,0.35,1.0);
  xrGL.drawArrays(xrGL.LINES,0,verts.length/3);
 }
 function drawConnection(view){
@@ -238,14 +240,14 @@ startAR.onclick=async()=>{
   xrGL=xrCanvas.getContext("webgl",{xrCompatible:true,alpha:true,premultipliedAlpha:false,antialias:true});await xrGL.makeXRCompatible();
   xrSession.updateRenderState({baseLayer:new XRWebGLLayer(xrSession,xrGL),depthNear:.01,depthFar:50});
   xrRef=await xrSession.requestReferenceSpace("local");xrViewer=await xrSession.requestReferenceSpace("viewer");xrHitSource=await xrSession.requestHitTestSource({space:xrViewer});
-  initMarkerGL();placed=[];projectRoot=null;lastHitResult=null;reticlePose=null;xrStart=performance.now();document.body.classList.add("ar-mode");arVisual.classList.add("on");arVisualMsg.textContent="Zoek vloer";arVisualBottom.textContent="Rood vizier = nog geen oppervlak";
-  xrSession.addEventListener("select",onXRSelect);xrSession.addEventListener("end",()=>{setAR("AR-test beëindigd.","warn");startAR.disabled=false;document.body.classList.remove("ar-mode");arVisual.classList.remove("on");if(xrCanvas)xrCanvas.remove();xrCanvas=null;projectRoot=null;lastHitResult=null;xrSession=null});
+  initMarkerGL();placed=[];projectRoot=null;lastHitResult=null;reticlePose=null;$("arLabels").innerHTML="";xrStart=performance.now();document.body.classList.add("ar-mode");arVisual.classList.add("on");arVisualMsg.textContent="Zoek vloer";arVisualBottom.textContent="Rood vizier = nog geen oppervlak";
+  xrSession.addEventListener("select",onXRSelect);xrSession.addEventListener("end",()=>{setAR("AR-test beëindigd.","warn");startAR.disabled=false;document.body.classList.remove("ar-mode");arVisual.classList.remove("on");if(xrCanvas)xrCanvas.remove();xrCanvas=null;projectRoot=null;lastHitResult=null;$("arLabels").innerHTML="";xrSession=null});
   startAR.disabled=true;xrSession.requestAnimationFrame(onXRFrame)
  }catch(e){document.body.classList.remove("ar-mode");arVisual.classList.remove("on");setAR("AR kon niet starten: "+e.message,"bad");startAR.disabled=false}
 };
 function onXRSelect(){
  if(!reticlePose || projectRoot)return;
- projectRoot=new Float32Array(reticlePose.transform.matrix);
+ projectRoot=new Float32Array(reticlePose.transform.matrix);$("arLabels").innerHTML="";
  arVisualMsg.textContent="RASTER GEPLAATST · "+arRasterPoints().length+" PUNTEN";
  arVisualBottom.textContent="P00 = oorsprong · volledig raster = één rigide ProjectRoot";
 }
@@ -257,7 +259,30 @@ function arRasterPoints(){
    index:p.i
  }));
 }
-function drawARRaster(view){if(!projectRoot)return;for(let p of arRasterPoints())drawMarker(view,p,p.index);}
+function transform4(m,v){return [
+ m[0]*v[0]+m[4]*v[1]+m[8]*v[2]+m[12]*v[3],
+ m[1]*v[0]+m[5]*v[1]+m[9]*v[2]+m[13]*v[3],
+ m[2]*v[0]+m[6]*v[1]+m[10]*v[2]+m[14]*v[3],
+ m[3]*v[0]+m[7]*v[1]+m[11]*v[2]+m[15]*v[3]
+]}
+function updateARLabels(view){
+ const box=$("arLabels"); if(!box||!projectRoot)return;
+ let pv=mul4(view.projectionMatrix,view.transform.inverse.matrix),mvp=mul4(pv,projectRoot);
+ let pts=arRasterPoints(), live=new Set();
+ for(let p of pts){
+   let clip=transform4(mvp,[p.x,p.y,p.z,1]); if(clip[3]<=0)continue;
+   let nx=clip[0]/clip[3],ny=clip[1]/clip[3],nz=clip[2]/clip[3];
+   if(nz < -1 || nz > 1 || nx < -1.2 || nx > 1.2 || ny < -1.2 || ny > 1.2)continue;
+   let id="arlbl"+p.index,el=$(id);
+   if(!el){el=document.createElement("div");el.id=id;el.className="arPointLabel";box.appendChild(el)}
+   el.textContent="P"+String(p.index).padStart(2,"0");
+   el.style.left=((nx*.5+.5)*innerWidth)+"px";
+   el.style.top=((-.5*ny+.5)*innerHeight)+"px";
+   el.style.display="block";live.add(id);
+ }
+ [...box.children].forEach(el=>{if(!live.has(el.id))el.style.display="none"});
+}
+function drawARRaster(view){if(!projectRoot)return;for(let p of arRasterPoints())drawMarker(view,p,p.index);updateARLabels(view);}
 function onXRFrame(t,frame){
  if(!xrSession)return;xrSession.requestAnimationFrame(onXRFrame);let pose=frame.getViewerPose(xrRef);if(!pose)return;
  let layer=xrSession.renderState.baseLayer;xrGL.bindFramebuffer(xrGL.FRAMEBUFFER,layer.framebuffer);xrGL.enable(xrGL.DEPTH_TEST);xrGL.clearColor(0,0,0,0);xrGL.clear(xrGL.COLOR_BUFFER_BIT|xrGL.DEPTH_BUFFER_BIT);

@@ -1,19 +1,11 @@
-# bomal_fundering v0.7.0.2 — WebGL Raster Render Fix
+# bomal_fundering v0.7.1 — AR Labels + Green Targets
 
-Gerichte hotfix op v0.7.0.1.
+- Elk zichtbaar AR-rasterpunt krijgt nu zijn label P00, P01, ... naast het punt.
+- Labels volgen hun punt op het scherm.
+- Rasterdoelwitten zijn groen voor betere zichtbaarheid op het terrein.
+- Volledig raster blijft één rigide ProjectRoot.
+- Rastercoördinaten blijven afkomstig uit dezelfde `coords()` als de 2D-weergave.
 
-## Opgelost
-`drawMarker()` gebruikte per vergissing `gl.*`, terwijl de actieve WebXR/WebGL-context `xrGL` heet.
-Daardoor kon de HUD nog `RASTER GEPLAATST` tonen, maar stopte de rendering zodra het eerste rasterpunt getekend moest worden.
+Volgende stap: P00 plaatsen en daarna een gekozen tweede rasterpunt gebruiken om de richting van het volledige raster uit te lijnen.
 
-v0.7.0.2 gebruikt consequent `xrGL` in `drawMarker()`.
-
-De AR-rasterdata blijft:
-- dezelfde `coords()` als het 2D-raster;
-- alleen actieve punten;
-- mm -> meter;
-- één rigide ProjectRoot;
-- grote rode doelwitten voor de zichtbaarheidstest.
-
-Live app:
-https://gasvdv-lab.github.io/Bomal_fundering/
+Live: https://gasvdv-lab.github.io/Bomal_fundering/
