@@ -1,11 +1,12 @@
-# TESTING — v0.7.3.2
+# TESTING — v0.7.6.0
 
-1. Plaats P00 en daarna P03.
-2. Controleer het volledige 3×5 raster.
-3. Ieder actief punt heeft een cirkel en gecentreerd kruis.
-4. Ieder actief punt heeft het juiste label P00 t/m P14.
-5. Labels moeten bij hun doelpunt blijven tijdens bewegen.
-6. Controleer de nummering: onderaan P00 P01 P02; daarboven P03 P04 P05; bovenaan P12 P13 P14.
-7. Loop rond en controleer dat raster en targets rigide blijven.
+1. Plaats P00 en P03 zoals in de geslaagde vorige versies.
+2. Controleer raster, cirkels, kruisen en labels.
+3. Druk `HOOGTEHULP: UIT`; status moet naar AAN gaan.
+4. Bij ieder actief punt verschijnt een verticale lijn door exact hetzelfde middelpunt.
+5. Loop over hoger/lager terrein en beoordeel of de loodlijnen het terugvinden van de punten verbeteren.
+6. Zet Hoogtehulp UIT; alleen de verticale lijnen moeten verdwijnen.
+7. Controleer dat P00/P03 en het volledige raster niet verspringen bij aan/uit schakelen.
+8. Controleer opnieuw stabiliteit na 1 m, 3 m en 5 m rondlopen.
 
-Anchorarchitectuur is ongewijzigd.
+Go/no-go: de hoogtehulp mag nooit de rastergeometrie beïnvloeden.

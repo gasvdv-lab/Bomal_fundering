@@ -1,12 +1,16 @@
-# Bomal Fundering v0.7.3.2 — Raster Targets + Labels
+# Bomal Fundering v0.7.6.0 — Height / Visibility Assistance
 
-Bouwt rechtstreeks verder op v0.7.3.1.
+Gebaseerd op v0.7.3.2. De bewezen P00/P03-anchorarchitectuur en het rigide 3×5 raster zijn niet gewijzigd.
 
-Elk actief rasterpunt krijgt in AR:
-- een cirkel;
-- een klein kruis exact op het theoretische tegelmiddelpunt;
-- een duidelijk schermlabel P00 t/m P14 boven het bijbehorende doelpunt.
+## Hoogtehulp
+In AR staat een knop `HOOGTEHULP: UIT/AAN`.
 
-De labels worden iedere frame geprojecteerd vanuit exact dezelfde actuele P00/P03-anchorposes en dezelfde ingevoerde rastergeometrie als de doelen.
+Bij AAN:
+- door ieder actief rasterpunt loopt een verticale loodlijn;
+- de lijn loopt 1,0 m onder en 1,0 m boven het theoretische rasterpunt;
+- cirkel, middenkruis, rasterlijnen en P00–P14-labels blijven zichtbaar.
 
-De bewezen anchorlogica is niet gewijzigd. Er zijn geen afbeeldingen of mediabestanden toegevoegd.
+Bij UIT:
+- alleen de verticale hulplijnen verdwijnen.
+
+De hoogtehulp is uitsluitend visueel. Ze detecteert de werkelijke bodemhoogte niet en verandert geen enkele ontwerpmaat of rasterpositie.

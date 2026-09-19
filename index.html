@@ -54,9 +54,10 @@ body.ar-mode #arCanvas{display:block!important}
 #arVisualMsg{font-size:15px;line-height:1.25}
 #arVisualBottom{font-size:14px}
 .arPointLabel{position:absolute;transform:translate(-50%,-100%);background:rgba(8,17,11,.88);color:#fff;border:2px solid #4ade80;border-radius:8px;padding:3px 6px;font-size:13px;font-weight:900;line-height:1;white-space:nowrap;pointer-events:none;text-shadow:0 1px 2px #000;box-shadow:0 2px 5px rgba(0,0,0,.35)}
+#heightAssistBtn{position:absolute;right:10px;top:58px;z-index:12;pointer-events:auto;border:1px solid rgba(255,255,255,.35);border-radius:10px;background:rgba(10,18,24,.82);color:#fff;padding:8px 10px;font-size:12px;font-weight:900}#heightAssistBtn.on{background:rgba(74,222,128,.92);color:#08110b;border-color:#4ade80}
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.3.2 · Raster Targets + Labels</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.6.0 · Height / Visibility Assistance</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -126,7 +127,8 @@ body.ar-mode #arCanvas{display:block!important}
 </div>
 </section>
 
-<div id="arVisual"><div id="arLabels"></div><div id="arVisualMsg">AR starten…</div><button id="stopAR">Stop</button><div id="arCross"></div><button id="placeP00Btn" disabled>● P00 HIER VASTZETTEN</button><div id="arVisualBottom">Zoek een oppervlak…</div></div>
+<div id="arVisual"><div id="arLabels"></div><div id="arVisualMsg">AR starten…</div><button id="stopAR">Stop</button>
+ <button id="heightAssistBtn">HOOGTEHULP: UIT</button><div id="arCross"></div><button id="placeP00Btn" disabled>● P00 HIER VASTZETTEN</button><div id="arVisualBottom">Zoek een oppervlak…</div></div>
 <script>
 (()=>{"use strict";
 const KEY="bomal_fundering_state_v050", OLD=["bomal_fundering_state","bomal_fundering_v030"];
@@ -190,6 +192,7 @@ function end(e){pointers.delete(e.pointerId);if(pointers.size<2)pinch=null;if(!p
 
 // ---- v0.7.2.3 isolated TRUE WebXR P00 anchor test ----
 let lastHitResult=null;
+let heightAssist=false;
 let xrSession=null,xrRef=null,xrViewer=null,xrHitSource=null,xrGL=null,xrCanvas=null;
 let reticlePose=null,p00Anchor=null,p03Anchor=null,anchorCreating=false,markerProgram=null,markerBuf=null;
 const arSupport=$("arSupport"),startAR=$("startAR"),anchorSupport=$("anchorSupport");
@@ -258,6 +261,31 @@ function updateRasterLabels(view,p0,p3){
  for(const el of arLabels.querySelectorAll(".arPointLabel")){
    if(!wanted.has(el.id))el.style.display="none";
  }
+}
+
+
+function drawHeightAssist(view,p0,p3){
+ if(!heightAssist)return;
+ const pts=coords().filter(p=>s.active[p.i]); if(!pts.length)return;
+ const x0=p0.transform.position.x,y0=p0.transform.position.y+.014,z0=p0.transform.position.z;
+ const x3=p3.transform.position.x,z3=p3.transform.position.z;
+ const dyx=x3-x0,dyz=z3-z0,L=Math.hypot(dyx,dyz); if(L<.05)return;
+ const uyx=dyx/L,uyz=dyz/L,uxx=-uyz,uxz=uyx;
+ const verts=[];
+ // Visual-only plumb lines: 1.0 m below and 1.0 m above every theoretical raster centre.
+ // They do NOT alter point coordinates or the rigid raster.
+ for(const q of pts){
+   const xm=q.x/1000,ym=q.y/1000;
+   const wx=x0+uxx*xm+uyx*ym,wz=z0+uxz*xm+uyz*ym;
+   verts.push(wx,y0-1.0,wz, wx,y0+1.0,wz);
+ }
+ xrGL.useProgram(markerProgram);xrGL.bindBuffer(xrGL.ARRAY_BUFFER,markerBuf);
+ xrGL.bufferData(xrGL.ARRAY_BUFFER,new Float32Array(verts),xrGL.DYNAMIC_DRAW);
+ let loc=xrGL.getAttribLocation(markerProgram,"p");xrGL.enableVertexAttribArray(loc);
+ xrGL.vertexAttribPointer(loc,3,xrGL.FLOAT,false,0,0);
+ let pv=mul4(view.projectionMatrix,view.transform.inverse.matrix);
+ xrGL.uniformMatrix4fv(xrGL.getUniformLocation(markerProgram,"mvp"),false,pv);
+ xrGL.lineWidth(4);xrGL.drawArrays(xrGL.LINES,0,verts.length/3);
 }
 
 function drawFullRaster(view,p0,p3){
@@ -405,11 +433,20 @@ function onXRFrame(t,frame){
  let firstView=true;
  for(let view of pose.views){
   let vp=layer.getViewport(view);xrGL.viewport(vp.x,vp.y,vp.width,vp.height);
-  if(ap&&ap03){drawFullRaster(view,ap,ap03);drawAxes(view,ap,ap03);if(firstView)updateRasterLabels(view,ap,ap03)}
+  if(ap&&ap03){drawHeightAssist(view,ap,ap03);drawFullRaster(view,ap,ap03);drawAxes(view,ap,ap03);if(firstView)updateRasterLabels(view,ap,ap03)}
   if(ap)drawP00(view,ap);if(ap03)drawP00(view,ap03);firstView=false
  }
 }
 $("placeP00Btn").onclick=placeP00;
+$("heightAssistBtn").onclick=()=>{
+ heightAssist=!heightAssist;
+ const b=$("heightAssistBtn");
+ b.textContent="HOOGTEHULP: "+(heightAssist?"AAN":"UIT");
+ b.classList.toggle("on",heightAssist);
+ arVisualBottom.textContent=heightAssist
+   ?"Hoogtehulp AAN · verticale lijnen zijn alleen visuele loodlijnen"
+   :"Hoogtehulp UIT · rastergeometrie blijft ongewijzigd";
+};
 $("stopAR").onclick=()=>{if(xrSession)xrSession.end()};
 load();renderInputs();render();
 })();
