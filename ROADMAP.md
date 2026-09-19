@@ -1,2 +1,2 @@
 # ROADMAP
-v0.7.10.2: eerst controleren dat camerabeeld normaal/transparant blijft; daarna anchorstabiliteit fysiek testen.
+Eerst v0.7.11.0 fysiek valideren: normaal camerabeeld, P00/P03, master lock, rondlooptest en offset.

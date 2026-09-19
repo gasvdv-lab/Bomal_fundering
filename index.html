@@ -67,7 +67,7 @@ body.ar-mode #arCanvas{display:block!important}
 
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.10.2 · Offset Zero Fix</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.11.0 · Offset Zero Fix</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -87,7 +87,7 @@ body.ar-mode #arCanvas{display:block!important}
 
 <section id="arPane" class="pane">
 <div class="card">
-<h2>AR Proof of Concept</h2>
+<h2>Bomal Fundering AR</h2>
 <p class="muted arHelp">Doel van deze test: plaats <b>P00</b> op een echt oppervlak en plaats daarna <b>P01</b>. De app toont de gemeten AR-afstand. Voor de stabiliteitstest proberen we P01 zo dicht mogelijk bij <b>1000 mm</b> te plaatsen.</p>
 <div id="anchorSupport" class="arState">Full AR Raster: tik P00 om het volledige opgeslagen raster rigide te plaatsen.</div>
 <div id="arSupport" class="arState">AR-ondersteuning nog niet gecontroleerd.</div>
@@ -223,7 +223,7 @@ async function checkAR(){
  if(!window.isSecureContext){setAR("AR vereist HTTPS.","bad");return false}
  if(!navigator.xr){setAR("WebXR niet beschikbaar. Gebruik Android Chrome + ARCore.","bad");return false}
  try{const ok=await navigator.xr.isSessionSupported("immersive-ar");
-  if(ok){setAR("AR beschikbaar — Anchored Axis Test klaar.","good");startAR.disabled=false;return true}
+  if(ok){setAR("AR beschikbaar — Master Anchor Raster klaar.","good");startAR.disabled=false;return true}
   setAR("Immersive AR wordt niet ondersteund.","bad")
  }catch(e){setAR("AR-controle mislukt: "+e.message,"bad")} return false
 }
@@ -231,7 +231,11 @@ $("checkAR").onclick=checkAR;
 function shader(type,src){let sh=xrGL.createShader(type);xrGL.shaderSource(sh,src);xrGL.compileShader(sh);if(!xrGL.getShaderParameter(sh,xrGL.COMPILE_STATUS))throw Error(xrGL.getShaderInfoLog(sh));return sh}
 function initMarkerGL(){
  const vs=`attribute vec3 p;uniform mat4 mvp;void main(){gl_Position=mvp*vec4(p,1.0);}`;
- const fs=`precision mediump float;void main(){gl_FragColor=vec4(0.1,1.0,0.25,1.0);}`;
+ const fs=`
+precision mediump float;
+uniform vec4 uColor;
+void main(){gl_FragColor=uColor;}
+`;
  markerProgram=xrGL.createProgram();xrGL.attachShader(markerProgram,shader(xrGL.VERTEX_SHADER,vs));xrGL.attachShader(markerProgram,shader(xrGL.FRAGMENT_SHADER,fs));xrGL.linkProgram(markerProgram);
  if(!xrGL.getProgramParameter(markerProgram,xrGL.LINK_STATUS))throw Error(xrGL.getProgramInfoLog(markerProgram));
  markerBuf=xrGL.createBuffer();
@@ -250,125 +254,14 @@ function drawP00(view,anchorPose){
 }
 
 
-function updateRasterLabels(view,p0,p3){
- const layer=xrSession&&xrSession.renderState.baseLayer;
- const box=xrCanvas&&xrCanvas.getBoundingClientRect();
- if(!layer||!box)return;
- const pts=coords().filter(p=>s.active[p.i]);
- const x0=p0.transform.position.x,y0=p0.transform.position.y+visualHeightOffset,z0=p0.transform.position.z;
- const x3=p3.transform.position.x,z3=p3.transform.position.z;
- const dyx=x3-x0,dyz=z3-z0,L=Math.hypot(dyx,dyz); if(L<.05)return;
- const uyx=dyx/L,uyz=dyz/L,uxx=-uyz,uxz=uyx;
- const pv=mul4(view.projectionMatrix,view.transform.inverse.matrix);
- const wanted=new Set();
- for(const q of pts){
-   const xm=q.x/1000,ym=q.y/1000;
-   const wx=x0+uxx*xm+uyx*ym,wz=z0+uxz*xm+uyz*ym;
-   const clip=transform4(pv,[wx,y0,wz,1]);
-   if(clip[3]<=0)continue;
-   const nx=clip[0]/clip[3],ny=clip[1]/clip[3],nz=clip[2]/clip[3];
-   if(nz < -1 || nz > 1)continue;
-   const id="arPointLabel"+q.i; wanted.add(id);
-   let el=document.getElementById(id);
-   if(!el){
-     el=document.createElement("div");el.id=id;el.className="arPointLabel";
-     el.textContent="P"+String(q.i).padStart(2,"0");
-     arLabels.appendChild(el);
-   }
-   el.style.display="block";
-   el.style.left=((nx*.5+.5)*box.width)+"px";
-   el.style.top=((-ny*.5+.5)*box.height-22)+"px";
- }
- for(const el of arLabels.querySelectorAll(".arPointLabel")){
-   if(!wanted.has(el.id))el.style.display="none";
- }
-}
 
 
 
 
-function drawFullRaster(view,p0,p3){
- // MASTER-ANCHOR architecture:
- // p0 is the CURRENT pose of the P00 XRAnchor every frame.
- // rigidRasterFrame stores only the frozen LOCAL orientation, never a world origin.
- const pts=coords().filter(p=>s.active[p.i]);
- if(!pts.length||!rigidRasterFrame)return;
- const byIndex=new Map(pts.map(q=>[q.i,q]));
- const verts=[];
 
- function world(q){
-   const xm=q.x/1000, ym=q.y/1000, off=visualHeightOffset;
-   return [
-     p0.transform.position.x + rigidRasterFrame.uxx*xm + rigidRasterFrame.uyx*ym + rigidRasterFrame.nx*off,
-     p0.transform.position.y + rigidRasterFrame.uxy*xm + rigidRasterFrame.uyy*ym + rigidRasterFrame.ny*off,
-     p0.transform.position.z + rigidRasterFrame.uxz*xm + rigidRasterFrame.uyz*ym + rigidRasterFrame.nz*off
-   ];
- }
- function line(a,b){
-   verts.push(a[0],a[1],a[2],b[0],b[1],b[2]);
- }
 
- // Connect only orthogonal direct neighbours according to the 3-column raster numbering.
- for(const q of pts){
-   const col=q.i%3, row=Math.floor(q.i/3);
-   if(col<2 && byIndex.has(q.i+1)) line(world(q),world(byIndex.get(q.i+1)));
-   if(row<4 && byIndex.has(q.i+3)) line(world(q),world(byIndex.get(q.i+3)));
- }
 
- // Clear target at every active design point:
- // a circle around the point + a centered cross exactly where raster lines intersect.
- const radius=.10, cross=.045, segments=28;
- for(const q of pts){
-   const w=world(q);
-   // Circle lies in the same rigid raster plane.
-   let prev=null;
-   for(let k=0;k<=segments;k++){
-     const a=(k/segments)*Math.PI*2;
-     const ca=Math.cos(a),sa=Math.sin(a);
-     const cur=[
-       w[0] + uxx*(ca*radius) + uyx*(sa*radius),
-       w[1],
-       w[2] + uxz*(ca*radius) + uyz*(sa*radius)
-     ];
-     if(prev)line(prev,cur);
-     prev=cur;
-   }
-   // Small + at the exact theoretical tile centre / line intersection.
-   line([w[0]-rigidRasterFrame.uxx*cross,w[1],w[2]-rigidRasterFrame.uxz*cross],[w[0]+rigidRasterFrame.uxx*cross,w[1],w[2]+rigidRasterFrame.uxz*cross]);
-   line([w[0]-rigidRasterFrame.uyx*cross,w[1],w[2]-rigidRasterFrame.uyz*cross],[w[0]+rigidRasterFrame.uyx*cross,w[1],w[2]+rigidRasterFrame.uyz*cross]);
- }
 
- if(!verts.length)return;
- xrGL.useProgram(markerProgram);xrGL.bindBuffer(xrGL.ARRAY_BUFFER,markerBuf);
- xrGL.bufferData(xrGL.ARRAY_BUFFER,new Float32Array(verts),xrGL.DYNAMIC_DRAW);
- let loc=xrGL.getAttribLocation(markerProgram,"p");xrGL.enableVertexAttribArray(loc);
- xrGL.vertexAttribPointer(loc,3,xrGL.FLOAT,false,0,0);
- let pv=mul4(view.projectionMatrix,view.transform.inverse.matrix);
- xrGL.uniformMatrix4fv(xrGL.getUniformLocation(markerProgram,"mvp"),false,pv);
- xrGL.lineWidth(5);xrGL.drawArrays(xrGL.LINES,0,verts.length/3);
-}
-
-function drawAxes(view,p0,p3){
- // World/reference-space coordinates from the TWO CURRENT anchor poses.
- // Y-axis follows P00 -> P03. X-axis is the horizontal perpendicular through P00.
- const x0=p0.transform.position.x, y0=p0.transform.position.y+visualHeightOffset, z0=p0.transform.position.z;
- const x3=p3.transform.position.x, y3=p3.transform.position.y+.008, z3=p3.transform.position.z;
- const dx=x3-x0,dz=z3-z0,len=Math.hypot(dx,dz); if(len<.05)return;
- const ux=dx/len,uz=dz/len;       // raster Y direction
- const xx=-uz,xz=ux;              // raster X direction, perpendicular
- const axisLen=Math.max(1.0,Math.min(3.0,len));
- const verts=new Float32Array([
-   x0,y0,z0, x3,y3,z3,             // exact P00 -> P03
-   x0,y0,z0, x0+xx*axisLen,y0,z0+xz*axisLen // perpendicular X axis
- ]);
- xrGL.useProgram(markerProgram);xrGL.bindBuffer(xrGL.ARRAY_BUFFER,markerBuf);
- xrGL.bufferData(xrGL.ARRAY_BUFFER,verts,xrGL.DYNAMIC_DRAW);
- let loc=xrGL.getAttribLocation(markerProgram,"p");xrGL.enableVertexAttribArray(loc);
- xrGL.vertexAttribPointer(loc,3,xrGL.FLOAT,false,0,0);
- let pv=mul4(view.projectionMatrix,view.transform.inverse.matrix);
- xrGL.uniformMatrix4fv(xrGL.getUniformLocation(markerProgram,"mvp"),false,pv);
- xrGL.lineWidth(5);xrGL.drawArrays(xrGL.LINES,0,4);
-}
 startAR.onclick=async()=>{
  if(!(await checkAR()))return;
  try{
@@ -384,7 +277,7 @@ $("visualHeightControl").style.display="flex";
   xrHitSource=await xrSession.requestHitTestSource({space:xrViewer});
   initMarkerGL();p00Anchor=null;p03Anchor=null;lastHitResult=null;reticlePose=null;anchorCreating=false;pendingAnchorKind=null;placeP00Btn.textContent="● P00 PRECISIE VASTZETTEN";placeP00Btn.style.display="block";placeP00Btn.disabled=true;$("undoARBtn").disabled=true;
   document.body.classList.add("ar-mode");arVisual.classList.add("on");
-  arVisualMsg.textContent="P00 + P03 ANCHOR TEST";arVisualBottom.textContent="Zoek een oppervlak — groen vizier = klaar om P00 te plaatsen";
+  arVisualMsg.textContent="BOMAL RASTER AR";arVisualBottom.textContent="Zoek een oppervlak — groen vizier = klaar om P00 te plaatsen";
   xrSession.addEventListener("end",()=>{
  visualHeightOffset=0;updateVisualHeightUI();$("visualHeightControl").style.display="none";setAR("AR-test beëindigd.","warn");startAR.disabled=false;document.body.classList.remove("ar-mode");arVisual.classList.remove("on");if(p00Anchor){try{p00Anchor.delete()}catch(_){}}if(p03Anchor){try{p03Anchor.delete()}catch(_){}}p00Anchor=null;p03Anchor=null;if(xrCanvas)xrCanvas.remove();xrCanvas=null;lastHitResult=null;reticlePose=null;xrSession=null});
   startAR.disabled=true;xrSession.requestAnimationFrame(onXRFrame);
@@ -402,7 +295,7 @@ async function placeP00(){
    const now=performance.now();
    if(reticlePose){
     const p=reticlePose.transform.position;
-    stabilitySamples.push({x:p.x,y:p.y,z:p.z,hit:lastHitResult});
+    stabilitySamples.push({x:p.x,y:p.y,z:p.z});
    }
    const f=Math.min(1,(now-stabilityStarted)/STABILITY_MS);
    arVisualBottom.textContent="Stabiliteitsmeting "+Math.round(f*100)+"% · houd zo stil mogelijk";
@@ -449,27 +342,57 @@ function mul4v(m,v){
   m[3]*v[0]+m[7]*v[1]+m[11]*v[2]+m[15]*v[3]
  ];
 }
+
+
+
+function xform(M,x,y,z){return[
+ M[0]*x+M[4]*y+M[8]*z+M[12],
+ M[1]*x+M[5]*y+M[9]*z+M[13],
+ M[2]*x+M[6]*y+M[10]*z+M[14]];}
+function localPoint(q){
+ const x=q.x/1000,y=q.y/1000,o=visualHeightOffset,r=rigidRasterFrame;
+ return[r.uxx*x+r.uyx*y+r.nx*o,r.uxy*x+r.uyy*y+r.ny*o,r.uxz*x+r.uyz*y+r.nz*o];
+}
+function drawFullRaster(view,p0){
+ if(!rigidRasterFrame)return;
+ const pts=coords().filter(q=>s.active[q.i]), M=p0.transform.matrix;
+ const map=new Map(pts.map(q=>[q.i,q])),v=[];
+ const W=q=>{const l=localPoint(q);return xform(M,l[0],l[1],l[2]);};
+ const L=(a,b)=>v.push(...a,...b);
+ for(const q of pts){
+  const c=q.i%3,r=Math.floor(q.i/3);
+  if(c<2&&map.has(q.i+1))L(W(q),W(map.get(q.i+1)));
+  if(r<4&&map.has(q.i+3))L(W(q),W(map.get(q.i+3)));
+ }
+ const rr=.10,cc=.045,n=28,R=rigidRasterFrame;
+ for(const q of pts){
+  const b=localPoint(q);let prev=null;
+  for(let k=0;k<=n;k++){
+   const a=k/n*Math.PI*2,ca=Math.cos(a),sa=Math.sin(a);
+   const l=[b[0]+R.uxx*ca*rr+R.uyx*sa*rr,b[1]+R.uxy*ca*rr+R.uyy*sa*rr,b[2]+R.uxz*ca*rr+R.uyz*sa*rr];
+   const w=xform(M,...l);if(prev)L(prev,w);prev=w;
+  }
+  const A=[b[0]-R.uxx*cc,b[1]-R.uxy*cc,b[2]-R.uxz*cc],B=[b[0]+R.uxx*cc,b[1]+R.uxy*cc,b[2]+R.uxz*cc];
+  const C=[b[0]-R.uyx*cc,b[1]-R.uyy*cc,b[2]-R.uyz*cc],D=[b[0]+R.uyx*cc,b[1]+R.uyy*cc,b[2]+R.uyz*cc];
+  L(xform(M,...A),xform(M,...B));L(xform(M,...C),xform(M,...D));
+ }
+ if(!v.length)return;
+ xrGL.useProgram(markerProgram);xrGL.bindBuffer(xrGL.ARRAY_BUFFER,markerBuf);
+ xrGL.bufferData(xrGL.ARRAY_BUFFER,new Float32Array(v),xrGL.DYNAMIC_DRAW);
+ const a=xrGL.getAttribLocation(markerProgram,"p");xrGL.enableVertexAttribArray(a);xrGL.vertexAttribPointer(a,3,xrGL.FLOAT,false,0,0);
+ xrGL.uniformMatrix4fv(xrGL.getUniformLocation(markerProgram,"mvp"),false,mul4(view.projectionMatrix,view.transform.inverse.matrix));
+ const c=xrGL.getUniformLocation(markerProgram,"uColor");if(c)xrGL.uniform4f(c,.1,1,.25,.92);
+ xrGL.drawArrays(xrGL.LINES,0,v.length/3);
+}
 function updateMasterRasterLabels(view,p0){
  if(!rigidRasterFrame)return;
- const pts=coords().filter(q=>s.active[q.i]);
- for(const q of pts){
-  const xm=q.x/1000,ym=q.y/1000,off=visualHeightOffset;
-  const w=[
-   p0.transform.position.x+rigidRasterFrame.uxx*xm+rigidRasterFrame.uyx*ym+rigidRasterFrame.nx*off,
-   p0.transform.position.y+rigidRasterFrame.uxy*xm+rigidRasterFrame.uyy*ym+rigidRasterFrame.ny*off,
-   p0.transform.position.z+rigidRasterFrame.uxz*xm+rigidRasterFrame.uyz*ym+rigidRasterFrame.nz*off
-  ];
-  const el=document.getElementById("arlbl"+q.i);
-  if(!el)continue;
-  const clip=mul4v(mul4(view.projectionMatrix,view.transform.inverse.matrix),[w[0],w[1],w[2],1]);
-  if(clip[3]<=0){el.style.display="none";continue;}
-  const nx=clip[0]/clip[3],ny=clip[1]/clip[3];
-  el.style.display="block";
-  el.style.left=((nx*.5+.5)*innerWidth)+"px";
-  el.style.top=((-ny*.5+.5)*innerHeight)+"px";
+ const M=p0.transform.matrix,pv=mul4(view.projectionMatrix,view.transform.inverse.matrix);
+ for(const q of coords().filter(q=>s.active[q.i])){
+  const l=localPoint(q),w=xform(M,...l),c=mul4v(pv,[...w,1]),el=document.getElementById("arlbl"+q.i);
+  if(!el)continue;if(c[3]<=0){el.style.display="none";continue;}
+  el.style.display="block";el.style.left=((c[0]/c[3]*.5+.5)*innerWidth)+"px";el.style.top=((-c[1]/c[3]*.5+.5)*innerHeight)+"px";
  }
 }
-
 function onXRFrame(t,frame){
  if(!xrSession)return;xrSession.requestAnimationFrame(onXRFrame);
  let pose=frame.getViewerPose(xrRef);if(!pose)return;
@@ -509,21 +432,15 @@ function onXRFrame(t,frame){
  let ap=p00Anchor?frame.getPose(p00Anchor.anchorSpace,xrRef):null;
  let ap03=p03Anchor?frame.getPose(p03Anchor.anchorSpace,xrRef):null;
  if(ap&&ap03&&!rigidRasterFrame){
-  const dx=ap03.transform.position.x-ap.transform.position.x;
-  const dy=ap03.transform.position.y-ap.transform.position.y;
-  const dz=ap03.transform.position.z-ap.transform.position.z;
-  const L=Math.hypot(dx,dy,dz),h=Math.hypot(dx,dz);
-  if(L>=.05&&h>=.02){
-    const uyx=dx/L,uyy=dy/L,uyz=dz/L;
-    const uxx=-dz/h,uxy=0,uxz=dx/h;
-    let nx=uxy*uyz-uxz*uyy,ny=uxz*uyx-uxx*uyz,nz=uxx*uyy-uxy*uyx;
-    const nL=Math.hypot(nx,ny,nz)||1;nx/=nL;ny/=nL;nz/=nL;
-    if(ny<0){nx=-nx;ny=-ny;nz=-nz;}
-    // IMPORTANT: no absolute world x/y/z are stored here.
-    rigidRasterFrame={uyx,uyy,uyz,uxx,uxy,uxz,nx,ny,nz};
-    arVisualMsg.textContent="✓ MASTER RASTER GEANKERD";
-    arVisualBottom.textContent="P00–P14 volgen samen de actuele P00-anchorpose.";
-  }
+ const inv=ap.transform.inverse.matrix,p=ap03.transform.position,lp=xform(inv,p.x,p.y,p.z);
+ const len=Math.hypot(...lp),h=Math.hypot(lp[0],lp[2]);
+ if(len>=.05&&h>=.02){
+  const uyx=lp[0]/len,uyy=lp[1]/len,uyz=lp[2]/len,uxx=-lp[2]/h,uxy=0,uxz=lp[0]/h;
+  let nx=uxy*uyz-uxz*uyy,ny=uxz*uyx-uxx*uyz,nz=uxx*uyy-uxy*uyx,nl=Math.hypot(nx,ny,nz)||1;
+  nx/=nl;ny/=nl;nz/=nl;if(ny<0){nx=-nx;ny=-ny;nz=-nz;}
+  rigidRasterFrame={uxx,uxy,uxz,uyx,uyy,uyz,nx,ny,nz};
+  arVisualMsg.textContent="✓ MASTER RASTER GEANKERD";arVisualBottom.textContent="P00–P14 · één rigide P00 anchorSpace";
+ }
  }
 
  if(!p00Anchor)arVisualBottom.textContent=reticlePose?"Groen vizier — druk onderaan om P00 vast te zetten":"Beweeg rustig: oppervlak zoeken…";
@@ -533,15 +450,12 @@ function onXRFrame(t,frame){
  let firstView=true;
  for(let view of pose.views){
   let vp=layer.getViewport(view);xrGL.viewport(vp.x,vp.y,vp.width,vp.height);
-  if(ap&&ap03&&rigidRasterFrame){drawFullRaster(view,ap,ap03);if(firstView)updateMasterRasterLabels(view,ap);if(firstView)updateRasterLabels(view,ap,ap03)}
-  if(ap)drawP00(view,ap);if(ap03)drawP00(view,ap03);firstView=false
+  if(ap&&ap03&&rigidRasterFrame){drawFullRaster(view,ap);if(firstView)updateMasterRasterLabels(view,ap);if(firstView)if(ap03)drawP00(view,ap03);firstView=false
  }
 }
 
 $("placeP00Btn").onclick=placeP00;
-$("heightAssistBtn").onclick=()=>{
  heightAssist=!heightAssist;
- const b=$("heightAssistBtn");
  b.textContent="HOOGTEHULP: "+(heightAssist?"AAN":"UIT");
  b.classList.toggle("on",heightAssist);
  arVisualBottom.textContent=heightAssist

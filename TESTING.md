@@ -1,9 +1,2 @@
-# TESTING — v0.7.10.2
-1. Start AR vóór P00 te plaatsen.
-2. Camerabeeld moet normaal zichtbaar zijn; géén groen scherm.
-3. Plaats P00.
-4. Plaats P03.
-5. Wacht op `MASTER RASTER GEANKERD`.
-6. Alleen rasterlijnen/cirkels/kruisen mogen gekleurd zijn.
-7. Loop weg en terug en controleer P00/P03/P14.
-8. Controleer OFFSET 0 mm.
+# TESTING v0.7.11.0
+1. Start AR: geen groene waas. 2. Plaats P00. 3. Plaats P03. 4. MASTER RASTER GEANKERD. 5. Controleer offset 0. 6. Loop weg en terug. 7. Controleer P00/P03/P14. 8. Test ±2 mm en Undo.
