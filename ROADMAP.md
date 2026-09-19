@@ -1,2 +1,2 @@
 # ROADMAP
-v0.7.9.6: fysiek valideren dat P00–P14 één gemeenschappelijke offset en één rigide 3D-raster volgen.
+v0.7.10.0: fysiek valideren van de nieuwe P00 master-anchorarchitectuur vóór nieuwe functies.
