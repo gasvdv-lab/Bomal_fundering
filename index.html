@@ -8,7 +8,7 @@
 body{min-height:100vh}header{background:#161b22;border-bottom:1px solid #30363d;padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
 h1{font-size:21px;margin:0}.sub,.muted{color:#9da7b3}.wrap{max-width:900px;margin:auto;padding:12px}
 button{border:0;border-radius:13px;min-height:46px;padding:11px 15px;font-weight:750;font-size:16px;background:#303b46;color:#fff}
-button.active,.primary{background:#4ade80;color:#08110b}.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+button.active,.primary{background:#4ade80;color:#08110b}.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
 .card{background:#161b22;border:1px solid #30363d;border-radius:19px;padding:15px;margin-bottom:13px}h2{margin:0 0 8px;font-size:22px}
 label{display:block;color:#c8d1da;margin:8px 0}input,select{width:100%;background:#0d1117;color:#fff;border:1px solid #45515d;border-radius:11px;padding:12px;font-size:17px}
 .setup,.geoGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.apply{display:grid;grid-template-columns:1fr 120px;gap:8px;margin:10px 0 13px}
@@ -30,11 +30,16 @@ svg{width:100%;height:100%;display:block}.edge{stroke:#59636e;stroke-width:3}.po
 .badge{position:absolute;z-index:5;right:9px;top:62px;background:rgba(22,27,34,.9);padding:7px 9px;border-radius:10px;color:#c8d1da;font-size:13px}
 .result{font-size:27px;font-weight:850;margin:12px 0 3px}
 @media(max-width:560px){.wrap{padding:10px}.tabs button{font-size:14px;padding:9px 5px}.geoGrid{grid-template-columns:1fr}.rasterShell{min-height:calc(100vh - 72px)}.infoGrid{grid-template-columns:1fr 1fr 1fr}}
+
+.arState{font-weight:800;padding:10px 12px;border-radius:12px;background:#0d1117;margin:10px 0}
+.arActions{display:grid;gap:8px}.arActions button{width:100%}
+.arHelp{line-height:1.45}.good{color:#7ee2a8}.warn{color:#f2cc60}.bad{color:#ff7b72}
+@media(max-width:560px){.tabs{grid-template-columns:repeat(4,1fr)}.tabs button{font-size:12px}}
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.5.0 · Interactive Raster</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.6.0 · AR Proof of Concept</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
-<div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button></div>
+<div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
 <div class="card"><h2>Raster opstellen</h2><p class="muted">P00 ligt links onderaan. Alle maten zijn millimeter.</p>
 <div class="setup"><label>Horizontaal<input id="cols" type="number" min="1" max="20"></label><label>Verticaal<input id="rows" type="number" min="1" max="20"></label></div>
@@ -48,6 +53,23 @@ svg{width:100%;height:100%;display:block}.edge{stroke:#59636e;stroke-width:3}.po
 <div class="geoGrid"><label>Punt A<select id="pointA"></select></label><label>Punt B<select id="pointB"></select></label></div>
 <div class="result" id="geoDistance">—</div><div class="muted" id="geoDelta">—</div>
 <button id="showLine" class="primary" style="width:100%;margin-top:14px">Toon in raster</button></div>
+</section>
+
+<section id="arPane" class="pane">
+<div class="card">
+<h2>AR Proof of Concept</h2>
+<p class="muted arHelp">Doel van deze test: plaats <b>P00</b> op een echt oppervlak en plaats daarna <b>P01</b>. De app toont de gemeten AR-afstand. Voor de stabiliteitstest proberen we P01 zo dicht mogelijk bij <b>1000 mm</b> te plaatsen.</p>
+<div id="arSupport" class="arState">AR-ondersteuning nog niet gecontroleerd.</div>
+<div class="arActions">
+<button id="checkAR">Controleer AR</button>
+<button id="startAR" class="primary" disabled>Start AR</button>
+</div>
+<p class="muted">Tijdens AR verschijnt een richtvizier op gevonden oppervlakken. Tik één keer voor P00 en een tweede keer voor P01. Daarna kun je rondlopen en visueel controleren of beide markeringen op hun fysieke referentie blijven staan.</p>
+</div>
+<div class="card">
+<h2>Testprotocol</h2>
+<p class="muted">1. Gebruik twee fysieke markeringen die exact 1000 mm uit elkaar liggen.<br>2. Plaats P00 op markering 1.<br>3. Plaats P01 op markering 2.<br>4. Loop enkele meters rond.<br>5. Controleer opnieuw na ongeveer 1, 5 en 10 minuten.<br><br><b>Belangrijk:</b> deze AR-afstand is een stabiliteitstest, geen vervanging voor de laser.</p>
+</div>
 </section>
 </main>
 
@@ -99,7 +121,7 @@ p.forEach(q=>{let [x,y]=xy(q),cls="point"+(!s.active[q.i]?" inactive":"")+(s.a==
 applyTransform();refreshGeo();$("labelsBtn").classList.toggle("active",s.labels);$("dimsBtn").classList.toggle("active",s.dims)}
 function selectPoint(i){if(s.a===null){s.a=i;s.b=null}else if(s.b===null&&i!==s.a){s.b=i}else{s.a=i;s.b=null}save();populateSelects();render()}
 function showTab(t){$("normalMain").style.display=t==="raster"?"none":"block";$("mainHeader").style.display=t==="raster"?"none":"flex";$("rasterPane").classList.toggle("active",t==="raster");
-document.querySelectorAll(".pane:not(#rasterPane)").forEach(x=>x.classList.toggle("active",x.id===(t==="input"?"inputPane":"geoPane")));document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===t));
+document.querySelectorAll(".pane:not(#rasterPane)").forEach(x=>x.classList.toggle("active",x.id===(t==="input"?"inputPane":t==="geo"?"geoPane":"arPane")));document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===t));
 if(t==="raster"){render();fit()}if(t==="geo")populateSelects()}
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
 $("backBtn").onclick=()=>showTab("input");$("fitBtn").onclick=fit;$("labelsBtn").onclick=()=>{s.labels=!s.labels;save();render()};$("dimsBtn").onclick=()=>{s.dims=!s.dims;save();render()};
@@ -117,6 +139,62 @@ wrap.addEventListener("pointermove",e=>{if(!pointers.has(e.pointerId))return;let
 if(pointers.size===2&&pinch){let a=[...pointers.values()],d=Math.hypot(a[1].x-a[0].x,a[1].y-a[0].y);view.scale=Math.max(.35,Math.min(5,pinch.scale*d/pinch.d));applyTransform()}
 else if(drag&&drag.id===e.pointerId){if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>5)moved=true;view.tx=drag.tx+e.clientX-drag.x;view.ty=drag.ty+e.clientY-drag.y;applyTransform()}});
 function end(e){pointers.delete(e.pointerId);if(pointers.size<2)pinch=null;if(!pointers.size)drag=null}wrap.addEventListener("pointerup",end);wrap.addEventListener("pointercancel",end);
+
+// ---- v0.6.0 WebXR AR proof of concept ----
+let xrSession=null,xrRef=null,xrViewer=null,xrHitSource=null,xrGL=null,xrCanvas=null;
+let reticlePose=null,placed=[],xrStart=0;
+const arSupport=$("arSupport"),startAR=$("startAR");
+function setAR(msg,cls=""){arSupport.className="arState "+cls;arSupport.textContent=msg}
+async function checkAR(){
+ if(!window.isSecureContext){setAR("AR vereist HTTPS.","bad");return false}
+ if(!navigator.xr){setAR("WebXR niet beschikbaar in deze browser. Gebruik Android Chrome met ARCore.","bad");return false}
+ try{
+  const ok=await navigator.xr.isSessionSupported("immersive-ar");
+  if(ok){setAR("AR beschikbaar. Klaar voor de P00/P01-test.","good");startAR.disabled=false;return true}
+  setAR("Immersive AR wordt op dit toestel/browser niet ondersteund.","bad")
+ }catch(e){setAR("AR-controle mislukt: "+e.message,"bad")}
+ return false
+}
+$("checkAR").onclick=checkAR;
+startAR.onclick=async()=>{
+ if(!(await checkAR()))return;
+ try{
+  xrSession=await navigator.xr.requestSession("immersive-ar",{requiredFeatures:["hit-test"],optionalFeatures:["dom-overlay","local-floor"],domOverlay:{root:document.body}});
+  xrCanvas=document.createElement("canvas");xrCanvas.style.display="none";document.body.appendChild(xrCanvas);
+  xrGL=xrCanvas.getContext("webgl",{xrCompatible:true,alpha:true});
+  await xrGL.makeXRCompatible();
+  xrSession.updateRenderState({baseLayer:new XRWebGLLayer(xrSession,xrGL)});
+  xrRef=await xrSession.requestReferenceSpace("local");
+  xrViewer=await xrSession.requestReferenceSpace("viewer");
+  xrHitSource=await xrSession.requestHitTestSource({space:xrViewer});
+  placed=[];reticlePose=null;xrStart=performance.now();
+  xrSession.addEventListener("select",onXRSelect);
+  xrSession.addEventListener("end",()=>{setAR("AR-test beëindigd. Start opnieuw om P00/P01 opnieuw te plaatsen.","warn");startAR.disabled=false;if(xrCanvas)xrCanvas.remove();xrSession=null});
+  startAR.disabled=true;setAR("AR actief — beweeg rustig tot een oppervlak gevonden is. Tik voor P00.","good");
+  xrSession.requestAnimationFrame(onXRFrame);
+ }catch(e){setAR("AR kon niet starten: "+e.message,"bad");startAR.disabled=false}
+};
+function onXRSelect(){
+ if(!reticlePose||placed.length>=2)return;
+ let m=reticlePose.transform.matrix;
+ placed.push({x:m[12],y:m[13],z:m[14]});
+ if(placed.length===1)setAR("P00 geplaatst. Richt nu op de tweede fysieke markering (1000 mm verder) en tik voor P01.","good");
+ else{
+  let a=placed[0],b=placed[1],d=Math.hypot(b.x-a.x,b.y-a.y,b.z-a.z)*1000;
+  setAR("P00 → P01 volgens AR: "+d.toFixed(0)+" mm. Loop nu rond en controleer of beide markeringen visueel blijven liggen.","good");
+ }
+}
+function onXRFrame(t,frame){
+ if(!xrSession)return;
+ xrSession.requestAnimationFrame(onXRFrame);
+ let pose=frame.getViewerPose(xrRef);
+ if(!pose)return;
+ let hits=frame.getHitTestResults(xrHitSource);
+ reticlePose=hits.length?hits[0].getPose(xrRef):null;
+ // This POC deliberately uses WebXR hit-test positions only.
+ // Persistent rendered 3D markers are the next step after device validation.
+}
+
 load();renderInputs();render();
 })();
 </script></body></html>
