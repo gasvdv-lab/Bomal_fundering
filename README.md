@@ -1,9 +1,9 @@
-# Bomal Fundering v0.7.11.1 — No Green Camera Layer
+# Bomal Fundering v0.7.11.2 — Green Screen Removal Test
 
-Gerichte renderer-fix:
-- de app wist de WebXR COLOR_BUFFER niet meer;
-- de app tekent geen achtergrondkleur/tint over het camerabeeld;
-- alleen de DEPTH_BUFFER wordt per XR-frame gewist;
-- globale alpha blending voor de AR-overlay is uitgeschakeld;
-- groen wordt uitsluitend gebruikt voor echte GL_LINES van raster/cirkels/kruisen;
-- Master Anchor-logica van v0.7.11.0 blijft behouden.
+Deze release doet bewust maar één hoofdzaak:
+- het WebXR-canvas wordt NIET meer als fullscreen DOM-laag getoond;
+- `#arCanvas` staat offscreen/onzichtbaar en dient alleen als WebGL-context voor `XRWebGLLayer`;
+- de AR-HUD blijft via DOM overlay zichtbaar;
+- achtergebleven hoogtehulp-restcode is verwijderd.
+
+De Master Anchor-logica is verder niet gewijzigd.

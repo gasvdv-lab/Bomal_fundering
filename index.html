@@ -50,11 +50,11 @@ box-shadow:0 3px 12px rgba(0,0,0,.35)}
 
 body.ar-mode #mainHeader,body.ar-mode #normalMain{display:none!important}
 body.ar-mode{background:transparent!important;overflow:hidden}
-body.ar-mode #arCanvas{display:block!important}
+
 #arVisualMsg{font-size:15px;line-height:1.25}
 #arVisualBottom{font-size:14px}
 .arPointLabel{position:absolute;transform:translate(-50%,-100%);background:rgba(8,17,11,.88);color:#fff;border:2px solid #4ade80;border-radius:8px;padding:3px 6px;font-size:13px;font-weight:900;line-height:1;white-space:nowrap;pointer-events:none;text-shadow:0 1px 2px #000;box-shadow:0 2px 5px rgba(0,0,0,.35)}
-{position:absolute;right:10px;top:58px;z-index:12;pointer-events:auto;border:1px solid rgba(255,255,255,.35);border-radius:10px;background:rgba(10,18,24,.82);color:#fff;padding:8px 10px;font-size:12px;font-weight:900}.on{background:rgba(74,222,128,.92);color:#08110b;border-color:#4ade80}
+.on{background:rgba(74,222,128,.92);color:#08110b;border-color:#4ade80}
 
 #undoARBtn{position:absolute;left:10px;top:58px;z-index:12;pointer-events:auto;border:1px solid rgba(255,255,255,.35);border-radius:10px;background:rgba(10,18,24,.82);color:#fff;padding:8px 12px;font-size:12px;font-weight:900}
 #undoARBtn:disabled{opacity:.4}
@@ -67,7 +67,7 @@ body.ar-mode #arCanvas{display:block!important}
 
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.11.1 · Offset Zero Fix</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.11.2 · Offset Zero Fix</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -268,7 +268,7 @@ startAR.onclick=async()=>{
   // Match the successful WebXR pattern: anchors + hit-test, with DOM overlay only as optional UI.
   xrSession=await navigator.xr.requestSession("immersive-ar",{requiredFeatures:["hit-test","anchors"],optionalFeatures:["dom-overlay"],domOverlay:{root:document.body}});
 $("visualHeightControl").style.display="flex";
-  xrCanvas=document.createElement("canvas");xrCanvas.id="arCanvas";xrCanvas.style.cssText="position:fixed;inset:0;width:100%;height:100%;z-index:9990;display:block;pointer-events:none";document.body.appendChild(xrCanvas);
+  xrCanvas=document.createElement("canvas");xrCanvas.id="arCanvas";xrCanvas.style.cssText="position:fixed;left:-10000px;top:-10000px;width:1px;height:1px;opacity:0;pointer-events:none;";document.body.appendChild(xrCanvas);
   xrGL=xrCanvas.getContext("webgl",{xrCompatible:true,alpha:true,premultipliedAlpha:false,antialias:true});await xrGL.makeXRCompatible();
   xrSession.updateRenderState({baseLayer:new XRWebGLLayer(xrSession,xrGL),depthNear:.01,depthFar:50});
   // Deliberately use local only in this isolation test; no local-floor transform is introduced.
@@ -453,10 +453,6 @@ function onXRFrame(t,frame){
 }
 
 $("placeP00Btn").onclick=placeP00;
- heightAssist=!heightAssist;
- b.textContent="HOOGTEHULP: "+(heightAssist?"AAN":"UIT");
- b.classList.toggle("on",heightAssist);
- arVisualBottom.textContent=heightAssist
    ?"Hoogtehulp AAN · verticale lijnen zijn alleen visuele loodlijnen"
    :"Hoogtehulp UIT · rastergeometrie blijft ongewijzigd";
 };

@@ -1,2 +1,2 @@
 # ROADMAP
-v0.7.11.1: eerst bevestigen dat het WebXR-camerabeeld volledig normaal blijft. Daarna P00 → P03 → master-raster fysiek testen.
+Eerst uitsluitend bevestigen dat het groene fullscreen vlak verdwenen is. Pas daarna verder met P00/P03/raster.
