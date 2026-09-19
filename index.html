@@ -67,7 +67,7 @@ body.ar-mode #arCanvas{display:block!important}
 
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.11.0 · Offset Zero Fix</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.11.1 · Offset Zero Fix</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -381,7 +381,7 @@ function drawFullRaster(view,p0){
  xrGL.bufferData(xrGL.ARRAY_BUFFER,new Float32Array(v),xrGL.DYNAMIC_DRAW);
  const a=xrGL.getAttribLocation(markerProgram,"p");xrGL.enableVertexAttribArray(a);xrGL.vertexAttribPointer(a,3,xrGL.FLOAT,false,0,0);
  xrGL.uniformMatrix4fv(xrGL.getUniformLocation(markerProgram,"mvp"),false,mul4(view.projectionMatrix,view.transform.inverse.matrix));
- const c=xrGL.getUniformLocation(markerProgram,"uColor");if(c)xrGL.uniform4f(c,.1,1,.25,.92);
+ const c=xrGL.getUniformLocation(markerProgram,"uColor");if(c)xrGL.uniform4f(c,.1,1,.25,1.0);
  xrGL.drawArrays(xrGL.LINES,0,v.length/3);
 }
 function updateMasterRasterLabels(view,p0){
@@ -400,9 +400,7 @@ function onXRFrame(t,frame){
  xrGL.disable(xrGL.CULL_FACE);
  xrGL.enable(xrGL.DEPTH_TEST);
  xrGL.depthMask(true);
- xrGL.enable(xrGL.BLEND);
- xrGL.blendFunc(xrGL.SRC_ALPHA,xrGL.ONE_MINUS_SRC_ALPHA);
- xrGL.clearColor(0,0,0,0);xrGL.clear(xrGL.COLOR_BUFFER_BIT|xrGL.DEPTH_BUFFER_BIT);
+ xrGL.disable(xrGL.BLEND);xrGL.clear(xrGL.DEPTH_BUFFER_BIT);
  let hits=frame.getHitTestResults(xrHitSource);lastHitResult=hits.length?hits[0]:null;reticlePose=lastHitResult?lastHitResult.getPose(xrRef):null;
  if(pendingAnchorKind && lastHitResult && !anchorCreating){
    const kindNow=pendingAnchorKind;pendingAnchorKind=null;anchorCreating=true;

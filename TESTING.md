@@ -1,2 +1,9 @@
-# TESTING v0.7.11.0
-1. Start AR: geen groene waas. 2. Plaats P00. 3. Plaats P03. 4. MASTER RASTER GEANKERD. 5. Controleer offset 0. 6. Loop weg en terug. 7. Controleer P00/P03/P14. 8. Test ±2 mm en Undo.
+# TESTING — v0.7.11.1
+1. Start AR en plaats nog niets: camerabeeld moet volledig normaal zijn, zonder groene laag.
+2. Beweeg telefoon: geen groene tint of fullscreen vlak.
+3. Plaats P00.
+4. Plaats P03.
+5. Controleer MASTER RASTER GEANKERD.
+6. Alleen rasterlijnen/cirkels/kruisen mogen groen zijn.
+7. Loop weg en terug; controleer P00/P03/P14.
+8. Test Undo en gemeenschappelijke offset.

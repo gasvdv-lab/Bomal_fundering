@@ -1,2 +1,2 @@
 # ROADMAP
-Eerst v0.7.11.0 fysiek valideren: normaal camerabeeld, P00/P03, master lock, rondlooptest en offset.
+v0.7.11.1: eerst bevestigen dat het WebXR-camerabeeld volledig normaal blijft. Daarna P00 → P03 → master-raster fysiek testen.
