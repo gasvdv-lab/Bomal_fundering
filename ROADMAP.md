@@ -1,13 +1,15 @@
 # ROADMAP
 
-## v0.7.4.0
-- actieve P00 positiecorrectie
-- actieve P03 richtingcorrectie
-- geen afhankelijkheid meer van beschikbare Anchor API voor relock
-- rigide ProjectRoot behouden
-- 3 × 5 raster en 300 × 300 mm tegeldoelen behouden
+## v0.7.3.1
+- UI hersteld
+- AR-overlay vrijgemaakt
+- rasteroverzicht terug
+- X/Y assen verduidelijkt
+- X-marker / anchor world-lock test behouden
 
-## Volgende stap
-Wanneer handmatige relock betrouwbaar werkt:
-- automatische herkenning van fysieke X onderzoeken;
-- correctie eventueel automatisch uitvoeren wanneer P00/P03 visueel herkend worden.
+## Volgende technische stap
+Na fysieke driftmeting:
+- automatische visuele herkenning van fysieke referentie onderzoeken;
+- marker-gebaseerde correctie van de ProjectRoot;
+- bevestigd punt als extra controlepunt;
+- native ARCore alleen indien WebXR onvoldoende stabiel blijft.

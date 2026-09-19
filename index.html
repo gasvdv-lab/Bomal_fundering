@@ -2,7 +2,7 @@
 <html lang="nl"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#101418"><link rel="manifest" href="manifest.json">
-<title>Bomal Fundering v0.7.4.0</title>
+<title>Bomal Fundering v0.7.3.1</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#0e1317;color:#f5f7f8;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
 header{position:sticky;top:0;z-index:4;background:#151c21;padding:12px 14px;border-bottom:1px solid #28323a}
@@ -23,24 +23,24 @@ body.ar-mode header,body.ar-mode main{display:none!important}
 #ret:before,#ret:after{content:"";position:absolute;left:50%;top:50%;background:#6aff96;transform:translate(-50%,-50%)}#ret:before{width:38px;height:2px}#ret:after{height:38px;width:2px}
 #labels{position:absolute;inset:0}.lab{position:absolute;transform:translate(-50%,-50%);padding:2px 5px;border-radius:5px;background:#06230fdd;border:1px solid #6aff96;font-size:12px;font-weight:850}
 #arBottom{position:absolute;bottom:max(10px,env(safe-area-inset-bottom));left:8px;right:8px;display:flex;justify-content:center;gap:7px;pointer-events:auto}
-#arBottom button{padding:8px 11px;background:#101a1fdd;font-size:12px}#arBottom #placeBtn{background:#087f3f;font-size:13px}
+#arBottom button{padding:8px 11px;background:#101a1fdd;font-size:12px}
 @media(max-width:480px){.grid{grid-template-columns:1fr 1fr}#svg{height:48vh}}
 </style></head>
 <body>
-<header><h1>Bomal Fundering</h1><div class="sub">v0.7.4.0 · Active Physical Relock</div></header>
+<header><h1>Bomal Fundering</h1><div class="sub">v0.7.3.1 · UI Restore + X Marker World-Lock Test</div></header>
 <main>
 <div class="tabs"><button class="tab on" data-tab="raster">Raster</button><button class="tab" data-tab="view">Weergave</button><button class="tab" data-tab="ar">AR</button></div>
 
 <section id="p-raster" class="panel on">
  <div class="card"><b>Raster instellen</b>
   <div class="grid" style="margin-top:9px">
-   <label class="field">Kolommen<input id="cols" type="number" min="2" max="20" value="3"></label>
-   <label class="field">Rijen<input id="rows" type="number" min="2" max="20" value="5"></label>
+   <label class="field">Kolommen<input id="cols" type="number" min="2" max="20" value="5"></label>
+   <label class="field">Rijen<input id="rows" type="number" min="2" max="20" value="3"></label>
    <label class="field"><span><span class="axis">X →</span> afstand (mm)</span><input id="dx" type="number" min="1" step="0.1" value="1975"></label>
    <label class="field"><span><span class="axis">Y ↑</span> afstand (mm)</span><input id="dy" type="number" min="1" step="0.1" value="1256.5"></label>
   </div>
   <div class="row" style="margin-top:9px"><button id="apply" class="primary">Raster bijwerken</button><button id="save">Opslaan</button></div>
-  <p class="small"><b>X →</b> en <b>Y ↑</b> zijn beide richtingen over de grond. Y is hier geen hoogte.</p><p class="small"><b>Nummering:</b> P00–P02 onderste rij, P03–P05 rij 2, P06–P08 rij 3, P09–P11 rij 4, P12–P14 bovenste rij.</p>
+  <p class="small"><b>X →</b> en <b>Y ↑</b> zijn beide richtingen over de grond. Y is hier geen hoogte.</p>
  </div>
  <div class="card"><b>Snelle rasterweergave</b><svg id="svg" viewBox="0 0 700 430"></svg><div class="legend"><span><i class="dot"></i> actief rasterpunt</span><span>P00 = nulpunt</span></div></div>
 </section>
@@ -54,7 +54,7 @@ body.ar-mode header,body.ar-mode main{display:none!important}
   <p class="small">1. Leg de houten X met het snijpunt exact op P00.<br>2. Kies een betrouwbaar tweede punt voor de richting.<br>3. Start AR. Tijdens AR verdwijnen alle normale panelen.</p>
   <label class="field">Tweede referentiepunt<select id="ref"></select></label>
   <div class="row" style="margin-top:10px"><button id="start" class="primary">Start AR</button></div>
-  <p id="support" class="small">Deze versie gebruikt actieve fysieke relock: na P00 + P03 kun je P00 opnieuw onder het vizier zetten en met één knop het hele raster terugschuiven. P03 kan apart de richting opnieuw vastleggen. Dit werkt ook wanneer de WebXR Anchor API niet beschikbaar is.</p>
+  <p id="support" class="small">Test: rigide ProjectRoot + WebXR anchors indien Chrome/ARCore ze ondersteunt. De houten X is voorlopig een fysieke richtreferentie; automatische X-herkenning volgt pas na de stabiliteitstest.</p>
  </div>
 </section>
 </main>
@@ -62,16 +62,16 @@ body.ar-mode header,body.ar-mode main{display:none!important}
 <div id="arUI">
  <div id="hud"><div id="hudStatus">AR starten…</div><div id="hudDetail"></div></div>
  <div id="ret"></div><div id="labels"></div>
- <div id="arBottom"><button id="placeBtn" class="primary">● P00 HIER VASTLEGGEN</button><button id="fixPos" style="display:none">P00 positie corrigeren</button><button id="fixDir" style="display:none">P03 richting corrigeren</button><button id="recal">Volledig herijken</button><button id="stop">Stop AR</button></div>
+ <div id="arBottom"><button id="recal">Herijk P00 + referentie</button><button id="stop">Stop AR</button></div>
 </div>
 
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
-let S=JSON.parse(localStorage.getItem("bomal0734")||"null")||{cols:3,rows:5,dx:1975,dy:1256.5};
+let S=JSON.parse(localStorage.getItem("bomal0731")||"null")||{cols:5,rows:3,dx:1975,dy:1256.5};
 ["cols","rows","dx","dy"].forEach(k=>$(k).value=S[k]);
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));document.querySelectorAll(".panel").forEach(x=>x.classList.remove("on"));b.classList.add("on");$("p-"+b.dataset.tab).classList.add("on")});
-function sync(){S.cols=Math.max(2,+$("cols").value||3);S.rows=Math.max(2,+$("rows").value||5);S.dx=Math.max(1,+$("dx").value||1975);S.dy=Math.max(1,+$("dy").value||1256.5);localStorage.setItem("bomal0734",JSON.stringify(S));fillRef();drawAll()}
+function sync(){S.cols=Math.max(2,+$("cols").value||5);S.rows=Math.max(2,+$("rows").value||3);S.dx=Math.max(1,+$("dx").value||1975);S.dy=Math.max(1,+$("dy").value||1256.5);localStorage.setItem("bomal0731",JSON.stringify(S));fillRef();drawAll()}
 function pts(){let a=[],i=0;for(let r=0;r<S.rows;r++)for(let c=0;c<S.cols;c++)a.push({i:i,name:"P"+String(i++).padStart(2,"0"),x:c*S.dx,z:-r*S.dy});return a}
 function fillRef(){let old=$("ref").value;$("ref").innerHTML="";pts().slice(1).forEach(p=>{let o=document.createElement("option");o.value=p.i;o.textContent=p.name;$("ref").appendChild(o)});$("ref").value=[...$("ref").options].some(o=>o.value===old)?old:String(Math.min(3,pts().length-1))}
 function draw(svg){
@@ -82,7 +82,7 @@ function draw(svg){
 }
 function drawAll(){draw($("svg"));draw($("svg2"))}$("apply").onclick=sync;$("save").onclick=sync;fillRef();drawAll();
 
-let ses=null,gl=null,space=null,viewer=null,hit=null,hitPose=null,root=null,prog=null,ploc=null,mloc=null,cloc=null,stage=0,p00=null,a0=null,a1=null,labs=[];let lockedYaw=0,refWorld=null;
+let ses=null,gl=null,space=null,viewer=null,hit=null,hitPose=null,root=null,prog=null,ploc=null,mloc=null,cloc=null,stage=0,p00=null,a0=null,a1=null,labs=[];
 function mul(a,b){let o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)o[c*4+r]=a[r]*b[c*4]+a[4+r]*b[c*4+1]+a[8+r]*b[c*4+2]+a[12+r]*b[c*4+3];return o}
 function tv(m,v){let[x,y,z,w]=v;return[m[0]*x+m[4]*y+m[8]*z+m[12]*w,m[1]*x+m[5]*y+m[9]*z+m[13]*w,m[2]*x+m[6]*y+m[10]*z+m[14]*w,m[3]*x+m[7]*y+m[11]*z+m[15]*w]}
 function mkroot(x,y,z,yaw){let c=Math.cos(yaw),s=Math.sin(yaw);return new Float32Array([c,0,-s,0,0,1,0,0,s,0,c,0,x,y,z,1])}
@@ -98,76 +98,17 @@ async function start(){
   let cv=document.createElement("canvas");gl=cv.getContext("webgl",{xrCompatible:true,alpha:true});await gl.makeXRCompatible();ses.updateRenderState({baseLayer:new XRWebGLLayer(ses,gl)});
   space=await ses.requestReferenceSpace("local");viewer=await ses.requestReferenceSpace("viewer");hit=await ses.requestHitTestSource({space:viewer});
   prog=gl.createProgram();gl.attachShader(prog,shader(gl.VERTEX_SHADER,"attribute vec3 p;uniform mat4 m;void main(){gl_Position=m*vec4(p,1.);}"));gl.attachShader(prog,shader(gl.FRAGMENT_SHADER,"precision mediump float;uniform vec4 c;void main(){gl_FragColor=c;}"));gl.linkProgram(prog);ploc=gl.getAttribLocation(prog,"p");mloc=gl.getUniformLocation(prog,"m");cloc=gl.getUniformLocation(prog,"c");
-  stage=0;root=null;p00=null;a0=a1=null;lockedYaw=0;refWorld=null;$("fixPos").style.display="none";$("fixDir").style.display="none";labs.forEach(e=>e.remove());labs=[];arPts().forEach(p=>{let e=document.createElement("div");e.className="lab";e.textContent=p.name;$("labels").appendChild(e);labs.push(e)});
-  stat("1/2 · PLAATS P00","X-snijding exact op P00 · richt vizier · druk op P00 HIER VASTLEGGEN.");$("placeBtn").textContent="● P00 HIER VASTLEGGEN";$("placeBtn").style.display="inline-block";ses.addEventListener("end",()=>{document.body.classList.remove("ar-mode");$("arUI").style.display="none";labs.forEach(e=>e.remove());labs=[];ses=null});ses.requestAnimationFrame(frame)
+  stage=0;root=null;p00=null;a0=a1=null;labs.forEach(e=>e.remove());labs=[];arPts().forEach(p=>{let e=document.createElement("div");e.className="lab";e.textContent=p.name;$("labels").appendChild(e);labs.push(e)});
+  stat("1/2 · PLAATS P00","X-snijding exact op P00 · richt vizier · tik.");ses.addEventListener("select",place);ses.addEventListener("end",()=>{document.body.classList.remove("ar-mode");$("arUI").style.display="none";labs.forEach(e=>e.remove());labs=[];ses=null});ses.requestAnimationFrame(frame)
  }catch(e){document.body.classList.remove("ar-mode");$("arUI").style.display="none";alert(e.message)}
 }
 async function place(){
- if(!hitPose)return;
- let M=hitPose.transform.matrix,ri=+$("ref").value,t=arPts()[ri];
- if(stage===0){
-   p00={x:M[12],y:M[13],z:M[14]};
-   lockedYaw=0;
-   root=mkroot(p00.x,p00.y,p00.z,lockedYaw);
-   a0=await anchor(hitPose);
-   stage=1;
-   $("placeBtn").textContent="● "+t.name+" HIER VASTLEGGEN";
-   stat("2/2 · PLAATS "+t.name,"Richt exact op het fysieke middelpunt van "+t.name+" · druk op de groene knop.");
- }else if(stage===1){
-   refWorld={x:M[12],y:M[13],z:M[14]};
-   let wx=refWorld.x-p00.x,wz=refWorld.z-p00.z;
-   let al=Math.atan2(t.z,t.x),aw=Math.atan2(wz,wx);
-   lockedYaw=al-aw;
-   root=mkroot(p00.x,p00.y,p00.z,lockedYaw);
-   a1=await anchor(hitPose);
-   stage=2;
-   $("placeBtn").style.display="none";
-   $("fixPos").style.display="inline-block";
-   $("fixDir").style.display="inline-block";
-   stat("🔒 RASTER P00 → "+t.name,"Actieve fysieke relock beschikbaar. Corrigeer P00 of richting wanneer tracking verschuift.");
- }
+ if(!hitPose)return;let M=hitPose.transform.matrix,ri=+$("ref").value,t=arPts()[ri];
+ if(stage===0){p00={x:M[12],y:M[13],z:M[14]};root=mkroot(p00.x,p00.y,p00.z,0);a0=await anchor(hitPose);stage=1;stat("2/2 · PLAATS "+t.name,"Richt exact op het fysieke middelpunt van "+t.name+" · tik.")}
+ else if(stage===1){let wx=M[12]-p00.x,wz=M[14]-p00.z,al=Math.atan2(t.z,t.x),aw=Math.atan2(wz,wx),yaw=al-aw;root=mkroot(p00.x,p00.y,p00.z,yaw);a1=await anchor(hitPose);stage=2;stat("🔒 RASTER P00 → "+t.name,(a0||a1)?"Rigide raster · WebXR anchor actief.":"Rigide raster · Anchor API niet beschikbaar.")}
 }
-async function fixPosition(){
- if(stage!==2||!hitPose||!root)return;
- let M=hitPose.transform.matrix;
- // Keep orientation exactly; translate entire rigid raster so P00 is again under the reticle.
- p00={x:M[12],y:M[13],z:M[14]};
- root=mkroot(p00.x,p00.y,p00.z,lockedYaw);
- stat("✓ P00 POSITIE GECORRIGEERD","Volledig raster rigide terug op P00 gezet; richting is behouden.");
-}
-async function fixDirection(){
- if(stage!==2||!hitPose||!root)return;
- let ri=+$("ref").value,t=arPts()[ri],M=hitPose.transform.matrix;
- refWorld={x:M[12],y:M[13],z:M[14]};
- let wx=refWorld.x-p00.x,wz=refWorld.z-p00.z;
- let al=Math.atan2(t.z,t.x),aw=Math.atan2(wz,wx);
- lockedYaw=al-aw;
- root=mkroot(p00.x,p00.y,p00.z,lockedYaw);
- stat("✓ "+t.name+" RICHTING GECORRIGEERD","P00 bleef vast; volledige rasterrotatie is opnieuw gekoppeld aan "+t.name+".");
-}
-function marker(m){
- // Exact tile footprint: 300 x 300 mm, centered on raster point.
- const h=.15; // half of 0.300 m
- const cross=.045;
- const v=[
-   -h,0,-h,  h,0,-h,
-    h,0,-h,  h,0, h,
-    h,0, h, -h,0, h,
-   -h,0, h, -h,0,-h,
-   -cross,0,0, cross,0,0,
-   0,0,-cross, 0,0,cross
- ];
- let b=gl.createBuffer();
- gl.bindBuffer(gl.ARRAY_BUFFER,b);
- gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(v),gl.STREAM_DRAW);
- gl.vertexAttribPointer(ploc,3,gl.FLOAT,false,0,0);
- gl.enableVertexAttribArray(ploc);
- gl.uniformMatrix4fv(mloc,false,m);
- gl.uniform4f(cloc,.1,1,.35,1);
- gl.drawArrays(gl.LINES,0,v.length/3);
- gl.deleteBuffer(b)
-}
+function marker(m){let r=.13,N=32,v=[];for(let i=0;i<N;i++){let a=i*2*Math.PI/N,b=(i+1)*2*Math.PI/N;v.push(Math.cos(a)*r,0,Math.sin(a)*r,Math.cos(b)*r,0,Math.sin(b)*r)}v.push(-r,0,0,r,0,0,0,0,-r,0,0,r);let b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(v),gl.STREAM_DRAW);gl.vertexAttribPointer(ploc,3,gl.FLOAT,false,0,0);gl.enableVertexAttribArray(ploc);gl.uniformMatrix4fv(mloc,false,m);gl.uniform4f(cloc,.1,1,.35,1);gl.drawArrays(gl.LINES,0,v.length/3);gl.deleteBuffer(b)}
 function frame(t,f){if(!ses)return;ses.requestAnimationFrame(frame);let pose=f.getViewerPose(space),hs=hit?f.getHitTestResults(hit):[];hitPose=hs.length?hs[0].getPose(space):null;if(!pose)return;let base=ses.renderState.baseLayer;gl.bindFramebuffer(gl.FRAMEBUFFER,base.framebuffer);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(prog);let v=pose.views[0],vp=base.getViewport(v);gl.viewport(vp.x,vp.y,vp.width,vp.height);
  if(root)arPts().forEach((p,i)=>{let T=new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,p.x,p.y,p.z,1]),W=mul(root,T),M=mul(v.projectionMatrix,mul(v.transform.inverse.matrix,W));marker(M);let q=tv(mul(v.projectionMatrix,v.transform.inverse.matrix),tv(root,[p.x,p.y,p.z,1]));if(q[3]>0){let nx=q[0]/q[3],ny=q[1]/q[3];labs[i].style.display=Math.abs(nx)<1.15&&Math.abs(ny)<1.15?"block":"none";labs[i].style.left=(nx*.5+.5)*innerWidth+"px";labs[i].style.top=(-ny*.5+.5)*innerHeight+"px"}else labs[i].style.display="none"})}
-$("start").onclick=start;$("placeBtn").onclick=()=>place();$("fixPos").onclick=()=>fixPosition();$("fixDir").onclick=()=>fixDirection();$("stop").onclick=()=>ses&&ses.end();$("recal").onclick=()=>{stage=0;root=null;p00=null;a0=a1=null;lockedYaw=0;refWorld=null;$("fixPos").style.display="none";$("fixDir").style.display="none";$("placeBtn").style.display="inline-block";$("placeBtn").textContent="● P00 HIER VASTLEGGEN";stat("HERIJK · PLAATS P00","Richt opnieuw exact op de X-snijding op P00 en druk op de groene knop.")};
+$("start").onclick=start;$("stop").onclick=()=>ses&&ses.end();$("recal").onclick=()=>{stage=0;root=null;p00=null;a0=a1=null;stat("HERIJK · PLAATS P00","Richt opnieuw exact op de X-snijding op P00.")};
 </script></body></html>
