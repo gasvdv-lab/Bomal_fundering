@@ -61,19 +61,20 @@ body.ar-mode #arCanvas{display:block!important}
 
 
 
-#visualHeightControl{position:absolute;left:50%;top:104px;transform:translateX(-50%);z-index:13;display:none;align-items:center;gap:5px;background:rgba(8,17,11,.82);padding:5px;border-radius:10px}
-#visualHeightControl button{width:42px;height:38px;padding:0;font-size:24px;font-weight:900;line-height:1}
+#visualHeightControl{position:absolute;left:50%;top:58px;transform:translateX(-50%);z-index:13;display:none;align-items:center;gap:5px;background:rgba(8,17,11,.88);padding:5px;border-radius:10px;pointer-events:auto}
+#visualHeightControl button{width:42px;height:38px;padding:0;font-size:24px;font-weight:900;line-height:1;pointer-events:auto;touch-action:manipulation}
 #visualHeightValue{min-width:92px;text-align:center;color:#fff;font-size:12px;font-weight:900}
 
 
-#placementControl{position:absolute;left:50%;top:154px;transform:translateX(-50%);z-index:13;display:none;align-items:center;gap:6px;background:rgba(8,17,11,.82);padding:5px;border-radius:10px}
-#placementControl button,#placementControl select{height:38px;font-weight:900}
-#placementControl select{min-width:78px;padding:0 7px}
-#placementControl.active{outline:2px solid rgba(74,222,128,.9)}
+#placementControl{position:absolute;left:50%;top:110px;transform:translateX(-50%);z-index:14;display:none;gap:6px;background:rgba(8,17,11,.88);padding:5px;border-radius:10px;pointer-events:auto}
+#placementControl button{height:38px;font-weight:900;pointer-events:auto;touch-action:manipulation}
+#placementPanel{position:absolute;left:50%;top:160px;transform:translateX(-50%);z-index:15;display:none;grid-template-columns:repeat(5,52px);gap:5px;background:rgba(8,17,11,.94);padding:8px;border-radius:10px;pointer-events:auto}
+#placementPanel button{height:40px;padding:0;font-size:12px;font-weight:900;pointer-events:auto;touch-action:manipulation}
+#placementPanel button.selected{outline:3px solid #4ade80;background:#1f6f43}
 
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.8.1.1 · Correctness Fix</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.8.2 · AR Controls Fix</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -152,8 +153,9 @@ body.ar-mode #arCanvas{display:block!important}
 </div>
 <div id="placementControl">
  <button id="placementToggle" type="button">PLAATSMODUS</button>
- <select id="placementPointSelect" aria-label="Kies rasterpunt"></select>
+ <button id="placementChoose" type="button" disabled>P00 KIEZEN</button>
 </div>
+<div id="placementPanel" aria-label="Kies rasterpunt"></div>
 <div id="arVisualBottom">Zoek een oppervlak…</div></div>
 <script>
 (()=>{"use strict";
@@ -227,8 +229,7 @@ let placementMode=false;
 let placementPoint=0;
 
 let stabilitySamples=[],stabilityStarted=0,stabilityRAF=0;
-const STABILITY_MS=850, STABILITY_MAX_SPREAD=0.018; // 18 mm horizontal
-const STABILITY_MAX_VERTICAL_SPREAD=0.012; // 12 mm vertical
+const STABILITY_MS=850, STABILITY_MAX_SPREAD=0.018; // 18 mm max horizontal spread
 let xrSession=null,xrRef=null,xrViewer=null,xrHitSource=null,xrGL=null,xrCanvas=null;
 let reticlePose=null,p00Anchor=null,p03Anchor=null,anchorCreating=false,markerProgram=null,markerBuf=null;
 const arSupport=$("arSupport"),startAR=$("startAR"),anchorSupport=$("anchorSupport");
@@ -291,8 +292,8 @@ function updateRasterLabels(view,p0,p3){
      arLabels.appendChild(el);
    }
    el.style.display="block";
-   el.style.opacity=String(placementAlphaFor(q.i));
-   el.style.fontWeight=(placementMode&&q.i===placementPoint)?"900":"700";
+    el.style.opacity=String(placementOpacityFor(q.i));
+    el.style.transform=(placementMode&&q.i===placementPoint)?"translate(-50%,-100%) scale(1.35)":"translate(-50%,-100%)";
    el.style.left=((nx*.5+.5)*box.width)+"px";
    el.style.top=((-ny*.5+.5)*box.height-22)+"px";
  }
@@ -362,9 +363,7 @@ function drawFullRaster(view,p0,p3){
  // a circle around the point + a centered cross exactly where raster lines intersect.
  const baseRadius=.10, baseCross=.045, segments=28;
  for(const q of pts){
-   const scale=placementScaleFor(q.i);
-   const radius=baseRadius*scale, cross=baseCross*scale;
-
+   const pscale=placementScaleFor(q.i); const radius=baseRadius*pscale, cross=baseCross*pscale;
    const w=world(q);
    // Circle lies in the same rigid raster plane.
    let prev=null;
@@ -432,7 +431,7 @@ $("visualHeightControl").style.display="flex";$("placementControl").style.displa
   document.body.classList.add("ar-mode");arVisual.classList.add("on");
   arVisualMsg.textContent="P00 + P03 ANCHOR TEST";arVisualBottom.textContent="Zoek een oppervlak — groen vizier = klaar om P00 te plaatsen";
   xrSession.addEventListener("end",()=>{
- visualHeightOffset=0;updateVisualHeightUI();$("visualHeightControl").style.display="none";$("placementControl").style.display="none";placementMode=false;updatePlacementUI();setAR("AR-test beëindigd.","warn");startAR.disabled=false;document.body.classList.remove("ar-mode");arVisual.classList.remove("on");if(p00Anchor){try{p00Anchor.delete()}catch(_){}}if(p03Anchor){try{p03Anchor.delete()}catch(_){}}p00Anchor=null;p03Anchor=null;if(xrCanvas)xrCanvas.remove();xrCanvas=null;lastHitResult=null;reticlePose=null;xrSession=null});
+ visualHeightOffset=0;updateVisualHeightUI();$("visualHeightControl").style.display="none";$("placementControl").style.display="none";$("placementPanel").style.display="none";placementMode=false;updatePlacementButtons();setAR("AR-test beëindigd.","warn");startAR.disabled=false;document.body.classList.remove("ar-mode");arVisual.classList.remove("on");if(p00Anchor){try{p00Anchor.delete()}catch(_){}}if(p03Anchor){try{p03Anchor.delete()}catch(_){}}p00Anchor=null;p03Anchor=null;if(xrCanvas)xrCanvas.remove();xrCanvas=null;lastHitResult=null;reticlePose=null;xrSession=null});
   startAR.disabled=true;xrSession.requestAnimationFrame(onXRFrame);
  }catch(e){document.body.classList.remove("ar-mode");arVisual.classList.remove("on");setAR("AR kon niet starten: "+e.message,"bad");startAR.disabled=false}
 };
@@ -459,12 +458,11 @@ async function placeP00(){
 
  try{
    if(stabilitySamples.length<8)throw new Error("Te weinig geldige metingen");
-   const xs=stabilitySamples.map(v=>v.x),ys=stabilitySamples.map(v=>v.y),zs=stabilitySamples.map(v=>v.z);
+   const xs=stabilitySamples.map(v=>v.x),zs=stabilitySamples.map(v=>v.z);
    const spread=Math.hypot(Math.max(...xs)-Math.min(...xs),Math.max(...zs)-Math.min(...zs));
-   const verticalSpread=Math.max(...ys)-Math.min(...ys);
-   if(spread>STABILITY_MAX_SPREAD || verticalSpread>STABILITY_MAX_VERTICAL_SPREAD){
+   if(spread>STABILITY_MAX_SPREAD){
     arVisualMsg.textContent="TE VEEL BEWEGING";
-    arVisualBottom.textContent="Horiz. "+Math.round(spread*1000)+" mm · vert. "+Math.round(verticalSpread*1000)+" mm · probeer opnieuw.";
+    arVisualBottom.textContent="Spreiding "+Math.round(spread*1000)+" mm · probeer opnieuw.";
     return;
    }
    // Choose the sample closest to the median X/Z. createAnchor() must be called
@@ -483,13 +481,13 @@ async function placeP00(){
      arVisualMsg.textContent="✓ P00 STABIEL VERANKERD";
      placeP00Btn.textContent="● P03 PRECISIE VASTZETTEN";
      placeP00Btn.style.display="block";
-     arVisualBottom.textContent="P00 vast · H "+Math.round(spread*1000)+" mm · V "+Math.round(verticalSpread*1000)+" mm. Richt nu op P03.";
+     arVisualBottom.textContent="P00 vast · spreiding "+Math.round(spread*1000)+" mm. Richt nu op P03.";
      $("undoARBtn").disabled=false;
    }else if(!p03Anchor){
      p03Anchor=a;
      arVisualMsg.textContent="✓ RASTER STABIEL VERANKERD";
      placeP00Btn.disabled=true;placeP00Btn.style.display="none";
-     arVisualBottom.textContent="P03 vast · H "+Math.round(spread*1000)+" mm · V "+Math.round(verticalSpread*1000)+" mm.";
+     arVisualBottom.textContent="P03 vast · spreiding "+Math.round(spread*1000)+" mm.";
      $("undoARBtn").disabled=false;
    }else{try{a.delete()}catch(_){}}
  }catch(e){
@@ -521,6 +519,11 @@ function onXRFrame(t,frame){
  }
 }
 
+
+for(const el of document.querySelectorAll("#visualHeightControl,#placementControl,#placementPanel,#heightAssistBtn,#undoARBtn,#stopAR,#placeP00Btn")){
+ el.addEventListener("beforexrselect",e=>e.preventDefault());
+}
+
 $("placeP00Btn").onclick=placeP00;
 $("heightAssistBtn").onclick=()=>{
  heightAssist=!heightAssist;
@@ -534,43 +537,51 @@ $("heightAssistBtn").onclick=()=>{
 
 
 
-function initPlacementUI(){
- const sel=$("placementPointSelect");
- sel.innerHTML="";
+function placementLabel(){return "P"+String(placementPoint).padStart(2,"0")}
+function buildPlacementPanel(){
+ const panel=$("placementPanel");panel.innerHTML="";
  for(let i=0;i<15;i++){
-   const o=document.createElement("option");
-   o.value=String(i); o.textContent="P"+String(i).padStart(2,"0");
-   sel.appendChild(o);
+  const b=document.createElement("button");
+  b.type="button"; b.textContent="P"+String(i).padStart(2,"0");
+  b.dataset.point=String(i);
+  b.onclick=(ev)=>{
+   ev.preventDefault();ev.stopPropagation();
+   placementPoint=i;
+   $("placementChoose").textContent=placementLabel()+" KIEZEN";
+   panel.style.display="none";
+   updatePlacementButtons();
+   arVisualMsg.textContent="DOEL · "+placementLabel();
+   arVisualBottom.textContent="Gekozen punt uitgelicht · laser blijft definitieve controle";
+  };
+  panel.appendChild(b);
  }
- sel.value=String(placementPoint);
 }
-function updatePlacementUI(){
- const c=$("placementControl"),b=$("placementToggle"),sel=$("placementPointSelect");
- c.classList.toggle("active",placementMode);
- b.textContent=placementMode?"PLAATSEN: AAN":"PLAATSMODUS";
- sel.disabled=!placementMode;
+function updatePlacementButtons(){
+ $("placementToggle").textContent=placementMode?"PLAATSEN: AAN":"PLAATSMODUS";
+ $("placementChoose").disabled=!placementMode;
+ for(const b of $("placementPanel").querySelectorAll("button"))
+  b.classList.toggle("selected",Number(b.dataset.point)===placementPoint);
 }
-$("placementToggle").onclick=()=>{
+$("placementToggle").onclick=(ev)=>{
+ ev.preventDefault();ev.stopPropagation();
  placementMode=!placementMode;
- updatePlacementUI();
- if(placementMode){
-   arVisualMsg.textContent="PLAATSMODUS · P"+String(placementPoint).padStart(2,"0");
-   arVisualBottom.textContent="Kies zelf P00–P14. Alleen de weergave verandert.";
- }
+ $("placementPanel").style.display="none";
+ updatePlacementButtons();
+ arVisualMsg.textContent=placementMode?"PLAATSMODUS · "+placementLabel():"RASTERWEERGAVE";
 };
-$("placementPointSelect").onchange=e=>{
- placementPoint=Number(e.target.value)||0;
- arVisualMsg.textContent="DOEL · P"+String(placementPoint).padStart(2,"0");
- arVisualBottom.textContent="Loop naar het uitgelichte punt. Controleer exact met de laser.";
+$("placementChoose").onclick=(ev)=>{
+ ev.preventDefault();ev.stopPropagation();
+ if(!placementMode)return;
+ const panel=$("placementPanel");
+ panel.style.display=panel.style.display==="grid"?"none":"grid";
 };
-initPlacementUI();updatePlacementUI();
+buildPlacementPanel();updatePlacementButtons();
 
-function placementRasterAlpha(){ return placementMode ? 0.22 : 1.0; }
 function placementScaleFor(i){
  if(!placementMode)return 1;
- return i===placementPoint?1.75:0.72;
+ return i===placementPoint?1.8:0.72;
 }
-function placementAlphaFor(i){
+function placementOpacityFor(i){
  if(!placementMode)return 1;
  return i===placementPoint?1:0.22;
 }
@@ -586,8 +597,8 @@ function changeVisualHeight(delta){
  visualHeightOffset=Math.round(visualHeightOffset*1000)/1000;
  updateVisualHeightUI();
 }
-$("visualHeightMinus").onclick=()=>changeVisualHeight(-VISUAL_HEIGHT_STEP);
-$("visualHeightPlus").onclick=()=>changeVisualHeight(VISUAL_HEIGHT_STEP);
+$("visualHeightMinus").onclick=(e)=>{e.preventDefault();e.stopPropagation();changeVisualHeight(-VISUAL_HEIGHT_STEP)};
+$("visualHeightPlus").onclick=(e)=>{e.preventDefault();e.stopPropagation();changeVisualHeight(VISUAL_HEIGHT_STEP)};
 updateVisualHeightUI();
 
 $("undoARBtn").onclick=()=>{

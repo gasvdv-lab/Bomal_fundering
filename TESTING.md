@@ -1,17 +1,16 @@
-# TESTING — v0.7.8.1.1
+# TESTING — v0.7.8.2
 
-1. Start AR; OFFSET moet 0 mm tonen.
-2. Plaats P00 en P03.
-3. Controleer dat raster, cirkels/kruisen, assen en labels visueel dezelfde offset volgen.
-4. Verander OFFSET met + en −; alle rasteronderdelen moeten samen bewegen.
-5. HOOGTEHULP moet alleen de verticale hulplijnen schakelen.
-6. Beweeg tijdens PRECISIE VASTZETTEN duidelijk op/neer: verticale instabiliteit moet kunnen worden afgekeurd.
-7. Bij succesvolle plaatsing moet H- en V-spreiding worden gemeld.
-8. Zet PLAATSMODUS aan en kies P01, P07, P14 en P00.
-9. Gekozen punt moet nadrukkelijker zijn; overige weergave wordt teruggenomen.
-10. Wisselen van doelpunt mag geen anchors of geometrie wijzigen.
-11. Test UNDO.
-12. Loop weg en terug en controleer P00/P03-stabiliteit.
-13. Controleer fysiek met de laser.
+Kritieke fysieke Samsung/WebXR-test:
+1. Start AR.
+2. Druk OFFSET + eenmaal. Tekst moet onmiddellijk `OFFSET +2 mm` tonen.
+3. Druk nogmaals: `+4 mm`. Druk −: terug `+2 mm`.
+4. Controleer dat raster/cirkels/labels daadwerkelijk mee omhoog/omlaag gaan.
+5. HOOGTEHULP mag hierdoor niet schakelen.
+6. Druk PLAATSMODUS: tekst wordt `PLAATSEN: AAN`.
+7. Druk `P00 KIEZEN`: 15 knoppen P00–P14 moeten verschijnen.
+8. Kies P07: paneel sluit, knop toont `P07 KIEZEN`, P07 wordt uitgelicht.
+9. Kies daarna P14 en P03 zonder P00/P03 opnieuw te ankeren.
+10. Test P00/P03 precisieplaatsing, UNDO en hoogtehulp zoals voorheen.
+11. Loop weg en terug; controleer stabiliteit met laser.
 
-Limieten stabiliteit: horizontaal ≤18 mm, verticaal ≤12 mm.
+Als stap 2 of 6 niet reageert, stop de test en meld exact welke knop geen visuele tekstwijziging geeft.

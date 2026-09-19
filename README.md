@@ -1,15 +1,14 @@
-# Bomal Fundering v0.7.8.1.1 — Correctness Fix
+# Bomal Fundering v0.7.8.2 — AR Controls Fix
 
-Gerichte reparatie van v0.7.8.1.
+Opnieuw opgebouwd vanaf de door de gebruiker aangeleverde v0.7.7.1.1.
 
-## Gecorrigeerd
-- Raster, cirkels/kruisen, rasterassen, labels en hoogtehulp gebruiken nu dezelfde visuele Y-basis: `P00 Y + OFFSET`.
-- De oude afzonderlijke +35 mm labelhoogte en +8 mm ashoogte zijn verwijderd.
-- `OFFSET 0 mm` betekent nu voor alle rastergerelateerde visualisatie dezelfde basis.
-- Stabiliteitsmeting controleert naast horizontale beweging ook verticale spreiding.
-- Huidige limieten: 18 mm horizontaal en 12 mm verticaal gedurende circa 0,85 s.
-- Na P00/P03 wordt H/V-spreiding gemeld.
-- Plaatsmodus houdt het gekozen punt nadrukkelijk zichtbaar en probeert de algemene rasterlijnen visueel terug te nemen.
+Belangrijkste oorzaak gevonden: `#arVisual` gebruikt `pointer-events:none`. De bestaande werkende AR-knoppen hadden expliciet `pointer-events:auto`, maar de OFFSET-bediening niet. Daardoor was ze zichtbaar zonder betrouwbare touch-input.
 
-## Bewust niet gewijzigd
-De bewezen P00/P03 WebXR `createAnchor()`-werkwijze is niet herschreven. De exacte 3×5 geometrie blijft rigide en de laser blijft de definitieve controle.
+Reparaties:
+- OFFSET-bediening expliciet touch/click-actief.
+- `beforexrselect` wordt op interactieve HUD-elementen tegengehouden.
+- OFFSET gebruikt ±2 mm en verandert alleen `visualHeightOffset`.
+- alle rastervisualisatie gebruikt dezelfde P00 + OFFSET-basis.
+- Plaatsmodus gebruikt geen native select maar een expliciet P00–P14 knoppenpaneel voor betrouwbaardere WebXR DOM-overlay bediening.
+- gekozen punt wordt groter; overige labels worden teruggenomen.
+- P00/P03 anchor- en stabiliteitslogica uit v0.7.7.1.1 blijft onaangeroerd.
