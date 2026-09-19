@@ -1,2 +1,2 @@
 # ROADMAP
-v0.7.10.0: fysiek valideren van de nieuwe P00 master-anchorarchitectuur vóór nieuwe functies.
+v0.7.10.1: vaste P00 → P03 workflow. Eerst de master-anchorwerking fysiek verder valideren.

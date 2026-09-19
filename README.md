@@ -1,12 +1,8 @@
-# Bomal Fundering v0.7.10.0 — Master Anchor Raster
+# Bomal Fundering v0.7.10.1 — P03 Workflow Fix
 
-Architectuurcorrectie:
-- P00 en P03 worden als echte WebXR anchors geplaatst.
-- P03 bepaalt éénmalig de lokale rasteroriëntatie.
-- Daarna wordt géén absolute wereldpositie als rasterlock opgeslagen.
-- Iedere XR-frame gebruikt het raster de actuele pose van P00's `anchorSpace` als mastertransformatie.
-- P01–P14 zijn vaste lokale punten van hetzelfde rigide raster.
-- P03 wordt na de lock niet gebruikt om de geometrie opnieuw te berekenen.
-- Rasterlijnen, cirkels, kruisen en labels gebruiken dezelfde mastertransformatie.
-- OFFSET is één gemeenschappelijke lokale offset voor P00–P14.
-- Hoogtehulp is volledig verwijderd.
+Hotfix op v0.7.10.0:
+- de verouderde/lege keuzelijst `Richtingspunt na P00` is verwijderd;
+- P03 is nu vast het tweede fysieke referentiepunt;
+- workflow is P00 → P03 → Master Raster;
+- verouderde P01-instructie is gecorrigeerd;
+- Master Anchor Raster-code is verder niet gewijzigd.

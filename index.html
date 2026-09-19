@@ -67,7 +67,7 @@ body.ar-mode #arCanvas{display:block!important}
 
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.10.0 · Offset Zero Fix</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.10.1 · Offset Zero Fix</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -107,16 +107,13 @@ body.ar-mode #arCanvas{display:block!important}
 <input id="markerSize" type="range" min="5" max="50" value="20">
 <p class="muted">De keuze verandert alleen de AR-weergave, nooit de geometrische positie.</p>
 </div>
-<div class="card" style="margin:10px 0">
-<label>Richtingspunt na P00</label>
-<select id="alignPoint"></select>
-<p class="muted">Kies bij voorkeur een duidelijk en zo ver mogelijk punt, bv. P03, P12 of P14. Na P00 richt je het vizier op het echte middelpunt van dit punt en tik je opnieuw.</p>
-</div>
+
 <div class="arActions">
+<div style="margin:0 0 16px;color:#aeb6c2;line-height:1.45"><b>Vaste AR-volgorde:</b> P00 → P03 → volledig raster geankerd.</div>
 <button id="checkAR">Controleer AR</button>
 <button id="startAR" class="primary" disabled>Start AR</button>
 </div>
-<p class="muted">Tijdens AR verschijnt een richtvizier op gevonden oppervlakken. Tik één keer voor P00 en een tweede keer voor P01. Daarna kun je rondlopen en visueel controleren of beide markeringen op hun fysieke referentie blijven staan.</p>
+<p class="muted">Tijdens AR verschijnt een richtvizier op gevonden oppervlakken. Tik één keer voor P00 en een tweede keer voor P03. Daarna kun je rondlopen en visueel controleren of beide markeringen op hun fysieke referentie blijven staan.</p>
 </div>
 <div class="card">
 <h2>Testprotocol</h2>
@@ -163,7 +160,6 @@ function addRow(parent,name,val,set){let d=document.createElement("div");d.class
 function renderInputs(){$("cols").value=s.cols;$("rows").value=s.rows;$("xRows").innerHTML="";$("yRows").innerHTML="";
 s.x.forEach((v,i)=>addRow("xRows",`K${i+1} → K${i+2}`,v,n=>s.x[i]=n));s.y.forEach((v,i)=>addRow("yRows",`R${i+1} → R${i+2}`,v,n=>s.y[i]=n));save();populateSelects()}
 function populateAlignSelect(){
- let el=$("alignPoint");if(!el)return;let old=el.value;el.innerHTML="";
  coords().filter(q=>q.i!==0&&s.active[q.i]).forEach(q=>{let o=document.createElement("option");o.value=q.i;o.textContent="P"+String(q.i).padStart(2,"0");el.appendChild(o)});
  if([...el.options].some(o=>o.value===old))el.value=old;
  else if([...el.options].some(o=>o.value==="3"))el.value="3";
