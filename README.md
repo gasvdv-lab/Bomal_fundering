@@ -1,14 +1,19 @@
-# Bomal Fundering v0.7.7.1.1 — Adjustable Visual Height
+# Bomal Fundering v0.7.8.0 — Placement Mode
 
-Basis: v0.7.7.1 Stability Assisted Anchoring.
+Basis: v0.7.7.1.1.
 
-Wijziging:
-- vaste +14 mm visuele rasteroffset verwijderd;
-- standaard visuele hoogte = 0 mm, exact dezelfde Y-basis als P00;
-- compacte AR-bediening `−  HOOGTE 0 mm  +`;
-- stapgrootte 2 mm;
-- bereik −20 mm tot +50 mm.
+Nieuw: PLAATSMODUS in AR.
+- plaatsmodus kan aan/uit;
+- gebruiker kiest zelf P00 t/m P14 via een compacte keuzelijst;
+- gekozen doelpunt wordt groter en duidelijker weergegeven;
+- overige rasterpunten blijven zichtbaar maar worden visueel teruggenomen;
+- wisselen van doelpunt verandert geen rastergeometrie en maakt geen nieuwe anchor.
 
-Belangrijk: dit verplaatst uitsluitend de getekende rasteroverlay. P00/P03 WebXR-anchors, X/Y-geometrie, afstanden en stabiliteitsmeting worden niet aangepast.
-
-Tegelherkenning blijft verwijderd.
+Ongewijzigd:
+- P00/P03 echte WebXR-anchors;
+- stabiliteitsmeting;
+- Undo;
+- 3×5 exacte rastergeometrie;
+- instelbare visuele hoogte −20 t/m +50 mm;
+- hoogtehulp;
+- laser blijft definitieve maatcontrole.
