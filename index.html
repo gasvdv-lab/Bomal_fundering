@@ -69,7 +69,7 @@ body.ar-mode #arCanvas{display:block!important}
 
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.7.0 · Undo + Tile Detection Test</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.7.0.1 · Camera Hotfix</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -455,68 +455,91 @@ function onXRFrame(t,frame){
 // --- v0.7.7.0 isolated tile-centre detection test ---
 // This runs OUTSIDE immersive AR and does not change P00/P03 or raster geometry.
 let tileStream=null,tileDetectRAF=0,tileDetectionPaused=false;
-const tdOverlay=$("tileDetectOverlay"),tdVideo=$("tileDetectVideo"),tdCanvas=$("tileDetectCanvas"),tdResult=$("tileDetectResult");
+function tdEls(){
+ return {
+  overlay:document.getElementById("tileDetectOverlay"),
+  video:document.getElementById("tileDetectVideo"),
+  canvas:document.getElementById("tileDetectCanvas"),
+  result:document.getElementById("tileDetectResult")
+ };
+}
 function stopTileDetection(){
+ const e=tdEls();
  cancelAnimationFrame(tileDetectRAF);tileDetectRAF=0;
  if(tileStream){for(const t of tileStream.getTracks())t.stop();tileStream=null}
- tdOverlay.classList.remove("on");tileDetectionPaused=false;
+ if(e.overlay)e.overlay.classList.remove("on");
+ if(e.video)e.video.srcObject=null;
+ tileDetectionPaused=false;
 }
 async function startTileDetection(){
+ const e=tdEls();
+ if(!e.overlay||!e.video||!e.canvas||!e.result){
+   alert("Tegelherkenning kon niet starten: camera-interface ontbreekt.");
+   return;
+ }
  try{
-   tileStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}},audio:false});
-   tdVideo.srcObject=tileStream;await tdVideo.play();
-   tdOverlay.classList.add("on");tileDetectionPaused=false;detectTileFrame();
- }catch(e){alert("Camera kon niet starten: "+(e.message||e))}
+   tileStream=await navigator.mediaDevices.getUserMedia({
+     video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}},
+     audio:false
+   });
+   e.video.srcObject=tileStream;
+   e.overlay.classList.add("on");
+   await e.video.play();
+   tileDetectionPaused=false;
+   detectTileFrame();
+ }catch(err){
+   if(tileStream){for(const t of tileStream.getTracks())t.stop();tileStream=null}
+   alert("Camera kon niet starten: "+(err.message||err));
+ }
 }
 function detectTileFrame(){
- if(!tdOverlay.classList.contains("on"))return;
+ const e=tdEls();
+ if(!e.overlay||!e.video||!e.canvas||!e.result||!e.overlay.classList.contains("on"))return;
  const W=160,H=120,off=document.createElement("canvas");off.width=W;off.height=H;
  const oc=off.getContext("2d",{willReadFrequently:true});
- if(tdVideo.readyState>=2){
-   oc.drawImage(tdVideo,0,0,W,H);
+ if(e.video.readyState>=2){
+   oc.drawImage(e.video,0,0,W,H);
    const im=oc.getImageData(0,0,W,H),d=im.data;
-   // Sample central patch: target is intentionally expected near screen centre.
    let sr=0,sg=0,sb=0,n=0;
    for(let y=H/2-4;y<=H/2+4;y++)for(let x=W/2-4;x<=W/2+4;x++){
      let i=(y*W+x)*4;sr+=d[i];sg+=d[i+1];sb+=d[i+2];n++;
    }
    const cr=sr/n,cg=sg/n,cb=sb/n;
    const ok=new Uint8Array(W*H);
-   // Adaptive colour-distance mask around centre-tile appearance.
    for(let y=4;y<H-4;y++)for(let x=4;x<W-4;x++){
      let i=(y*W+x)*4,dr=d[i]-cr,dg=d[i+1]-cg,db=d[i+2]-cb;
      if(Math.sqrt(dr*dr+dg*dg+db*db)<62)ok[y*W+x]=1;
    }
-   // Flood fill from centre; avoids selecting similar remote ground patches.
    const seen=new Uint8Array(W*H),q=[(H>>1)*W+(W>>1)];seen[q[0]]=1;
    let qi=0,minx=W,miny=H,maxx=0,maxy=0,count=0;
    while(qi<q.length && count<W*H*.65){
      const k=q[qi++],x=k%W,y=(k/W)|0;if(!ok[k])continue;
      count++;if(x<minx)minx=x;if(x>maxx)maxx=x;if(y<miny)miny=y;if(y>maxy)maxy=y;
-     const ns=[k-1,k+1,k-W,k+W];
-     for(const nk of ns)if(nk>=0&&nk<W*H&&!seen[nk]){seen[nk]=1;q.push(nk)}
+     for(const nk of [k-1,k+1,k-W,k+W])if(nk>=0&&nk<W*H&&!seen[nk]){seen[nk]=1;q.push(nk)}
    }
    const bw=maxx-minx+1,bh=maxy-miny+1,aspect=bw/(bh||1);
-   const valid=count>350 && bw>22 && bh>18 && aspect>.45 && aspect<2.2 && bw<W*.88 && bh<H*.88;
-   const c=tdCanvas.getContext("2d");tdCanvas.width=innerWidth;tdCanvas.height=innerHeight;c.clearRect(0,0,tdCanvas.width,tdCanvas.height);
+   const valid=count>350&&bw>22&&bh>18&&aspect>.45&&aspect<2.2&&bw<W*.88&&bh<H*.88;
+   const c=e.canvas.getContext("2d");
+   e.canvas.width=innerWidth;e.canvas.height=innerHeight;
+   c.clearRect(0,0,e.canvas.width,e.canvas.height);
    if(valid){
-     // Map analysis rectangle to cover-video screen coordinates approximately.
-     const sx=tdCanvas.width/W,sy=tdCanvas.height/H;
+     const sx=e.canvas.width/W,sy=e.canvas.height/H;
      const cx=(minx+maxx)/2*sx,cy=(miny+maxy)/2*sy;
      c.lineWidth=4;c.strokeStyle="#4ade80";c.strokeRect(minx*sx,miny*sy,bw*sx,bh*sy);
      c.beginPath();c.moveTo(cx-18,cy);c.lineTo(cx+18,cy);c.moveTo(cx,cy-18);c.lineTo(cx,cy+18);c.stroke();
      c.beginPath();c.arc(cx,cy,24,0,Math.PI*2);c.stroke();
-     tdResult.textContent="TEGELKANDIDAAT GEVONDEN · + = berekend middelpunt";
+     e.result.textContent="TEGELKANDIDAAT GEVONDEN · + = berekend middelpunt";
    }else{
-     c.strokeStyle="#ffcc66";c.lineWidth=3;c.beginPath();c.arc(tdCanvas.width/2,tdCanvas.height/2,34,0,Math.PI*2);c.stroke();
-     tdResult.textContent="Nog geen betrouwbare tegel · richt het midden op de tegel";
+     c.strokeStyle="#ffcc66";c.lineWidth=3;c.beginPath();
+     c.arc(e.canvas.width/2,e.canvas.height/2,34,0,Math.PI*2);c.stroke();
+     e.result.textContent="Nog geen betrouwbare tegel · richt het midden op de tegel";
    }
  }
  if(!tileDetectionPaused)tileDetectRAF=requestAnimationFrame(detectTileFrame);
 }
 $("startTileDetect").onclick=startTileDetection;
-$("tileDetectClose").onclick=stopTileDetection;
-$("tileDetectRetry").onclick=()=>{tileDetectionPaused=false;cancelAnimationFrame(tileDetectRAF);detectTileFrame()};
+document.getElementById("tileDetectClose").onclick=stopTileDetection;
+document.getElementById("tileDetectRetry").onclick=()=>{tileDetectionPaused=false;cancelAnimationFrame(tileDetectRAF);detectTileFrame()};
 
 $("placeP00Btn").onclick=placeP00;
 $("heightAssistBtn").onclick=()=>{

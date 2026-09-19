@@ -1,20 +1,12 @@
-# TESTING — v0.7.7.0
+# TESTING — v0.7.7.0.1
 
-## Undo
-1. Start AR en plaats P00.
-2. Druk UNDO: P00 moet verdwijnen en opnieuw plaatsbaar zijn.
-3. Plaats P00 en P03.
-4. Druk UNDO: alleen P03 moet verdwijnen; P00 blijft staan.
-5. Plaats P03 opnieuw.
-6. Controleer dat raster/labels/hoogtehulp weer normaal werken.
+1. Open de app buiten AR.
+2. Druk `TEGELHERKENNING TEST`.
+3. Sta cameratoegang toe indien Chrome dit vraagt.
+4. De achtercamera moet beeld tonen zonder `srcObject`-fout.
+5. Richt het midden ongeveer op één tegel.
+6. Controleer of de herkenning een kandidaat en berekend middelpunt probeert te tonen.
+7. Sluit de test; camera moet stoppen.
+8. Start daarna AR en controleer P00, P03, Undo, raster en hoogtehulp.
 
-## Tegelherkenning
-1. Stop AR.
-2. Start `TEGELHERKENNING TEST`.
-3. Richt de achtercamera ongeveer op één echte tegel.
-4. Controleer of een tegelkandidaat wordt omlijnd.
-5. Controleer of kruis + cirkel ongeveer op het echte geometrische middelpunt liggen.
-6. Test met verschillende kijkhoeken, licht, gras/modder en afstand.
-7. Noteer situaties waarin de herkenning fout zit.
-
-Deze versie gebruikt de herkenning nog niet om P00/P03 te verankeren.
+Deze hotfix verandert de bewezen WebXR-anchorarchitectuur niet.
