@@ -51,7 +51,7 @@ body.ar-mode #arCanvas{display:block!important}
 #arVisualBottom{font-size:14px}
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.1 · AR Labels + Green Targets</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.2 · Two Point Raster Alignment</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -90,6 +90,11 @@ body.ar-mode #arCanvas{display:block!important}
 <label style="margin-top:8px">Grootte</label>
 <input id="markerSize" type="range" min="5" max="50" value="20">
 <p class="muted">De keuze verandert alleen de AR-weergave, nooit de geometrische positie.</p>
+</div>
+<div class="card" style="margin:10px 0">
+<label>Richtingspunt na P00</label>
+<select id="alignPoint"></select>
+<p class="muted">Kies bij voorkeur een duidelijk en zo ver mogelijk punt, bv. P03, P12 of P14. Na P00 richt je het vizier op het echte middelpunt van dit punt en tik je opnieuw.</p>
 </div>
 <div class="arActions">
 <button id="checkAR">Controleer AR</button>
@@ -134,7 +139,13 @@ function coords(){let xs=[0],ys=[0];for(let v of s.x)xs.push(xs.at(-1)+(+v||0));
 function addRow(parent,name,val,set){let d=document.createElement("div");d.className="row";d.innerHTML=`<span>${name}</span><input type="number" min="1" value="${val}"><span>mm</span>`;d.querySelector("input").onchange=e=>{set(Math.max(1,+e.target.value||1));save();refreshGeo();render()};$(parent).appendChild(d)}
 function renderInputs(){$("cols").value=s.cols;$("rows").value=s.rows;$("xRows").innerHTML="";$("yRows").innerHTML="";
 s.x.forEach((v,i)=>addRow("xRows",`K${i+1} → K${i+2}`,v,n=>s.x[i]=n));s.y.forEach((v,i)=>addRow("yRows",`R${i+1} → R${i+2}`,v,n=>s.y[i]=n));save();populateSelects()}
-function populateSelects(){let p=coords();["pointA","pointB"].forEach((id,j)=>{let el=$(id);el.innerHTML='<option value="">— kies punt —</option>';p.forEach(q=>{let o=document.createElement("option");o.value=q.i;o.textContent="P"+String(q.i).padStart(2,"0");if((j? s.b:s.a)===q.i)o.selected=true;el.appendChild(o)})});refreshGeo()}
+function populateAlignSelect(){
+ let el=$("alignPoint");if(!el)return;let old=el.value;el.innerHTML="";
+ coords().filter(q=>q.i!==0&&s.active[q.i]).forEach(q=>{let o=document.createElement("option");o.value=q.i;o.textContent="P"+String(q.i).padStart(2,"0");el.appendChild(o)});
+ if([...el.options].some(o=>o.value===old))el.value=old;
+ else if([...el.options].some(o=>o.value==="3"))el.value="3";
+}
+function populateSelects(){populateAlignSelect();let p=coords();["pointA","pointB"].forEach((id,j)=>{let el=$(id);el.innerHTML='<option value="">— kies punt —</option>';p.forEach(q=>{let o=document.createElement("option");o.value=q.i;o.textContent="P"+String(q.i).padStart(2,"0");if((j? s.b:s.a)===q.i)o.selected=true;el.appendChild(o)})});refreshGeo()}
 function measure(){let p=coords();if(s.a===null||s.b===null||!p[s.a]||!p[s.b])return null;let A=p[s.a],B=p[s.b],dx=B.x-A.x,dy=B.y-A.y;return{A,B,dx,dy,d:Math.hypot(dx,dy)}}
 function refreshGeo(){let m=measure();$("geoDistance").textContent=m?m.d.toFixed(1)+" mm":"—";$("geoDelta").textContent=m?`ΔX = ${Math.abs(m.dx).toFixed(0)} mm · ΔY = ${Math.abs(m.dy).toFixed(0)} mm`:"Kies twee punten.";
 let info=$("info");if(m){$("infoTitle").textContent=`P${String(s.a).padStart(2,"0")} → P${String(s.b).padStart(2,"0")}`;$("dist").textContent=`↗ ${m.d.toFixed(1)} mm`;$("dx").textContent=`ΔX ${Math.abs(m.dx).toFixed(0)}`;$("dy").textContent=`ΔY ${Math.abs(m.dy).toFixed(0)}`;info.classList.add("show");$("selectHint").textContent="Tik nieuw punt A of wis selectie"}else{info.classList.remove("show");$("selectHint").textContent=s.a===null?"Tik punt A":"Tik punt B"}}
@@ -176,7 +187,7 @@ function end(e){pointers.delete(e.pointerId);if(pointers.size<2)pinch=null;if(!p
 let lastHitResult=null;
 let xrSession=null,xrRef=null,xrViewer=null,xrHitSource=null,xrGL=null,xrCanvas=null;
 let reticlePose=null,placed=[],xrStart=0,markerProgram=null,markerBuf=null;
-let projectRoot=null;
+let projectRoot=null,alignStage=0,alignIndex=3;
 const arSupport=$("arSupport"),startAR=$("startAR"),anchorSupport=$("anchorSupport");
 const arVisual=$("arVisual"),arCross=$("arCross"),arVisualMsg=$("arVisualMsg"),arVisualBottom=$("arVisualBottom");
 function setAR(msg,cls=""){arSupport.className="arState "+cls;arSupport.textContent=msg}
@@ -240,16 +251,44 @@ startAR.onclick=async()=>{
   xrGL=xrCanvas.getContext("webgl",{xrCompatible:true,alpha:true,premultipliedAlpha:false,antialias:true});await xrGL.makeXRCompatible();
   xrSession.updateRenderState({baseLayer:new XRWebGLLayer(xrSession,xrGL),depthNear:.01,depthFar:50});
   xrRef=await xrSession.requestReferenceSpace("local");xrViewer=await xrSession.requestReferenceSpace("viewer");xrHitSource=await xrSession.requestHitTestSource({space:xrViewer});
-  initMarkerGL();placed=[];projectRoot=null;lastHitResult=null;reticlePose=null;$("arLabels").innerHTML="";xrStart=performance.now();document.body.classList.add("ar-mode");arVisual.classList.add("on");arVisualMsg.textContent="Zoek vloer";arVisualBottom.textContent="Rood vizier = nog geen oppervlak";
-  xrSession.addEventListener("select",onXRSelect);xrSession.addEventListener("end",()=>{setAR("AR-test beëindigd.","warn");startAR.disabled=false;document.body.classList.remove("ar-mode");arVisual.classList.remove("on");if(xrCanvas)xrCanvas.remove();xrCanvas=null;projectRoot=null;lastHitResult=null;$("arLabels").innerHTML="";xrSession=null});
+  initMarkerGL();placed=[];projectRoot=null;alignStage=0;alignIndex=+$("alignPoint").value||3;lastHitResult=null;reticlePose=null;$("arLabels").innerHTML="";xrStart=performance.now();document.body.classList.add("ar-mode");arVisual.classList.add("on");arVisualMsg.textContent="Zoek vloer";arVisualBottom.textContent="Rood vizier = nog geen oppervlak";
+  xrSession.addEventListener("select",onXRSelect);xrSession.addEventListener("end",()=>{setAR("AR-test beëindigd.","warn");startAR.disabled=false;document.body.classList.remove("ar-mode");arVisual.classList.remove("on");if(xrCanvas)xrCanvas.remove();xrCanvas=null;projectRoot=null;alignStage=0;lastHitResult=null;$("arLabels").innerHTML="";xrSession=null});
   startAR.disabled=true;xrSession.requestAnimationFrame(onXRFrame)
  }catch(e){document.body.classList.remove("ar-mode");arVisual.classList.remove("on");setAR("AR kon niet starten: "+e.message,"bad");startAR.disabled=false}
 };
 function onXRSelect(){
- if(!reticlePose || projectRoot)return;
- projectRoot=new Float32Array(reticlePose.transform.matrix);$("arLabels").innerHTML="";
- arVisualMsg.textContent="RASTER GEPLAATST · "+arRasterPoints().length+" PUNTEN";
- arVisualBottom.textContent="P00 = oorsprong · volledig raster = één rigide ProjectRoot";
+ if(!reticlePose)return;
+ if(alignStage===0){
+   projectRoot=new Float32Array(reticlePose.transform.matrix);
+   $("arLabels").innerHTML="";
+   alignIndex=+$("alignPoint").value;
+   if(!Number.isFinite(alignIndex)||alignIndex===0)alignIndex=3;
+   alignStage=1;
+   arVisualMsg.textContent="P00 VAST · PLAATS NU P"+String(alignIndex).padStart(2,"0");
+   arVisualBottom.textContent="Richt groen vizier op het fysieke middelpunt van P"+String(alignIndex).padStart(2,"0")+" en tik";
+   return;
+ }
+ if(alignStage===1){
+   let target=coords().find(q=>q.i===alignIndex);
+   if(!target)return;
+   let M=reticlePose.transform.matrix;
+   let wx=M[12]-projectRoot[12], wz=M[14]-projectRoot[14];
+   let lx=target.x/1000, lz=-target.y/1000;
+   // yaw needed to rotate theoretical local P00->target onto measured world P00->target
+   let aLocal=Math.atan2(lz,lx), aWorld=Math.atan2(wz,wx), yaw=aWorld-aLocal;
+   let c=Math.cos(yaw),sn=Math.sin(yaw);
+   // Preserve P00 translation; use horizontal yaw only so the raster remains level/rigid.
+   projectRoot=new Float32Array([
+      c,0,-sn,0,
+      0,1,0,0,
+      sn,0,c,0,
+      projectRoot[12],projectRoot[13],projectRoot[14],1
+   ]);
+   $("arLabels").innerHTML="";
+   alignStage=2;
+   arVisualMsg.textContent="✓ RASTER UITGELIJND VIA P00 → P"+String(alignIndex).padStart(2,"0");
+   arVisualBottom.textContent="P00 blijft vast · volledig raster is als één rigide geheel gedraaid";
+ }
 }
 function arRasterPoints(){
  return coords().filter(p=>s.active[p.i]).map(p=>({
@@ -290,7 +329,8 @@ function onXRFrame(t,frame){
  lastHitResult=hits.length?hits[0]:null;
  reticlePose=lastHitResult?lastHitResult.getPose(xrRef):null;
  arCross.classList.toggle("hit",!!reticlePose);
- if(placed.length===0)arVisualBottom.textContent=reticlePose?"Groen vizier — tik voor P00":"Beweeg rustig: oppervlak zoeken…";
+ if(alignStage===0)arVisualBottom.textContent=reticlePose?"Groen vizier — tik voor P00":"Beweeg rustig: oppervlak zoeken…";
+ else if(alignStage===1)arVisualBottom.textContent=reticlePose?"Plaats vizier op fysieke P"+String(alignIndex).padStart(2,"0")+" — tik om richting vast te leggen":"Zoek oppervlak bij P"+String(alignIndex).padStart(2,"0")+"…";
  for(let view of pose.views){let vp=layer.getViewport(view);xrGL.viewport(vp.x,vp.y,vp.width,vp.height);drawARRaster(view);drawConnection(view)}
 }
 $("stopAR").onclick=()=>{if(xrSession)xrSession.end()};

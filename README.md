@@ -1,11 +1,15 @@
-# bomal_fundering v0.7.1 — AR Labels + Green Targets
+# bomal_fundering v0.7.2 — Two Point Raster Alignment
 
-- Elk zichtbaar AR-rasterpunt krijgt nu zijn label P00, P01, ... naast het punt.
-- Labels volgen hun punt op het scherm.
-- Rasterdoelwitten zijn groen voor betere zichtbaarheid op het terrein.
-- Volledig raster blijft één rigide ProjectRoot.
-- Rastercoördinaten blijven afkomstig uit dezelfde `coords()` als de 2D-weergave.
+## Nieuwe werkwijze
+1. Stel raster in.
+2. Kies in AR een richtingspunt, bv. P03.
+3. Start AR en plaats P00 op het fysieke middelpunt.
+4. De app vraagt nu het gekozen punt te plaatsen.
+5. Richt het groene vizier op het fysieke middelpunt van bv. P03 en tik.
+6. De app berekent de horizontale rotatie tussen de theoretische vector P00→P03 en de gemeten AR-vector P00→P03.
+7. P00 blijft vast; het volledige raster draait als één rigide geheel.
+8. HUD bevestigt `RASTER UITGELIJND VIA P00 → P03`.
 
-Volgende stap: P00 plaatsen en daarna een gekozen tweede rasterpunt gebruiken om de richting van het volledige raster uit te lijnen.
+Gebruik liefst een betrouwbaar, verder gelegen punt om hoekfout te beperken. Laser blijft definitieve maatcontrole.
 
 Live: https://gasvdv-lab.github.io/Bomal_fundering/
