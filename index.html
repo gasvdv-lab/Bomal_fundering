@@ -210,7 +210,7 @@ function markerVerts(kind){
 function mul4(a,b){let o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)o[c*4+r]=a[r]*b[c*4]+a[4+r]*b[c*4+1]+a[8+r]*b[c*4+2]+a[12+r]*b[c*4+3];return o}
 function drawMarker(view,pos,index){
  if(!projectRoot)return;
- let kind="target",verts=markerVerts(kind),sz=.12;
+ let kind="target",verts=markerVerts(kind),sz=.25;
  gl.useProgram(markerProgram);gl.bindBuffer(gl.ARRAY_BUFFER,markerBuf);
  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(verts),gl.DYNAMIC_DRAW);
  let a=gl.getAttribLocation(markerProgram,"p");gl.enableVertexAttribArray(a);gl.vertexAttribPointer(a,3,gl.FLOAT,false,0,0);
@@ -218,7 +218,7 @@ function drawMarker(view,pos,index){
  gl.uniformMatrix4fv(gl.getUniformLocation(markerProgram,"vp"),false,mvp);
  gl.uniform3f(gl.getUniformLocation(markerProgram,"origin"),pos.x,pos.y,pos.z);
  gl.uniform1f(gl.getUniformLocation(markerProgram,"size"),sz);
- gl.uniform4f(gl.getUniformLocation(markerProgram,"color"),0.15,1.0,0.25,1.0);
+ gl.uniform4f(gl.getUniformLocation(markerProgram,"color"),1.0,0.15,0.05,1.0);
  gl.drawArrays(gl.LINES,0,verts.length/3);
 }
 function drawConnection(view){
@@ -246,16 +246,16 @@ startAR.onclick=async()=>{
 function onXRSelect(){
  if(!reticlePose || projectRoot)return;
  projectRoot=new Float32Array(reticlePose.transform.matrix);
- arVisualMsg.textContent="RASTER GEPLAATST";
+ arVisualMsg.textContent="RASTER GEPLAATST · "+arRasterPoints().length+" PUNTEN";
  arVisualBottom.textContent="P00 = oorsprong · volledig raster = één rigide ProjectRoot";
 }
 function arRasterPoints(){
- let out=[];
- for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
-  let n=r*cols+c;if(!active[n])continue;
-  out.push({x:xs[c]/1000,y:0,z:-ys[r]/1000,index:n});
- }
- return out;
+ return coords().filter(p=>s.active[p.i]).map(p=>({
+   x:p.x/1000,
+   y:0.012,
+   z:-p.y/1000,
+   index:p.i
+ }));
 }
 function drawARRaster(view){if(!projectRoot)return;for(let p of arRasterPoints())drawMarker(view,p,p.index);}
 function onXRFrame(t,frame){
