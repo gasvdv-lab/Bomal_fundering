@@ -1,30 +1,25 @@
-# bomal_fundering v0.6.6.1 — Button Fix
+# bomal_fundering v0.6.7 — Native Anchor Pin Test
 
-Deze release is bewust teruggebracht tot één AR-doel: P00 correct world-locked krijgen.
+Deze release test één enkele P00 als echte native WebXR Anchor.
 
-## AR-diagnose
-- één P00;
-- geen P01;
-- geen native anchors;
-- geen herijking;
-- geen tweepuntskalibratie;
-- één vast doelwit;
-- P00 wordt één keer uit de hit-testpose opgeslagen;
-- opgeslagen P00-coördinaten worden daarna niet meer aangepast;
-- HUD toont de bevroren local X/Y/Z-coördinaten.
+## Werking
+1. ARCore/WebXR zoekt een geldig oppervlak via hit-test.
+2. Tik om P00 te plaatsen.
+3. De app roept `XRHitTestResult.createAnchor()` aan op exact die hit.
+4. Na plaatsing wordt P00 niet meer uit de oorspronkelijke losse x/y/z gerenderd.
+5. Iedere frame wordt de actuele pose uit `anchor.anchorSpace` opgevraagd.
+6. Als de anchor-pose tijdelijk niet beschikbaar is, wordt P00 verborgen en verschijnt `P00 TRACKING VERLOREN`.
+7. Er is bewust géén losse-coordinate fallback die een mogelijk fout punt kan tonen.
+8. Zodra de native anchor opnieuw traceerbaar is, verschijnt P00 opnieuw.
 
-## Test
-Plaats P00 op een herkenbare fysieke markering. Beweeg daarna de telefoon ongeveer 1 meter links/rechts, vooruit/achteruit en rond P00 terwijl het punt zichtbaar blijft. P00 moet fysiek op dezelfde plaats blijven.
+## Doel
+Test of één fysiek punt robuuster vastgepind blijft wanneer je:
+- links/rechts beweegt;
+- rond P00 loopt;
+- P00 tijdelijk uit beeld brengt;
+- daarna terug naar dezelfde fysieke plaats kijkt.
 
-Breng P00 daarna uit beeld en kijk opnieuw naar dezelfde fysieke plaats. Noteer afzonderlijk of:
-1. het punt tijdens zichtbare camerabeweging meeschuift;
-2. het pas na uit beeld gaan verspringt;
-3. het na een sprong vanzelf terugkeert.
-
-De laser blijft de definitieve maatvoering.
+Native AR-anchors zijn geen garantie voor landmeetkundige nauwkeurigheid. De laser blijft de definitieve maatvoering.
 
 ## Live app
-De eerder gebruikte Pages-link was door de gebruiker als onjuist gemeld. Vul de correcte GitHub Pages-URL in zodra die bevestigd is.
-
-## Hotfix
-Herstelt een JavaScript-syntaxfout in v0.6.6 waardoor de knoppen niet reageerden. De AR-diagnose blijft één P00 zonder anchors of herijking.
+https://gasvdv-lab.github.io/Bomal_fundering/
