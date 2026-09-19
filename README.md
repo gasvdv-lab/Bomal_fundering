@@ -1,16 +1,21 @@
-# Bomal Fundering v0.7.6.0 — Height / Visibility Assistance
+# Bomal Fundering v0.7.7.0 — Undo + Tile Detection Test
 
-Gebaseerd op v0.7.3.2. De bewezen P00/P03-anchorarchitectuur en het rigide 3×5 raster zijn niet gewijzigd.
+Deze release combineert de geplande v0.7.6.1 en v0.7.7.0.
 
-## Hoogtehulp
-In AR staat een knop `HOOGTEHULP: UIT/AAN`.
+## AR Undo
+- P00 geplaatst: UNDO verwijdert P00.
+- P00 + P03 geplaatst: eerste UNDO verwijdert alleen P03.
+- Tweede UNDO verwijdert daarna P00.
+- Het theoretische raster wordt nooit gewijzigd door UNDO.
 
-Bij AAN:
-- door ieder actief rasterpunt loopt een verticale loodlijn;
-- de lijn loopt 1,0 m onder en 1,0 m boven het theoretische rasterpunt;
-- cirkel, middenkruis, rasterlijnen en P00–P14-labels blijven zichtbaar.
+## Tegelherkenning test
+Buiten de immersive AR-modus staat `TEGELHERKENNING TEST`.
+De achtercamera zoekt een tegelkandidaat rond het midden van het camerabeeld, tekent een contourkader en toont een kruis/cirkel op het berekende centrum.
 
-Bij UIT:
-- alleen de verticale hulplijnen verdwijnen.
+Dit is bewust nog een geïsoleerde herkenningstest:
+- detectie maakt nog GEEN WebXR-anchor;
+- P00/P03-anchorlogica is niet gewijzigd;
+- gebruiker moet eerst buiten testen of echte tegels op het terrein betrouwbaar worden herkend.
 
-De hoogtehulp is uitsluitend visueel. Ze detecteert de werkelijke bodemhoogte niet en verandert geen enkele ontwerpmaat of rasterpositie.
+De bestaande cirkels, kruisen, P00–P14 labels en schakelbare hoogtehulp blijven behouden.
+Geen afbeeldingen of mediabestanden in de ZIP.

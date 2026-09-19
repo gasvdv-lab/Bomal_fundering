@@ -1,9 +1,7 @@
 # ROADMAP
 
-- v0.7.2.5.1: stabiele P00 + P03 dual-anchor.
-- v0.7.2.6: verankerde assen.
-- v0.7.3.0: volledig 3×5 raster.
-- v0.7.3.1: cirkel + middenkruis.
-- v0.7.3.2: P00–P14 labels.
-- v0.7.6.0: schakelbare Height / Visibility Assistance — huidige release.
-- Daarna: Placement Mode en praktische terreinworkflow.
+- v0.7.6.0: schakelbare hoogtehulp.
+- v0.7.7.0: AR Undo + geïsoleerde tegelherkenning/centrumbepaling — huidige release.
+- Volgende: bevestiging `Middelpunt correct?` + AANPASSEN/OPNIEUW.
+- Daarna: stabilisatie over meerdere frames.
+- Pas na geslaagde terreinproeven: herkend centrum koppelen aan P00/P03 WebXR-anchor.

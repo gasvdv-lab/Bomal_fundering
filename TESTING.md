@@ -1,12 +1,20 @@
-# TESTING — v0.7.6.0
+# TESTING — v0.7.7.0
 
-1. Plaats P00 en P03 zoals in de geslaagde vorige versies.
-2. Controleer raster, cirkels, kruisen en labels.
-3. Druk `HOOGTEHULP: UIT`; status moet naar AAN gaan.
-4. Bij ieder actief punt verschijnt een verticale lijn door exact hetzelfde middelpunt.
-5. Loop over hoger/lager terrein en beoordeel of de loodlijnen het terugvinden van de punten verbeteren.
-6. Zet Hoogtehulp UIT; alleen de verticale lijnen moeten verdwijnen.
-7. Controleer dat P00/P03 en het volledige raster niet verspringen bij aan/uit schakelen.
-8. Controleer opnieuw stabiliteit na 1 m, 3 m en 5 m rondlopen.
+## Undo
+1. Start AR en plaats P00.
+2. Druk UNDO: P00 moet verdwijnen en opnieuw plaatsbaar zijn.
+3. Plaats P00 en P03.
+4. Druk UNDO: alleen P03 moet verdwijnen; P00 blijft staan.
+5. Plaats P03 opnieuw.
+6. Controleer dat raster/labels/hoogtehulp weer normaal werken.
 
-Go/no-go: de hoogtehulp mag nooit de rastergeometrie beïnvloeden.
+## Tegelherkenning
+1. Stop AR.
+2. Start `TEGELHERKENNING TEST`.
+3. Richt de achtercamera ongeveer op één echte tegel.
+4. Controleer of een tegelkandidaat wordt omlijnd.
+5. Controleer of kruis + cirkel ongeveer op het echte geometrische middelpunt liggen.
+6. Test met verschillende kijkhoeken, licht, gras/modder en afstand.
+7. Noteer situaties waarin de herkenning fout zit.
+
+Deze versie gebruikt de herkenning nog niet om P00/P03 te verankeren.
