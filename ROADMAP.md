@@ -1,15 +1,12 @@
 # ROADMAP
+## v0.7.3.3
+- herstelde raster-UI
+- expliciete plaatsknoppen
+- 300 × 300 mm AR-tegelvierkant
+- P00 + gekozen tweede referentie
+- één rigide ProjectRoot
+- WebXR anchors waar beschikbaar
+- houten X als fysieke referentie
 
-## v0.7.3.1
-- UI hersteld
-- AR-overlay vrijgemaakt
-- rasteroverzicht terug
-- X/Y assen verduidelijkt
-- X-marker / anchor world-lock test behouden
-
-## Volgende technische stap
-Na fysieke driftmeting:
-- automatische visuele herkenning van fysieke referentie onderzoeken;
-- marker-gebaseerde correctie van de ProjectRoot;
-- bevestigd punt als extra controlepunt;
-- native ARCore alleen indien WebXR onvoldoende stabiel blijft.
+## Volgende stap
+World-lock/drift fysiek testen. Daarna eventueel automatische herkenning van fysieke referenties en actieve driftcorrectie.

@@ -1,15 +1,15 @@
-# Bomal Fundering v0.7.3.1 — UI Restore
+# Bomal Fundering v0.7.3.3
 
-Herstelt de raster-UI en behoudt de v0.7.3 world-lockproef.
+## Wijzigingen
+- AR-doel is geen cirkel meer.
+- Elk rasterpunt wordt in AR weergegeven als een exact vierkant van 300 × 300 mm.
+- Het rasterpunt ligt exact in het midden van het vierkant.
+- Klein groen centrumkruis blijft zichtbaar.
+- Expliciete knop `P00 HIER VASTLEGGEN`, daarna het gekozen tweede referentiepunt.
+- Volledige raster-UI blijft buiten AR beschikbaar.
+- In AR verdwijnen de configuratiepanelen.
+- X-marker / WebXR-anchor world-lock test blijft behouden.
 
-## Belangrijk
-- Volledige rasterweergave buiten AR.
-- X → en Y ↑ expliciet zichtbaar; beide liggen over de grond.
-- Bij Start AR verdwijnt de volledige configuratie-UI.
-- In AR blijven alleen compacte HUD, vizier, Herijk en Stop AR zichtbaar.
-- Volledig groen raster + P00–Pxx labels blijft zichtbaar.
-- P00 + gekozen tweede punt bepalen één rigide ProjectRoot.
-- WebXR anchors worden gebruikt indien beschikbaar.
-- Houten X blijft voorlopig fysieke richtreferentie, geen automatische beeldherkenning.
+De 300 × 300 mm is de virtuele tegelcontour in wereldmaat, dus 0,300 × 0,300 meter in WebXR.
 
 Live: https://gasvdv-lab.github.io/Bomal_fundering/
