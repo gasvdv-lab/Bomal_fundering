@@ -55,7 +55,7 @@ body.ar-mode #arCanvas{display:block!important}
 #arVisualBottom{font-size:14px}
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.2.6 · Anchored Axis Test</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.3.0 · Anchored Full Raster</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -223,6 +223,57 @@ function drawP00(view,anchorPose){
  xrGL.uniformMatrix4fv(xrGL.getUniformLocation(markerProgram,"mvp"),false,mvp);
  xrGL.lineWidth(6);xrGL.drawArrays(xrGL.LINES,0,4);
 }
+
+function drawFullRaster(view,p0,p3){
+ // P00 + P03 define only placement/orientation.
+ // Exact raster geometry remains the entered design geometry from coords().
+ const pts=coords().filter(p=>s.active[p.i]);
+ if(!pts.length)return;
+
+ const x0=p0.transform.position.x, y0=p0.transform.position.y+.014, z0=p0.transform.position.z;
+ const x3=p3.transform.position.x, z3=p3.transform.position.z;
+ const dyx=x3-x0,dyz=z3-z0,L=Math.hypot(dyx,dyz); if(L<.05)return;
+
+ // +Y raster direction = P00 -> P03. +X is its right-hand horizontal perpendicular.
+ const uyx=dyx/L, uyz=dyz/L;
+ const uxx=-uyz, uxz=uyx;
+
+ const byIndex=new Map(pts.map(q=>[q.i,q]));
+ const verts=[];
+
+ function world(q){
+   const xm=q.x/1000, ym=q.y/1000;
+   return [x0 + uxx*xm + uyx*ym, y0, z0 + uxz*xm + uyz*ym];
+ }
+ function line(a,b){
+   verts.push(a[0],a[1],a[2],b[0],b[1],b[2]);
+ }
+
+ // Connect only orthogonal direct neighbours according to the 3-column raster numbering.
+ for(const q of pts){
+   const col=q.i%3, row=Math.floor(q.i/3);
+   if(col<2 && byIndex.has(q.i+1)) line(world(q),world(byIndex.get(q.i+1)));
+   if(row<4 && byIndex.has(q.i+3)) line(world(q),world(byIndex.get(q.i+3)));
+ }
+
+ // Cross target at every active design point.
+ const cross=.055;
+ for(const q of pts){
+   const w=world(q);
+   line([w[0]-uxx*cross,w[1],w[2]-uxz*cross],[w[0]+uxx*cross,w[1],w[2]+uxz*cross]);
+   line([w[0]-uyx*cross,w[1],w[2]-uyz*cross],[w[0]+uyx*cross,w[1],w[2]+uyz*cross]);
+ }
+
+ if(!verts.length)return;
+ xrGL.useProgram(markerProgram);xrGL.bindBuffer(xrGL.ARRAY_BUFFER,markerBuf);
+ xrGL.bufferData(xrGL.ARRAY_BUFFER,new Float32Array(verts),xrGL.DYNAMIC_DRAW);
+ let loc=xrGL.getAttribLocation(markerProgram,"p");xrGL.enableVertexAttribArray(loc);
+ xrGL.vertexAttribPointer(loc,3,xrGL.FLOAT,false,0,0);
+ let pv=mul4(view.projectionMatrix,view.transform.inverse.matrix);
+ xrGL.uniformMatrix4fv(xrGL.getUniformLocation(markerProgram,"mvp"),false,pv);
+ xrGL.lineWidth(5);xrGL.drawArrays(xrGL.LINES,0,verts.length/3);
+}
+
 function drawAxes(view,p0,p3){
  // World/reference-space coordinates from the TWO CURRENT anchor poses.
  // Y-axis follows P00 -> P03. X-axis is the horizontal perpendicular through P00.
@@ -276,9 +327,9 @@ async function placeP00(){
      arVisualBottom.textContent="P00 staat vast. Richt nu het middenvizier exact op P03.";
    }else if(!p03Anchor){
      p03Anchor=a;
-     arVisualMsg.textContent="✓ ASSEN VERANKERD";
+     arVisualMsg.textContent="✓ RASTER VERANKERD";
      placeP00Btn.disabled=true;placeP00Btn.style.display="none";
-     arVisualBottom.textContent="Y-as = P00→P03. X-as = loodrecht door P00. Loop rond en controleer stabiliteit.";
+     arVisualBottom.textContent="3 × 5 raster actief · P00/P03 bepalen positie en richting.";
    }else{
      a.delete();
    }
@@ -299,8 +350,8 @@ function onXRFrame(t,frame){
  if(!p00Anchor)arVisualBottom.textContent=reticlePose?"Groen vizier — druk onderaan om P00 vast te zetten":"Beweeg rustig: oppervlak zoeken…";
  else if(!p03Anchor)arVisualBottom.textContent=reticlePose?"P00 staat vast — richt op P03 en druk onderaan":"Zoek een oppervlak voor P03…";
  else if(!ap||!ap03)arVisualBottom.textContent="Anchor tijdelijk niet gevolgd — beweeg rustig tot tracking terugkomt";
- else arVisualBottom.textContent="P00 + P03 stabiel · lijn = Y-as · loodrechte lijn = X-as";
- for(let view of pose.views){let vp=layer.getViewport(view);xrGL.viewport(vp.x,vp.y,vp.width,vp.height);if(ap&&ap03)drawAxes(view,ap,ap03);if(ap)drawP00(view,ap);if(ap03)drawP00(view,ap03)}
+ else arVisualBottom.textContent="Raster P00–P14 · controleer tegelmiddelpunten tijdens het rondlopen";
+ for(let view of pose.views){let vp=layer.getViewport(view);xrGL.viewport(vp.x,vp.y,vp.width,vp.height);if(ap&&ap03){drawFullRaster(view,ap,ap03);drawAxes(view,ap,ap03)}if(ap)drawP00(view,ap);if(ap03)drawP00(view,ap03)}
 }
 $("placeP00Btn").onclick=placeP00;
 $("stopAR").onclick=()=>{if(xrSession)xrSession.end()};

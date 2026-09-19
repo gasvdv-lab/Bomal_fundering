@@ -1,13 +1,19 @@
-# Bomal Fundering v0.7.2.6 — Anchored Axis Test
+# Bomal Fundering v0.7.3.0 — Anchored Full Raster
 
-Gebaseerd op de fysiek geslaagde dual-anchor v0.7.2.5.1.
+Gebaseerd op de fysiek geslaagde P00/P03 dual-anchor en de v0.7.2.6 assentest.
 
-Nieuw:
-- P00 en P03 blijven twee echte, onafhankelijke WebXR anchors.
-- Iedere frame worden beide actuele anchorposes gelezen.
-- De lijn P00 → P03 vormt de lokale Y-as.
-- Door P00 wordt een horizontaal loodrechte X-as getekend.
-- Geen opgeslagen P03-worldmatrix, geen ProjectRoot en nog geen 3×5 raster.
+## Nieuw
+- Volledig 3 × 5 raster P00–P14 in AR.
+- Nummering:
+  P12 P13 P14
+  P09 P10 P11
+  P06 P07 P08
+  P03 P04 P05
+  P00 P01 P02
+- P00 en P03 blijven de twee echte WebXR anchors.
+- P00→P03 bepaalt de positieve Y-richting.
+- X staat loodrecht op Y.
+- De exacte rasterafstanden blijven afkomstig uit de bestaande ingevoerde ontwerpgeometrie (`coords()`).
+- Alle rasterpunten vormen één rigide geometrie; er is geen individuele puntcorrectie aan het terrein.
 
-Doel: bewijzen dat een geometrische constructie die rechtstreeks uit de twee actuele anchors
-wordt afgeleid stabiel op het terrein blijft.
+De laser blijft de definitieve maatcontrole.
