@@ -60,9 +60,14 @@ body.ar-mode #arCanvas{display:block!important}
 #undoARBtn:disabled{opacity:.4}
 
 
+
+#visualHeightControl{position:absolute;right:10px;top:54px;z-index:13;display:none;align-items:center;gap:5px;background:rgba(8,17,11,.82);padding:5px;border-radius:10px}
+#visualHeightControl button{width:42px;height:38px;padding:0;font-size:24px;font-weight:900;line-height:1}
+#visualHeightValue{min-width:92px;text-align:center;color:#fff;font-size:12px;font-weight:900}
+
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.7.1 · Stability Assisted Anchoring</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.7.1.1 · Adjustable Visual Height</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -134,7 +139,12 @@ body.ar-mode #arCanvas{display:block!important}
 
 <div id="arVisual"><div id="arLabels"></div><div id="arVisualMsg">AR starten…</div><button id="stopAR">Stop</button>
  <button id="heightAssistBtn">HOOGTEHULP: UIT</button>
- <button id="undoARBtn" disabled>↶ UNDO</button><div id="arCross"></div><button id="placeP00Btn" disabled>● P00 PRECISIE VASTZETTEN</button><div id="arVisualBottom">Zoek een oppervlak…</div></div>
+ <button id="undoARBtn" disabled>↶ UNDO</button><div id="arCross"></div><button id="placeP00Btn" disabled>● P00 PRECISIE VASTZETTEN</button><div id="visualHeightControl">
+ <button id="visualHeightMinus" type="button">−</button>
+ <span id="visualHeightValue">HOOGTE 0 mm</span>
+ <button id="visualHeightPlus" type="button">+</button>
+</div>
+<div id="arVisualBottom">Zoek een oppervlak…</div></div>
 <script>
 (()=>{"use strict";
 const KEY="bomal_fundering_state_v050", OLD=["bomal_fundering_state","bomal_fundering_v030"];
@@ -199,6 +209,11 @@ function end(e){pointers.delete(e.pointerId);if(pointers.size<2)pinch=null;if(!p
 // ---- v0.7.2.3 isolated TRUE WebXR P00 anchor test ----
 let lastHitResult=null;
 let heightAssist=false;
+let visualHeightOffset=0; // metres; visual overlay only, anchors remain untouched
+const VISUAL_HEIGHT_STEP=0.002;
+const VISUAL_HEIGHT_MIN=-0.020;
+const VISUAL_HEIGHT_MAX=0.050;
+
 let stabilitySamples=[],stabilityStarted=0,stabilityRAF=0;
 const STABILITY_MS=850, STABILITY_MAX_SPREAD=0.018; // 18 mm max horizontal spread
 let xrSession=null,xrRef=null,xrViewer=null,xrHitSource=null,xrGL=null,xrCanvas=null;
@@ -275,7 +290,7 @@ function updateRasterLabels(view,p0,p3){
 function drawHeightAssist(view,p0,p3){
  if(!heightAssist)return;
  const pts=coords().filter(p=>s.active[p.i]); if(!pts.length)return;
- const x0=p0.transform.position.x,y0=p0.transform.position.y+.014,z0=p0.transform.position.z;
+ const x0=p0.transform.position.x,y0=p0.transform.position.y+visualHeightOffset,z0=p0.transform.position.z;
  const x3=p3.transform.position.x,z3=p3.transform.position.z;
  const dyx=x3-x0,dyz=z3-z0,L=Math.hypot(dyx,dyz); if(L<.05)return;
  const uyx=dyx/L,uyz=dyz/L,uxx=-uyz,uxz=uyx;
@@ -302,7 +317,7 @@ function drawFullRaster(view,p0,p3){
  const pts=coords().filter(p=>s.active[p.i]);
  if(!pts.length)return;
 
- const x0=p0.transform.position.x, y0=p0.transform.position.y+.014, z0=p0.transform.position.z;
+ const x0=p0.transform.position.x, y0=p0.transform.position.y+visualHeightOffset, z0=p0.transform.position.z;
  const x3=p3.transform.position.x, z3=p3.transform.position.z;
  const dyx=x3-x0,dyz=z3-z0,L=Math.hypot(dyx,dyz); if(L<.05)return;
 
@@ -387,6 +402,7 @@ startAR.onclick=async()=>{
  try{
   // Match the successful WebXR pattern: anchors + hit-test, with DOM overlay only as optional UI.
   xrSession=await navigator.xr.requestSession("immersive-ar",{requiredFeatures:["hit-test","anchors"],optionalFeatures:["dom-overlay"],domOverlay:{root:document.body}});
+$("visualHeightControl").style.display="flex";
   xrCanvas=document.createElement("canvas");xrCanvas.id="arCanvas";xrCanvas.style.cssText="position:fixed;inset:0;width:100%;height:100%;z-index:9990;display:block;pointer-events:none";document.body.appendChild(xrCanvas);
   xrGL=xrCanvas.getContext("webgl",{xrCompatible:true,alpha:true,premultipliedAlpha:false,antialias:true});await xrGL.makeXRCompatible();
   xrSession.updateRenderState({baseLayer:new XRWebGLLayer(xrSession,xrGL),depthNear:.01,depthFar:50});
@@ -397,7 +413,8 @@ startAR.onclick=async()=>{
   initMarkerGL();p00Anchor=null;p03Anchor=null;lastHitResult=null;reticlePose=null;anchorCreating=false;placeP00Btn.textContent="● P00 PRECISIE VASTZETTEN";placeP00Btn.style.display="block";placeP00Btn.disabled=true;$("undoARBtn").disabled=true;
   document.body.classList.add("ar-mode");arVisual.classList.add("on");
   arVisualMsg.textContent="P00 + P03 ANCHOR TEST";arVisualBottom.textContent="Zoek een oppervlak — groen vizier = klaar om P00 te plaatsen";
-  xrSession.addEventListener("end",()=>{setAR("AR-test beëindigd.","warn");startAR.disabled=false;document.body.classList.remove("ar-mode");arVisual.classList.remove("on");if(p00Anchor){try{p00Anchor.delete()}catch(_){}}if(p03Anchor){try{p03Anchor.delete()}catch(_){}}p00Anchor=null;p03Anchor=null;if(xrCanvas)xrCanvas.remove();xrCanvas=null;lastHitResult=null;reticlePose=null;xrSession=null});
+  xrSession.addEventListener("end",()=>{
+ visualHeightOffset=0;updateVisualHeightUI();$("visualHeightControl").style.display="none";setAR("AR-test beëindigd.","warn");startAR.disabled=false;document.body.classList.remove("ar-mode");arVisual.classList.remove("on");if(p00Anchor){try{p00Anchor.delete()}catch(_){}}if(p03Anchor){try{p03Anchor.delete()}catch(_){}}p00Anchor=null;p03Anchor=null;if(xrCanvas)xrCanvas.remove();xrCanvas=null;lastHitResult=null;reticlePose=null;xrSession=null});
   startAR.disabled=true;xrSession.requestAnimationFrame(onXRFrame);
  }catch(e){document.body.classList.remove("ar-mode");arVisual.classList.remove("on");setAR("AR kon niet starten: "+e.message,"bad");startAR.disabled=false}
 };
@@ -495,6 +512,22 @@ $("heightAssistBtn").onclick=()=>{
    ?"Hoogtehulp AAN · verticale lijnen zijn alleen visuele loodlijnen"
    :"Hoogtehulp UIT · rastergeometrie blijft ongewijzigd";
 };
+
+
+function updateVisualHeightUI(){
+ const mm=Math.round(visualHeightOffset*1000);
+ $("visualHeightValue").textContent="HOOGTE "+(mm>0?"+":"")+mm+" mm";
+ $("visualHeightMinus").disabled=visualHeightOffset<=VISUAL_HEIGHT_MIN+1e-9;
+ $("visualHeightPlus").disabled=visualHeightOffset>=VISUAL_HEIGHT_MAX-1e-9;
+}
+function changeVisualHeight(delta){
+ visualHeightOffset=Math.max(VISUAL_HEIGHT_MIN,Math.min(VISUAL_HEIGHT_MAX,visualHeightOffset+delta));
+ visualHeightOffset=Math.round(visualHeightOffset*1000)/1000;
+ updateVisualHeightUI();
+}
+$("visualHeightMinus").onclick=()=>changeVisualHeight(-VISUAL_HEIGHT_STEP);
+$("visualHeightPlus").onclick=()=>changeVisualHeight(VISUAL_HEIGHT_STEP);
+updateVisualHeightUI();
 
 $("undoARBtn").onclick=()=>{
  if(anchorCreating)return;

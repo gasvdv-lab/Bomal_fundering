@@ -1,14 +1,15 @@
-# TESTING — v0.7.7.1
+# TESTING — v0.7.7.1.1
 
-1. Controleer dat `TEGELHERKENNING TEST` verdwenen is.
-2. Start AR en richt op P00.
-3. Druk `P00 PRECISIE VASTZETTEN`.
-4. Houd de telefoon ongeveer 0,85 s stil.
-5. Bij grote beweging moet `TE VEEL BEWEGING` verschijnen en mag P00 niet vastgelegd zijn.
-6. Bij voldoende stabiliteit moet P00 een echte anchor krijgen.
-7. Herhaal voor P03.
-8. Test UNDO: eerst P03 verwijderen, daarna eventueel P00.
-9. Controleer raster, labels, cirkels/kruisen en hoogtehulp.
-10. Loop 1 m, 3 m en 5 m weg en terug en controleer stabiliteit.
+1. Start AR en plaats P00/P03 zoals in v0.7.7.1.
+2. Controleer dat de beginwaarde `HOOGTE 0 mm` is.
+3. Controleer dat raster/cirkels/kruisen niet meer bewust +14 mm boven P00 worden getekend.
+4. Druk `+`: waarde moet per druk 2 mm stijgen.
+5. Druk `−`: waarde moet per druk 2 mm dalen.
+6. Controleer minimum −20 mm en maximum +50 mm.
+7. Controleer dat alleen de visuele overlay omhoog/omlaag gaat.
+8. Controleer dat P00/P03 anchors niet opnieuw worden aangemaakt of verplaatst.
+9. Test UNDO.
+10. Test HOOGTEHULP en labels.
+11. Loop weg en terug naar P00/P03 en controleer de anchorstabiliteit.
 
-Drempel huidige testrelease: maximaal 18 mm horizontale spreiding tijdens de meetperiode.
+Laser blijft de definitieve maatcontrole.

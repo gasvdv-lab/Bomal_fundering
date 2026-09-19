@@ -1,6 +1,6 @@
 # ROADMAP
 
-- v0.7.7.0.1: technische baseline; tegelherkenning fysiek mislukt.
-- v0.7.7.1: tegelherkenning verwijderd + stabiliteitsmeting voor P00/P03 — huidige release.
-- Volgende stap na terreinproef: drempel en meetduur finetunen indien nodig.
-- Daarna: controle-anchors voor fysiek gelegde en met laser gecontroleerde tegelpunten.
+- v0.7.7.1: vaste technische baseline.
+- v0.7.7.1.1: vaste +14 mm offset verwijderd; handmatige visuele hoogtecorrectie in AR.
+- Eerst fysiek testen of 0 mm correct op de tegel ligt en hoeveel visuele offset praktisch nodig is.
+- Daarna pas verdere precisie-/controlefuncties.
