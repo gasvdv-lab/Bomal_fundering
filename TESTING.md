@@ -1,20 +1,12 @@
-# TESTING v0.7.3.1
+# TESTING — v0.7.2.2
 
-## UI
-1. Raster-tab toont raster en X/Y.
-2. Weergave-tab toont volledig raster.
-3. AR-tab laat tweede referentie kiezen.
-4. Na Start AR mogen raster/configuratiepanelen NIET over de camera blijven staan.
-5. Alleen compacte HUD, vizier, Herijk en Stop AR mogen zichtbaar zijn.
+1. Start AR in Android Chrome.
+2. Plaats P00 op een exact herkenbaar fysiek punt. Controleer melding `P00 ECHT VERANKERD`.
+3. Plaats P03 (of gekozen referentiepunt) op zijn fysieke positie.
+4. Controleer dat het volledige raster verschijnt en correct draait.
+5. Loop 1 m, 3 m en 5 m weg en terug.
+6. Controleer P00 en meerdere verre rasterpunten tegen dezelfde fysieke grondposities.
+7. Beweeg rond het raster en keer terug.
+8. Bij tijdelijk anchor-trackingverlies moet het raster verborgen worden, niet op een oude pose blijven staan.
 
-## World-lock
-1. Houten X exact centreren op P00.
-2. P00 plaatsen.
-3. P03 of gekozen tweede punt plaatsen.
-4. Controleer P00/P03 direct.
-5. Loop 2–5 m weg en terug.
-6. Schat drift: <2 cm / 2–5 cm / 5–10 cm / >10 cm.
-7. Loop rondom het raster en controleer opnieuw.
-8. Test Herijk.
-
-Laser/controlemetingen blijven de definitieve maatvoering.
+Belangrijkste regressietest: P00 mag niet meer als een eenmalig opgeslagen hit-testmatrix worden behandeld.

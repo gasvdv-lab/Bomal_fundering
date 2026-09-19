@@ -1,15 +1,7 @@
-# Bomal Fundering v0.7.3.1 — UI Restore
+# bomal_fundering v0.7.2.2 — True WebXR Anchor World Lock
 
-Herstelt de raster-UI en behoudt de v0.7.3 world-lockproef.
+Gebaseerd rechtstreeks op v0.7.2.1. De rasterlogica blijft behouden, maar P00 wordt nu met `XRHitTestResult.createAnchor()` als echte WebXR Anchor gemaakt. Iedere XR-frame wordt de actuele `anchor.anchorSpace` pose opnieuw opgehaald. Pxx bepaalt alleen de horizontale rasterrichting.
 
-## Belangrijk
-- Volledige rasterweergave buiten AR.
-- X → en Y ↑ expliciet zichtbaar; beide liggen over de grond.
-- Bij Start AR verdwijnt de volledige configuratie-UI.
-- In AR blijven alleen compacte HUD, vizier, Herijk en Stop AR zichtbaar.
-- Volledig groen raster + P00–Pxx labels blijft zichtbaar.
-- P00 + gekozen tweede punt bepalen één rigide ProjectRoot.
-- WebXR anchors worden gebruikt indien beschikbaar.
-- Houten X blijft voorlopig fysieke richtreferentie, geen automatische beeldherkenning.
+Geen houten X, geen tegelvorm, geen persistentie na afsluiten.
 
-Live: https://gasvdv-lab.github.io/Bomal_fundering/
+Live app: https://gasvdv-lab.github.io/Bomal_fundering/

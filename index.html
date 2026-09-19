@@ -1,114 +1,367 @@
 <!doctype html>
-<html lang="nl"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#101418"><link rel="manifest" href="manifest.json">
-<title>Bomal Fundering v0.7.3.1</title>
+<html lang="nl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d1117"><title>Bomal Fundering</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#0e1317;color:#f5f7f8;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-header{position:sticky;top:0;z-index:4;background:#151c21;padding:12px 14px;border-bottom:1px solid #28323a}
-h1{font-size:18px;margin:0}.sub{font-size:11px;color:#aebbc3;margin-top:2px}
-main{max-width:850px;margin:auto;padding:10px}.tabs{display:flex;gap:6px;margin-bottom:9px}.tab{flex:1;background:#222d35;color:#dfe6ea;padding:10px 6px}.tab.on{background:#087f3f}
-.panel{display:none}.panel.on{display:block}.card{background:#171f25;border:1px solid #2a353d;border-radius:13px;padding:12px;margin-bottom:9px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:#c3cdd3}
-input,select,button{font:inherit;border-radius:9px;border:1px solid #3a4750;padding:10px}input,select{background:#0f1519;color:#fff;width:100%}
-button{background:#293740;color:#fff;font-weight:700}.primary{background:#087f3f}.danger{background:#7f2c2c}.row{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
-.small{font-size:12px;color:#b6c1c8}.axis{font-weight:800;color:#76ef9c}
-#svg{width:100%;height:52vh;min-height:330px;background:#0b1013;border-radius:11px;touch-action:none}
-.legend{display:flex;gap:14px;font-size:12px;margin-top:7px}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#67ee8d}
-#arUI{display:none;position:fixed;inset:0;z-index:100;pointer-events:none}
-body.ar-mode header,body.ar-mode main{display:none!important}
-#hud{position:absolute;top:max(8px,env(safe-area-inset-top));left:8px;right:8px;max-width:620px;margin:auto;background:#07110dcc;border:1px solid #31563d;border-radius:10px;padding:7px 10px;pointer-events:auto}
-#hudStatus{font-size:16px;font-weight:850}#hudDetail{font-size:11px;color:#d2ddd6;margin-top:2px}
-#ret{position:absolute;left:50%;top:50%;width:27px;height:27px;border:2px solid #6aff96;border-radius:50%;transform:translate(-50%,-50%)}
-#ret:before,#ret:after{content:"";position:absolute;left:50%;top:50%;background:#6aff96;transform:translate(-50%,-50%)}#ret:before{width:38px;height:2px}#ret:after{height:38px;width:2px}
-#labels{position:absolute;inset:0}.lab{position:absolute;transform:translate(-50%,-50%);padding:2px 5px;border-radius:5px;background:#06230fdd;border:1px solid #6aff96;font-size:12px;font-weight:850}
-#arBottom{position:absolute;bottom:max(10px,env(safe-area-inset-bottom));left:8px;right:8px;display:flex;justify-content:center;gap:7px;pointer-events:auto}
-#arBottom button{padding:8px 11px;background:#101a1fdd;font-size:12px}
-@media(max-width:480px){.grid{grid-template-columns:1fr 1fr}#svg{height:48vh}}
+*{box-sizing:border-box}html,body{margin:0;background:#0d1117;color:#f0f3f6;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+body{min-height:100vh}header{background:#161b22;border-bottom:1px solid #30363d;padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
+h1{font-size:21px;margin:0}.sub,.muted{color:#9da7b3}.wrap{max-width:900px;margin:auto;padding:12px}
+button{border:0;border-radius:13px;min-height:46px;padding:11px 15px;font-weight:750;font-size:16px;background:#303b46;color:#fff}
+button.active,.primary{background:#4ade80;color:#08110b}.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.card{background:#161b22;border:1px solid #30363d;border-radius:19px;padding:15px;margin-bottom:13px}h2{margin:0 0 8px;font-size:22px}
+label{display:block;color:#c8d1da;margin:8px 0}input,select{width:100%;background:#0d1117;color:#fff;border:1px solid #45515d;border-radius:11px;padding:12px;font-size:17px}
+.setup,.geoGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.apply{display:grid;grid-template-columns:1fr 120px;gap:8px;margin:10px 0 13px}
+.row{display:grid;grid-template-columns:100px 1fr 38px;gap:7px;align-items:center;margin:7px 0}.pane{display:none}.pane.active{display:block}
+.status{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}.ok{color:#7ee2a8}
+
+/* Raster is intentionally screen-dominant. */
+#rasterPane{padding:0}.rasterShell{position:relative;background:#090d12;min-height:calc(100vh - 88px);overflow:hidden}
+.rasterTop{position:absolute;z-index:4;left:8px;right:8px;top:8px;display:flex;gap:6px;flex-wrap:wrap;pointer-events:none}
+.rasterTop button{pointer-events:auto;min-height:42px;padding:8px 11px;font-size:14px;background:#25303b}
+.rasterTop button.active{background:#4ade80;color:#08110b}
+#canvasWrap{position:absolute;inset:0;touch-action:none;overflow:hidden}
+svg{width:100%;height:100%;display:block}.edge{stroke:#59636e;stroke-width:3}.point{fill:#4ade80;stroke:#0d1117;stroke-width:4;cursor:pointer}
+.point.inactive{fill:#4b5563}.point.selA{fill:#f2cc60}.point.selB{fill:#ff7b72}.label,.measureText,.dimText{fill:#fff;font-size:16px;font-weight:800;paint-order:stroke;stroke:#090d12;stroke-width:5px;stroke-linejoin:round}
+.measure{stroke:#f2cc60;stroke-width:4;stroke-dasharray:10 7}.dim{stroke:#58a6ff;stroke-width:2}
+.info{position:absolute;z-index:5;left:8px;right:8px;bottom:10px;background:rgba(22,27,34,.94);border:1px solid #3d4854;border-radius:16px;padding:11px 13px;display:none}
+.info.show{display:block}.infoTitle{font-weight:850;font-size:17px}.infoGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:5px;color:#c8d1da;font-size:14px}
+.infoActions{display:flex;gap:6px;margin-top:8px}.infoActions button{min-height:38px;padding:7px 10px;font-size:13px}
+.badge{position:absolute;z-index:5;right:9px;top:62px;background:rgba(22,27,34,.9);padding:7px 9px;border-radius:10px;color:#c8d1da;font-size:13px}
+.result{font-size:27px;font-weight:850;margin:12px 0 3px}
+@media(max-width:560px){.wrap{padding:10px}.tabs button{font-size:14px;padding:9px 5px}.geoGrid{grid-template-columns:1fr}.rasterShell{min-height:calc(100vh - 72px)}.infoGrid{grid-template-columns:1fr 1fr 1fr}}
+
+.arState{font-weight:800;padding:10px 12px;border-radius:12px;background:#0d1117;margin:10px 0}
+.arActions{display:grid;gap:8px}.arActions button{width:100%}
+.arHelp{line-height:1.45}.good{color:#7ee2a8}.warn{color:#f2cc60}.bad{color:#ff7b72}
+@media(max-width:560px){.tabs{grid-template-columns:repeat(4,1fr)}.tabs button{font-size:12px}}
+#arVisual{display:none;position:fixed;inset:0;z-index:9999;pointer-events:none}
+#arVisual.on{display:block}#arCross{position:absolute;left:50%;top:50%;width:54px;height:54px;transform:translate(-50%,-50%);border:3px solid #ff7b72;border-radius:50%;color:#ff7b72}
+#arCross:before,#arCross:after{content:"";position:absolute;left:50%;top:50%;background:currentColor;transform:translate(-50%,-50%)}#arCross:before{width:28px;height:3px}#arCross:after{width:3px;height:28px}
+#arCross.hit{border-color:#4ade80;color:#4ade80}#arVisualMsg{position:absolute;top:12px;left:10px;right:95px;background:rgba(8,12,17,.82);padding:11px;border-radius:13px;font-weight:800;color:#fff}
+#stopAR{position:absolute;right:10px;top:10px;pointer-events:auto;background:#b42318;color:#fff}
+#arLabels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.arPointLabel{position:absolute;transform:translate(-50%,-115%);padding:4px 7px;border-radius:8px;background:rgba(8,18,12,.82);border:1px solid rgba(74,222,128,.9);color:#7ee2a8;font-size:13px;font-weight:900;white-space:nowrap;text-shadow:0 1px 2px #000}
+#arVisualBottom{position:absolute;left:10px;right:10px;bottom:12px;background:rgba(8,12,17,.82);padding:11px;border-radius:13px;text-align:center;font-weight:800;color:#fff}
+
+body.ar-mode #mainHeader,body.ar-mode #normalMain{display:none!important}
+body.ar-mode{background:transparent!important;overflow:hidden}
+body.ar-mode #arCanvas{display:block!important}
+#arVisualMsg{font-size:15px;line-height:1.25}
+#arVisualBottom{font-size:14px}
 </style></head>
 <body>
-<header><h1>Bomal Fundering</h1><div class="sub">v0.7.3.1 · UI Restore + X Marker World-Lock Test</div></header>
-<main>
-<div class="tabs"><button class="tab on" data-tab="raster">Raster</button><button class="tab" data-tab="view">Weergave</button><button class="tab" data-tab="ar">AR</button></div>
-
-<section id="p-raster" class="panel on">
- <div class="card"><b>Raster instellen</b>
-  <div class="grid" style="margin-top:9px">
-   <label class="field">Kolommen<input id="cols" type="number" min="2" max="20" value="5"></label>
-   <label class="field">Rijen<input id="rows" type="number" min="2" max="20" value="3"></label>
-   <label class="field"><span><span class="axis">X →</span> afstand (mm)</span><input id="dx" type="number" min="1" step="0.1" value="1975"></label>
-   <label class="field"><span><span class="axis">Y ↑</span> afstand (mm)</span><input id="dy" type="number" min="1" step="0.1" value="1256.5"></label>
-  </div>
-  <div class="row" style="margin-top:9px"><button id="apply" class="primary">Raster bijwerken</button><button id="save">Opslaan</button></div>
-  <p class="small"><b>X →</b> en <b>Y ↑</b> zijn beide richtingen over de grond. Y is hier geen hoogte.</p>
- </div>
- <div class="card"><b>Snelle rasterweergave</b><svg id="svg" viewBox="0 0 700 430"></svg><div class="legend"><span><i class="dot"></i> actief rasterpunt</span><span>P00 = nulpunt</span></div></div>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.2.2 · True WebXR Anchor World Lock</div></div><button id="newBtn">Nieuw</button></header>
+<main id="normalMain" class="wrap">
+<div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
+<section id="inputPane" class="pane active">
+<div class="card"><h2>Raster opstellen</h2><p class="muted">P00 ligt links onderaan. Alle maten zijn millimeter.</p>
+<div class="setup"><label>Horizontaal<input id="cols" type="number" min="1" max="20"></label><label>Verticaal<input id="rows" type="number" min="1" max="20"></label></div>
+<button id="makeBtn" class="primary" style="width:100%;margin-top:8px">Raster maken</button></div>
+<div class="card"><h2>Horizontale afstanden</h2><div class="apply"><input id="allX" type="number" min="1" placeholder="bv. 1200"><button id="applyX">Op alle</button></div><div id="xRows"></div></div>
+<div class="card"><h2>Verticale afstanden</h2><div class="apply"><input id="allY" type="number" min="1" placeholder="bv. 1500"><button id="applyY">Op alle</button></div><div id="yRows"></div></div>
+<div class="card status"><b id="count"></b><span class="ok">Lokaal opgeslagen</span></div>
+</section>
+<section id="geoPane" class="pane">
+<div class="card"><h2>Geometriecontrole</h2><p class="muted">Selecteer twee punten hier, of veel sneller rechtstreeks in het raster.</p>
+<div class="geoGrid"><label>Punt A<select id="pointA"></select></label><label>Punt B<select id="pointB"></select></label></div>
+<div class="result" id="geoDistance">—</div><div class="muted" id="geoDelta">—</div>
+<button id="showLine" class="primary" style="width:100%;margin-top:14px">Toon in raster</button></div>
 </section>
 
-<section id="p-view" class="panel">
- <div class="card"><b>Rasteroverzicht</b><p class="small">Het volledige raster blijft één rigide geometrisch object. Punten worden niet afzonderlijk vervormd.</p><svg id="svg2" viewBox="0 0 700 430" style="width:100%;height:60vh;background:#0b1013;border-radius:11px"></svg></div>
-</section>
+<section id="arPane" class="pane">
+<div class="card">
+<h2>AR Proof of Concept</h2>
+<p class="muted arHelp">Doel van deze test: plaats <b>P00</b> op een echt oppervlak en plaats daarna <b>P01</b>. De app toont de gemeten AR-afstand. Voor de stabiliteitstest proberen we P01 zo dicht mogelijk bij <b>1000 mm</b> te plaatsen.</p>
+<div id="anchorSupport" class="arState">Full AR Raster: tik P00 om het volledige opgeslagen raster rigide te plaatsen.</div>
+<div id="arSupport" class="arState">AR-ondersteuning nog niet gecontroleerd.</div>
 
-<section id="p-ar" class="panel">
- <div class="card"><b>AR-kalibratie</b>
-  <p class="small">1. Leg de houten X met het snijpunt exact op P00.<br>2. Kies een betrouwbaar tweede punt voor de richting.<br>3. Start AR. Tijdens AR verdwijnen alle normale panelen.</p>
-  <label class="field">Tweede referentiepunt<select id="ref"></select></label>
-  <div class="row" style="margin-top:10px"><button id="start" class="primary">Start AR</button></div>
-  <p id="support" class="small">Test: rigide ProjectRoot + WebXR anchors indien Chrome/ARCore ze ondersteunt. De houten X is voorlopig een fysieke richtreferentie; automatische X-herkenning volgt pas na de stabiliteitstest.</p>
- </div>
+<div class="card" style="margin:10px 0">
+<label>AR-punt / object</label>
+<select id="markerType">
+<option value="target">Doelwit</option>
+<option value="cross">Kruis</option>
+<option value="ring">Cirkel</option>
+<option value="pin">Pin</option>
+<option value="post">Paaltje</option>
+<option value="tile">Vlak / tegel</option>
+<option value="cube">Kubus</option>
+</select>
+<label style="margin-top:8px">Grootte</label>
+<input id="markerSize" type="range" min="5" max="50" value="20">
+<p class="muted">De keuze verandert alleen de AR-weergave, nooit de geometrische positie.</p>
+</div>
+<div class="card" style="margin:10px 0">
+<label>Richtingspunt na P00</label>
+<select id="alignPoint"></select>
+<p class="muted">Kies bij voorkeur een duidelijk en zo ver mogelijk punt, bv. P03, P12 of P14. Na P00 richt je het vizier op het echte middelpunt van dit punt en tik je opnieuw.</p>
+</div>
+<div class="arActions">
+<button id="checkAR">Controleer AR</button>
+<button id="startAR" class="primary" disabled>Start AR</button>
+</div>
+<p class="muted">Tijdens AR verschijnt een richtvizier op gevonden oppervlakken. Tik één keer voor P00 en een tweede keer voor P01. Daarna kun je rondlopen en visueel controleren of beide markeringen op hun fysieke referentie blijven staan.</p>
+</div>
+<div class="card">
+<h2>Testprotocol</h2>
+<p class="muted">1. Gebruik twee fysieke markeringen die exact 1000 mm uit elkaar liggen.<br>2. Plaats P00 op markering 1.<br>3. Plaats P01 op markering 2.<br>4. Loop enkele meters rond.<br>5. Controleer opnieuw na ongeveer 1, 5 en 10 minuten.<br><br><b>Belangrijk:</b> deze AR-afstand is een stabiliteitstest, geen vervanging voor de laser.</p>
+</div>
 </section>
 </main>
 
-<div id="arUI">
- <div id="hud"><div id="hudStatus">AR starten…</div><div id="hudDetail"></div></div>
- <div id="ret"></div><div id="labels"></div>
- <div id="arBottom"><button id="recal">Herijk P00 + referentie</button><button id="stop">Stop AR</button></div>
+<section id="rasterPane" class="pane">
+<div class="rasterShell" id="rasterShell">
+<div class="rasterTop">
+<button id="backBtn">← Invoer</button><button id="fitBtn">⊙ Centreer</button><button id="labelsBtn">Labels</button><button id="dimsBtn">Maten</button><button id="clearBtn">Wis selectie</button>
 </div>
+<div class="badge" id="selectHint">Tik punt A</div>
+<div id="canvasWrap"><svg id="svg" viewBox="0 0 800 600" aria-label="Interactief raster"><g id="world"></g></svg></div>
+<div class="info" id="info"><div class="infoTitle" id="infoTitle"></div><div class="infoGrid"><span id="dist"></span><span id="dx"></span><span id="dy"></span></div>
+<div class="infoActions"><button id="swapBtn">Wissel A/B</button><button id="inactiveBtn">Actief/leeg</button><button id="closeInfo">Sluit</button></div></div>
+</div>
+</section>
 
+<div id="arVisual"><div id="arLabels"></div><div id="arVisualMsg">AR starten…</div><button id="stopAR">Stop</button><div id="arCross"></div><div id="arVisualBottom">Zoek een oppervlak…</div></div>
 <script>
-"use strict";
+(()=>{"use strict";
+const KEY="bomal_fundering_state_v050", OLD=["bomal_fundering_state","bomal_fundering_v030"];
 const $=id=>document.getElementById(id);
-let S=JSON.parse(localStorage.getItem("bomal0731")||"null")||{cols:5,rows:3,dx:1975,dy:1256.5};
-["cols","rows","dx","dy"].forEach(k=>$(k).value=S[k]);
-document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));document.querySelectorAll(".panel").forEach(x=>x.classList.remove("on"));b.classList.add("on");$("p-"+b.dataset.tab).classList.add("on")});
-function sync(){S.cols=Math.max(2,+$("cols").value||5);S.rows=Math.max(2,+$("rows").value||3);S.dx=Math.max(1,+$("dx").value||1975);S.dy=Math.max(1,+$("dy").value||1256.5);localStorage.setItem("bomal0731",JSON.stringify(S));fillRef();drawAll()}
-function pts(){let a=[],i=0;for(let r=0;r<S.rows;r++)for(let c=0;c<S.cols;c++)a.push({i:i,name:"P"+String(i++).padStart(2,"0"),x:c*S.dx,z:-r*S.dy});return a}
-function fillRef(){let old=$("ref").value;$("ref").innerHTML="";pts().slice(1).forEach(p=>{let o=document.createElement("option");o.value=p.i;o.textContent=p.name;$("ref").appendChild(o)});$("ref").value=[...$("ref").options].some(o=>o.value===old)?old:String(Math.min(3,pts().length-1))}
-function draw(svg){
- let P=pts();svg.innerHTML="";let mx=Math.max(...P.map(p=>p.x),1),my=Math.max(...P.map(p=>-p.z),1),pad=50,W=700,H=430,sc=Math.min((W-2*pad)/mx,(H-2*pad)/my),xy=p=>[pad+p.x*sc,H-pad+p.z*sc];
- P.forEach(p=>P.forEach(q=>{let adj=(Math.abs(p.x-q.x)===S.dx&&p.z===q.z)||(Math.abs(p.z-q.z)===S.dy&&p.x===q.x);if(adj&&q.i>p.i){let a=xy(p),b=xy(q);svg.insertAdjacentHTML("beforeend",`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="#45545d" stroke-width="2"/>`)}}));
- P.forEach(p=>{let a=xy(p);svg.insertAdjacentHTML("beforeend",`<circle cx="${a[0]}" cy="${a[1]}" r="${p.i===0?9:7}" fill="${p.i===0?"#fff":"#67ee8d"}"/><text x="${a[0]+11}" y="${a[1]-10}" fill="white" font-size="14" font-weight="700">${p.name}</text>`)});
- svg.insertAdjacentHTML("beforeend",`<text x="52" y="${H-16}" fill="#70ef98" font-size="15" font-weight="800">X →</text><text x="12" y="${H-53}" fill="#70ef98" font-size="15" font-weight="800">Y ↑</text>`);
-}
-function drawAll(){draw($("svg"));draw($("svg2"))}$("apply").onclick=sync;$("save").onclick=sync;fillRef();drawAll();
+let s={cols:5,rows:3,x:[1200,1200,1200,1200],y:[1500,1500],active:[],labels:true,dims:false,a:null,b:null};
+let view={scale:1,tx:0,ty:0},drag=null,moved=false,pointers=new Map(),pinch=null;
 
-let ses=null,gl=null,space=null,viewer=null,hit=null,hitPose=null,root=null,prog=null,ploc=null,mloc=null,cloc=null,stage=0,p00=null,a0=null,a1=null,labs=[];
-function mul(a,b){let o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)o[c*4+r]=a[r]*b[c*4]+a[4+r]*b[c*4+1]+a[8+r]*b[c*4+2]+a[12+r]*b[c*4+3];return o}
-function tv(m,v){let[x,y,z,w]=v;return[m[0]*x+m[4]*y+m[8]*z+m[12]*w,m[1]*x+m[5]*y+m[9]*z+m[13]*w,m[2]*x+m[6]*y+m[10]*z+m[14]*w,m[3]*x+m[7]*y+m[11]*z+m[15]*w]}
-function mkroot(x,y,z,yaw){let c=Math.cos(yaw),s=Math.sin(yaw);return new Float32Array([c,0,-s,0,0,1,0,0,s,0,c,0,x,y,z,1])}
-function shader(t,s){let q=gl.createShader(t);gl.shaderSource(q,s);gl.compileShader(q);if(!gl.getShaderParameter(q,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(q));return q}
-async function anchor(p){try{return p&&p.createAnchor?await p.createAnchor():null}catch(e){return null}}
-function stat(a,b){$("hudStatus").textContent=a;$("hudDetail").textContent=b||""}
-function arPts(){return pts().map(p=>({i:p.i,name:p.name,x:p.x/1000,y:.012,z:p.z/1000}))}
-async function start(){
- sync();if(!navigator.xr||!await navigator.xr.isSessionSupported("immersive-ar")){alert("WebXR immersive-ar is niet beschikbaar.");return}
+function norm(){s.cols=Math.max(1,Math.min(20,+s.cols||1));s.rows=Math.max(1,Math.min(20,+s.rows||1));
+while(s.x.length<s.cols-1)s.x.push(1200);s.x=s.x.slice(0,s.cols-1);while(s.y.length<s.rows-1)s.y.push(1500);s.y=s.y.slice(0,s.rows-1);
+let n=s.cols*s.rows;while(s.active.length<n)s.active.push(true);s.active=s.active.slice(0,n);
+if(s.a!==null&&(s.a<0||s.a>=n))s.a=null;if(s.b!==null&&(s.b<0||s.b>=n))s.b=null}
+function save(){norm();localStorage.setItem(KEY,JSON.stringify(s));$("count").textContent=`${s.cols} × ${s.rows} = ${s.cols*s.rows} posities · ${s.active.filter(Boolean).length} actief`}
+function load(){try{let v=JSON.parse(localStorage.getItem(KEY));if(!v){for(let k of OLD){v=JSON.parse(localStorage.getItem(k));if(v)break}}if(v)Object.assign(s,v)}catch(e){}norm()}
+function coords(){let xs=[0],ys=[0];for(let v of s.x)xs.push(xs.at(-1)+(+v||0));for(let v of s.y)ys.push(ys.at(-1)+(+v||0));let p=[];for(let r=0;r<s.rows;r++)for(let c=0;c<s.cols;c++)p.push({i:r*s.cols+c,c,r,x:xs[c],y:ys[r]});return p}
+function addRow(parent,name,val,set){let d=document.createElement("div");d.className="row";d.innerHTML=`<span>${name}</span><input type="number" min="1" value="${val}"><span>mm</span>`;d.querySelector("input").onchange=e=>{set(Math.max(1,+e.target.value||1));save();refreshGeo();render()};$(parent).appendChild(d)}
+function renderInputs(){$("cols").value=s.cols;$("rows").value=s.rows;$("xRows").innerHTML="";$("yRows").innerHTML="";
+s.x.forEach((v,i)=>addRow("xRows",`K${i+1} → K${i+2}`,v,n=>s.x[i]=n));s.y.forEach((v,i)=>addRow("yRows",`R${i+1} → R${i+2}`,v,n=>s.y[i]=n));save();populateSelects()}
+function populateAlignSelect(){
+ let el=$("alignPoint");if(!el)return;let old=el.value;el.innerHTML="";
+ coords().filter(q=>q.i!==0&&s.active[q.i]).forEach(q=>{let o=document.createElement("option");o.value=q.i;o.textContent="P"+String(q.i).padStart(2,"0");el.appendChild(o)});
+ if([...el.options].some(o=>o.value===old))el.value=old;
+ else if([...el.options].some(o=>o.value==="3"))el.value="3";
+}
+function populateSelects(){populateAlignSelect();let p=coords();["pointA","pointB"].forEach((id,j)=>{let el=$(id);el.innerHTML='<option value="">— kies punt —</option>';p.forEach(q=>{let o=document.createElement("option");o.value=q.i;o.textContent="P"+String(q.i).padStart(2,"0");if((j? s.b:s.a)===q.i)o.selected=true;el.appendChild(o)})});refreshGeo()}
+function measure(){let p=coords();if(s.a===null||s.b===null||!p[s.a]||!p[s.b])return null;let A=p[s.a],B=p[s.b],dx=B.x-A.x,dy=B.y-A.y;return{A,B,dx,dy,d:Math.hypot(dx,dy)}}
+function refreshGeo(){let m=measure();$("geoDistance").textContent=m?m.d.toFixed(1)+" mm":"—";$("geoDelta").textContent=m?`ΔX = ${Math.abs(m.dx).toFixed(0)} mm · ΔY = ${Math.abs(m.dy).toFixed(0)} mm`:"Kies twee punten.";
+let info=$("info");if(m){$("infoTitle").textContent=`P${String(s.a).padStart(2,"0")} → P${String(s.b).padStart(2,"0")}`;$("dist").textContent=`↗ ${m.d.toFixed(1)} mm`;$("dx").textContent=`ΔX ${Math.abs(m.dx).toFixed(0)}`;$("dy").textContent=`ΔY ${Math.abs(m.dy).toFixed(0)}`;info.classList.add("show");$("selectHint").textContent="Tik nieuw punt A of wis selectie"}else{info.classList.remove("show");$("selectHint").textContent=s.a===null?"Tik punt A":"Tik punt B"}}
+function fit(){view={scale:1,tx:0,ty:0};applyTransform()}
+function applyTransform(){$("world").setAttribute("transform",`translate(${view.tx} ${view.ty}) scale(${view.scale})`)}
+function render(){let g=$("world");g.innerHTML="";let p=coords(),NS="http://www.w3.org/2000/svg",W=800,H=600;
+let maxX=Math.max(1,...p.map(q=>q.x)),maxY=Math.max(1,...p.map(q=>q.y)),pad=80,k=Math.min((W-2*pad)/maxX,(H-2*pad)/maxY);if(!isFinite(k)||k<=0)k=1;
+let usedW=maxX*k,usedH=maxY*k,ox=(W-usedW)/2,oy=(H-usedH)/2,xy=q=>[ox+q.x*k,H-(oy+q.y*k)];
+function add(type,attrs,cls,text){let e=document.createElementNS(NS,type);Object.entries(attrs).forEach(([a,v])=>e.setAttribute(a,v));if(cls)e.setAttribute("class",cls);if(text!==undefined)e.textContent=text;g.appendChild(e);return e}
+function line(a,b,cls){let A=xy(a),B=xy(b);return add("line",{x1:A[0],y1:A[1],x2:B[0],y2:B[1]},cls)}
+p.forEach(q=>{if(q.c<s.cols-1)line(q,p[q.i+1],"edge");if(q.r<s.rows-1)line(q,p[q.i+s.cols],"edge")});
+if(s.dims){for(let c=0;c<s.cols-1;c++){let A=xy(p[c]),B=xy(p[c+1]),y=A[1]+32;add("line",{x1:A[0],y1:y,x2:B[0],y2:y},"dim");add("text",{x:(A[0]+B[0])/2,y:y+18,"text-anchor":"middle"},"dimText",s.x[c]+" mm")}
+for(let r=0;r<s.rows-1;r++){let A=xy(p[r*s.cols]),B=xy(p[(r+1)*s.cols]),x=A[0]-32;add("line",{x1:x,y1:A[1],x2:x,y2:B[1]},"dim");add("text",{x:x-6,y:(A[1]+B[1])/2,"text-anchor":"end"},"dimText",s.y[r]+" mm")}}
+let m=measure();if(m){line(m.A,m.B,"measure");let A=xy(m.A),B=xy(m.B);add("text",{x:(A[0]+B[0])/2,y:(A[1]+B[1])/2-12,"text-anchor":"middle"},"measureText",m.d.toFixed(1)+" mm")}
+p.forEach(q=>{let [x,y]=xy(q),cls="point"+(!s.active[q.i]?" inactive":"")+(s.a===q.i?" selA":"")+(s.b===q.i?" selB":"");let c=add("circle",{cx:x,cy:y,r:(s.a===q.i||s.b===q.i)?15:12,"data-i":q.i},cls);c.addEventListener("pointerup",e=>{e.stopPropagation();if(!moved)selectPoint(q.i)});if(s.labels)add("text",{x:x+15,y:y-13},"label","P"+String(q.i).padStart(2,"0"))});
+applyTransform();refreshGeo();$("labelsBtn").classList.toggle("active",s.labels);$("dimsBtn").classList.toggle("active",s.dims)}
+function selectPoint(i){if(s.a===null){s.a=i;s.b=null}else if(s.b===null&&i!==s.a){s.b=i}else{s.a=i;s.b=null}save();populateSelects();render()}
+function showTab(t){$("normalMain").style.display=t==="raster"?"none":"block";$("mainHeader").style.display=t==="raster"?"none":"flex";$("rasterPane").classList.toggle("active",t==="raster");
+document.querySelectorAll(".pane:not(#rasterPane)").forEach(x=>x.classList.toggle("active",x.id===(t==="input"?"inputPane":t==="geo"?"geoPane":"arPane")));document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===t));
+if(t==="raster"){render();fit()}if(t==="geo")populateSelects()}
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+$("backBtn").onclick=()=>showTab("input");$("fitBtn").onclick=fit;$("labelsBtn").onclick=()=>{s.labels=!s.labels;save();render()};$("dimsBtn").onclick=()=>{s.dims=!s.dims;save();render()};
+$("clearBtn").onclick=()=>{s.a=s.b=null;save();populateSelects();render()};$("closeInfo").onclick=()=>{s.a=s.b=null;save();populateSelects();render()};
+$("swapBtn").onclick=()=>{let t=s.a;s.a=s.b;s.b=t;save();populateSelects();render()};$("inactiveBtn").onclick=()=>{let i=s.b!==null?s.b:s.a;if(i!==null){s.active[i]=!s.active[i];save();render()}};
+$("pointA").onchange=e=>{s.a=e.target.value===""?null:+e.target.value;save();refreshGeo();render()};$("pointB").onchange=e=>{s.b=e.target.value===""?null:+e.target.value;save();refreshGeo();render()};
+$("showLine").onclick=()=>showTab("raster");
+$("makeBtn").onclick=()=>{s.cols=+$("cols").value;s.rows=+$("rows").value;s.x=[];s.y=[];s.active=[];s.a=s.b=null;norm();renderInputs();render()};
+$("applyX").onclick=()=>{let v=+$("allX").value;if(v>0){s.x=s.x.map(()=>v);renderInputs();render()}};$("applyY").onclick=()=>{let v=+$("allY").value;if(v>0){s.y=s.y.map(()=>v);renderInputs();render()}};
+$("newBtn").onclick=()=>{if(confirm("Nieuw raster starten?")){localStorage.removeItem(KEY);s={cols:5,rows:3,x:[1200,1200,1200,1200],y:[1500,1500],active:[],labels:true,dims:false,a:null,b:null};norm();renderInputs();render();showTab("input")}};
+
+let wrap=$("canvasWrap");
+wrap.addEventListener("pointerdown",e=>{pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});wrap.setPointerCapture(e.pointerId);moved=false;if(pointers.size===1)drag={id:e.pointerId,x:e.clientX,y:e.clientY,tx:view.tx,ty:view.ty};if(pointers.size===2){let a=[...pointers.values()];pinch={d:Math.hypot(a[1].x-a[0].x,a[1].y-a[0].y),scale:view.scale};drag=null}});
+wrap.addEventListener("pointermove",e=>{if(!pointers.has(e.pointerId))return;let old=pointers.get(e.pointerId);if(Math.hypot(e.clientX-old.x,e.clientY-old.y)>2)moved=true;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+if(pointers.size===2&&pinch){let a=[...pointers.values()],d=Math.hypot(a[1].x-a[0].x,a[1].y-a[0].y);view.scale=Math.max(.35,Math.min(5,pinch.scale*d/pinch.d));applyTransform()}
+else if(drag&&drag.id===e.pointerId){if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>5)moved=true;view.tx=drag.tx+e.clientX-drag.x;view.ty=drag.ty+e.clientY-drag.y;applyTransform()}});
+function end(e){pointers.delete(e.pointerId);if(pointers.size<2)pinch=null;if(!pointers.size)drag=null}wrap.addEventListener("pointerup",end);wrap.addEventListener("pointercancel",end);
+
+// ---- v0.6.3 persistent raw-WebGL AR markers ----
+let lastHitResult=null;
+let xrSession=null,xrRef=null,xrViewer=null,xrHitSource=null,xrGL=null,xrCanvas=null;
+let reticlePose=null,placed=[],xrStart=0,markerProgram=null,markerBuf=null;
+let projectRoot=null,alignStage=0,alignIndex=3;
+let p00Anchor=null,anchorYaw=0,anchorTracked=false,anchorCreating=false;
+const arSupport=$("arSupport"),startAR=$("startAR"),anchorSupport=$("anchorSupport");
+const arVisual=$("arVisual"),arCross=$("arCross"),arVisualMsg=$("arVisualMsg"),arVisualBottom=$("arVisualBottom");
+function setAR(msg,cls=""){arSupport.className="arState "+cls;arSupport.textContent=msg}
+async function checkAR(){
+ if(!window.isSecureContext){setAR("AR vereist HTTPS.","bad");return false}
+ if(!navigator.xr){setAR("WebXR niet beschikbaar. Gebruik Android Chrome + ARCore.","bad");return false}
+ try{const ok=await navigator.xr.isSessionSupported("immersive-ar");
+  if(ok){setAR("AR beschikbaar. Klaar voor de 3D-markertest.","good");startAR.disabled=false;return true}
+  setAR("Immersive AR wordt niet ondersteund.","bad")
+ }catch(e){setAR("AR-controle mislukt: "+e.message,"bad")} return false
+}
+$("checkAR").onclick=checkAR;
+
+function shader(type,src){let s=xrGL.createShader(type);xrGL.shaderSource(s,src);xrGL.compileShader(s);if(!xrGL.getShaderParameter(s,xrGL.COMPILE_STATUS))throw Error(xrGL.getShaderInfoLog(s));return s}
+function initMarkerGL(){
+ const vs=`attribute vec3 p;uniform mat4 vp;uniform vec3 origin;uniform float size;void main(){gl_Position=vp*vec4(origin+p*size,1.0);}`;
+ const fs=`precision mediump float;uniform vec4 color;void main(){gl_FragColor=color;}`;
+ markerProgram=xrGL.createProgram();xrGL.attachShader(markerProgram,shader(xrGL.VERTEX_SHADER,vs));xrGL.attachShader(markerProgram,shader(xrGL.FRAGMENT_SHADER,fs));xrGL.linkProgram(markerProgram);
+ if(!xrGL.getProgramParameter(markerProgram,xrGL.LINK_STATUS))throw Error(xrGL.getProgramInfoLog(markerProgram));
+ markerBuf=xrGL.createBuffer();
+}
+function markerVerts(kind){
+ let v=[], seg=32;
+ const line=(a,b,c,d,e,f)=>v.push(a,b,c,d,e,f);
+ if(kind==="cross"||kind==="target"){line(-1,0,0,1,0,0);line(0,0,-1,0,0,1)}
+ if(kind==="ring"||kind==="target"){for(let i=0;i<seg;i++){let a=i*2*Math.PI/seg,b=(i+1)*2*Math.PI/seg;line(Math.cos(a),0,Math.sin(a),Math.cos(b),0,Math.sin(b))}}
+ if(kind==="pin"){line(0,0,0,0,2,0);for(let i=0;i<seg;i++){let a=i*2*Math.PI/seg,b=(i+1)*2*Math.PI/seg;line(.45*Math.cos(a),2,.45*Math.sin(a),.45*Math.cos(b),2,.45*Math.sin(b))}}
+ if(kind==="post"){let s=.35;line(-s,0,-s,-s,2,-s);line(s,0,-s,s,2,-s);line(s,0,s,s,2,s);line(-s,0,s,-s,2,s)}
+ if(kind==="tile"){let s=1;line(-s,0,-s,s,0,-s);line(s,0,-s,s,0,s);line(s,0,s,-s,0,s);line(-s,0,s,-s,0,-s);line(-.35,0,0,.35,0,0);line(0,0,-.35,0,0,.35)}
+ if(kind==="cube"){let s=.65,y=1.3;let pts=[[-s,0,-s],[s,0,-s],[s,0,s],[-s,0,s],[-s,y,-s],[s,y,-s],[s,y,s],[-s,y,s]];let E=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];for(let e of E){let A=pts[e[0]],B=pts[e[1]];line(...A,...B)}}
+ return new Float32Array(v)
+}
+function mul4(a,b){let o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)o[c*4+r]=a[r]*b[c*4]+a[4+r]*b[c*4+1]+a[8+r]*b[c*4+2]+a[12+r]*b[c*4+3];return o}
+function drawMarker(view,pos,index){
+ if(!projectRoot)return;
+ let kind="target",verts=markerVerts(kind),sz=.25;
+ xrGL.useProgram(markerProgram);xrGL.bindBuffer(xrGL.ARRAY_BUFFER,markerBuf);
+ xrGL.bufferData(xrGL.ARRAY_BUFFER,new Float32Array(verts),xrGL.DYNAMIC_DRAW);
+ let a=xrGL.getAttribLocation(markerProgram,"p");xrGL.enableVertexAttribArray(a);xrGL.vertexAttribPointer(a,3,xrGL.FLOAT,false,0,0);
+ let pv=mul4(view.projectionMatrix,view.transform.inverse.matrix),mvp=mul4(pv,projectRoot);
+ xrGL.uniformMatrix4fv(xrGL.getUniformLocation(markerProgram,"vp"),false,mvp);
+ xrGL.uniform3f(xrGL.getUniformLocation(markerProgram,"origin"),pos.x,pos.y,pos.z);
+ xrGL.uniform1f(xrGL.getUniformLocation(markerProgram,"size"),sz);
+ xrGL.uniform4f(xrGL.getUniformLocation(markerProgram,"color"),0.15,1.0,0.35,1.0);
+ xrGL.drawArrays(xrGL.LINES,0,verts.length/3);
+}
+function drawConnection(view){
+ if(placed.length<2)return;
+ let a=placed[0],b=placed[1],verts=new Float32Array([a.x,a.y+.01,a.z,b.x,b.y+.01,b.z]);
+ xrGL.useProgram(markerProgram);xrGL.bindBuffer(xrGL.ARRAY_BUFFER,markerBuf);xrGL.bufferData(xrGL.ARRAY_BUFFER,verts,xrGL.DYNAMIC_DRAW);
+ let loc=xrGL.getAttribLocation(markerProgram,"p");xrGL.enableVertexAttribArray(loc);xrGL.vertexAttribPointer(loc,3,xrGL.FLOAT,false,0,0);
+ let vp=mul4(view.projectionMatrix,view.transform.inverse.matrix);xrGL.uniformMatrix4fv(xrGL.getUniformLocation(markerProgram,"vp"),false,vp);
+ xrGL.uniform3f(xrGL.getUniformLocation(markerProgram,"origin"),0,0,0);xrGL.uniform1f(xrGL.getUniformLocation(markerProgram,"size"),1);
+ xrGL.uniform4f(xrGL.getUniformLocation(markerProgram,"color"),1,1,1,.9);xrGL.drawArrays(xrGL.LINES,0,2);
+}
+startAR.onclick=async()=>{
+ if(!(await checkAR()))return;
  try{
-  ses=await navigator.xr.requestSession("immersive-ar",{requiredFeatures:["hit-test"],optionalFeatures:["anchors","local-floor","dom-overlay"],domOverlay:{root:document.body}});
-  document.body.classList.add("ar-mode");$("arUI").style.display="block";
-  let cv=document.createElement("canvas");gl=cv.getContext("webgl",{xrCompatible:true,alpha:true});await gl.makeXRCompatible();ses.updateRenderState({baseLayer:new XRWebGLLayer(ses,gl)});
-  space=await ses.requestReferenceSpace("local");viewer=await ses.requestReferenceSpace("viewer");hit=await ses.requestHitTestSource({space:viewer});
-  prog=gl.createProgram();gl.attachShader(prog,shader(gl.VERTEX_SHADER,"attribute vec3 p;uniform mat4 m;void main(){gl_Position=m*vec4(p,1.);}"));gl.attachShader(prog,shader(gl.FRAGMENT_SHADER,"precision mediump float;uniform vec4 c;void main(){gl_FragColor=c;}"));gl.linkProgram(prog);ploc=gl.getAttribLocation(prog,"p");mloc=gl.getUniformLocation(prog,"m");cloc=gl.getUniformLocation(prog,"c");
-  stage=0;root=null;p00=null;a0=a1=null;labs.forEach(e=>e.remove());labs=[];arPts().forEach(p=>{let e=document.createElement("div");e.className="lab";e.textContent=p.name;$("labels").appendChild(e);labs.push(e)});
-  stat("1/2 · PLAATS P00","X-snijding exact op P00 · richt vizier · tik.");ses.addEventListener("select",place);ses.addEventListener("end",()=>{document.body.classList.remove("ar-mode");$("arUI").style.display="none";labs.forEach(e=>e.remove());labs=[];ses=null});ses.requestAnimationFrame(frame)
- }catch(e){document.body.classList.remove("ar-mode");$("arUI").style.display="none";alert(e.message)}
+  xrSession=await navigator.xr.requestSession("immersive-ar",{requiredFeatures:["hit-test","anchors"],optionalFeatures:["dom-overlay","local-floor"],domOverlay:{root:document.body}});
+  xrCanvas=document.createElement("canvas");xrCanvas.id="arCanvas";xrCanvas.style.cssText="position:fixed;inset:0;width:100%;height:100%;z-index:9990;display:block;pointer-events:none";document.body.appendChild(xrCanvas);
+  xrGL=xrCanvas.getContext("webgl",{xrCompatible:true,alpha:true,premultipliedAlpha:false,antialias:true});await xrGL.makeXRCompatible();
+  xrSession.updateRenderState({baseLayer:new XRWebGLLayer(xrSession,xrGL),depthNear:.01,depthFar:50});
+  try{xrRef=await xrSession.requestReferenceSpace("local-floor")}catch(_){xrRef=await xrSession.requestReferenceSpace("local")}
+  xrViewer=await xrSession.requestReferenceSpace("viewer");xrHitSource=await xrSession.requestHitTestSource({space:xrViewer});
+  initMarkerGL();placed=[];projectRoot=null;p00Anchor=null;anchorYaw=0;anchorTracked=false;anchorCreating=false;alignStage=0;alignIndex=+$("alignPoint").value||3;lastHitResult=null;reticlePose=null;$("arLabels").innerHTML="";xrStart=performance.now();document.body.classList.add("ar-mode");arVisual.classList.add("on");arVisualMsg.textContent="Zoek vloer";arVisualBottom.textContent="Rood vizier = nog geen oppervlak";
+  xrSession.addEventListener("select",onXRSelect);xrSession.addEventListener("end",()=>{setAR("AR-test beëindigd.","warn");startAR.disabled=false;document.body.classList.remove("ar-mode");arVisual.classList.remove("on");if(p00Anchor){try{p00Anchor.delete()}catch(_){}}p00Anchor=null;if(xrCanvas)xrCanvas.remove();xrCanvas=null;projectRoot=null;alignStage=0;lastHitResult=null;$("arLabels").innerHTML="";xrSession=null});
+  startAR.disabled=true;xrSession.requestAnimationFrame(onXRFrame)
+ }catch(e){document.body.classList.remove("ar-mode");arVisual.classList.remove("on");setAR("AR kon niet starten: "+e.message,"bad");startAR.disabled=false}
+};
+async function onXRSelect(){
+ if(!reticlePose||!lastHitResult||anchorCreating)return;
+ if(alignStage===0){
+   if(typeof lastHitResult.createAnchor!=="function"){
+     arVisualMsg.textContent="ANCHORS API NIET BESCHIKBAAR";
+     arVisualBottom.textContent="Deze sessie biedt geen XRHitTestResult.createAnchor().";
+     return;
+   }
+   try{
+     anchorCreating=true;
+     arVisualMsg.textContent="P00 VERANKEREN…";
+     p00Anchor=await lastHitResult.createAnchor();
+     anchorYaw=0; projectRoot=null; anchorTracked=false;
+     $("arLabels").innerHTML="";
+     alignIndex=+$("alignPoint").value;
+     if(!Number.isFinite(alignIndex)||alignIndex===0)alignIndex=3;
+     alignStage=1;
+     arVisualMsg.textContent="✓ P00 ECHT VERANKERD · PLAATS P"+String(alignIndex).padStart(2,"0");
+     arVisualBottom.textContent="P00 gebruikt nu een echte WebXR Anchor. Richt op P"+String(alignIndex).padStart(2,"0")+" en tik voor de richting.";
+   }catch(e){
+     p00Anchor=null; alignStage=0;
+     arVisualMsg.textContent="P00 ANCHOR MISLUKT";
+     arVisualBottom.textContent=e.message||String(e);
+   }finally{anchorCreating=false}
+   return;
+ }
+ if(alignStage===1){
+   if(!p00Anchor||!projectRoot||!anchorTracked){
+     arVisualBottom.textContent="Wacht tot P00-anchor opnieuw TRACKING heeft…"; return;
+   }
+   let target=coords().find(q=>q.i===alignIndex); if(!target)return;
+   let M=reticlePose.transform.matrix;
+   // projectRoot is currently the live P00 anchor pose (anchorYaw=0).
+   let ax=projectRoot[12],az=projectRoot[14];
+   let wx=M[12]-ax,wz=M[14]-az;
+   let lx=target.x/1000,lz=-target.y/1000;
+   if(Math.hypot(wx,wz)<0.05){arVisualBottom.textContent="Tweede punt ligt te dicht bij P00.";return}
+   let aLocal=Math.atan2(lz,lx),aWorld=Math.atan2(wz,wx);
+   // Horizontal world angle of the anchor's local +X axis.
+   let aAnchor=Math.atan2(projectRoot[2],projectRoot[0]);
+   // Our Y-yaw matrix rotates a horizontal vector by -yaw.
+   anchorYaw=aAnchor+aLocal-aWorld;
+   alignStage=2; $("arLabels").innerHTML="";
+   arVisualMsg.textContent="✓ TRUE ANCHOR WORLD LOCK · P00 → P"+String(alignIndex).padStart(2,"0");
+   arVisualBottom.textContent="Raster volgt iedere frame de echte P00-anchor; P"+String(alignIndex).padStart(2,"0")+" bepaalt alleen de richting.";
+ }
 }
-async function place(){
- if(!hitPose)return;let M=hitPose.transform.matrix,ri=+$("ref").value,t=arPts()[ri];
- if(stage===0){p00={x:M[12],y:M[13],z:M[14]};root=mkroot(p00.x,p00.y,p00.z,0);a0=await anchor(hitPose);stage=1;stat("2/2 · PLAATS "+t.name,"Richt exact op het fysieke middelpunt van "+t.name+" · tik.")}
- else if(stage===1){let wx=M[12]-p00.x,wz=M[14]-p00.z,al=Math.atan2(t.z,t.x),aw=Math.atan2(wz,wx),yaw=al-aw;root=mkroot(p00.x,p00.y,p00.z,yaw);a1=await anchor(hitPose);stage=2;stat("🔒 RASTER P00 → "+t.name,(a0||a1)?"Rigide raster · WebXR anchor actief.":"Rigide raster · Anchor API niet beschikbaar.")}
+function arRasterPoints(){
+ return coords().filter(p=>s.active[p.i]).map(p=>({
+   x:p.x/1000,
+   y:0.012,
+   z:-p.y/1000,
+   index:p.i
+ }));
 }
-function marker(m){let r=.13,N=32,v=[];for(let i=0;i<N;i++){let a=i*2*Math.PI/N,b=(i+1)*2*Math.PI/N;v.push(Math.cos(a)*r,0,Math.sin(a)*r,Math.cos(b)*r,0,Math.sin(b)*r)}v.push(-r,0,0,r,0,0,0,0,-r,0,0,r);let b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(v),gl.STREAM_DRAW);gl.vertexAttribPointer(ploc,3,gl.FLOAT,false,0,0);gl.enableVertexAttribArray(ploc);gl.uniformMatrix4fv(mloc,false,m);gl.uniform4f(cloc,.1,1,.35,1);gl.drawArrays(gl.LINES,0,v.length/3);gl.deleteBuffer(b)}
-function frame(t,f){if(!ses)return;ses.requestAnimationFrame(frame);let pose=f.getViewerPose(space),hs=hit?f.getHitTestResults(hit):[];hitPose=hs.length?hs[0].getPose(space):null;if(!pose)return;let base=ses.renderState.baseLayer;gl.bindFramebuffer(gl.FRAMEBUFFER,base.framebuffer);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(prog);let v=pose.views[0],vp=base.getViewport(v);gl.viewport(vp.x,vp.y,vp.width,vp.height);
- if(root)arPts().forEach((p,i)=>{let T=new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,p.x,p.y,p.z,1]),W=mul(root,T),M=mul(v.projectionMatrix,mul(v.transform.inverse.matrix,W));marker(M);let q=tv(mul(v.projectionMatrix,v.transform.inverse.matrix),tv(root,[p.x,p.y,p.z,1]));if(q[3]>0){let nx=q[0]/q[3],ny=q[1]/q[3];labs[i].style.display=Math.abs(nx)<1.15&&Math.abs(ny)<1.15?"block":"none";labs[i].style.left=(nx*.5+.5)*innerWidth+"px";labs[i].style.top=(-ny*.5+.5)*innerHeight+"px"}else labs[i].style.display="none"})}
-$("start").onclick=start;$("stop").onclick=()=>ses&&ses.end();$("recal").onclick=()=>{stage=0;root=null;p00=null;a0=a1=null;stat("HERIJK · PLAATS P00","Richt opnieuw exact op de X-snijding op P00.")};
+function transform4(m,v){return [
+ m[0]*v[0]+m[4]*v[1]+m[8]*v[2]+m[12]*v[3],
+ m[1]*v[0]+m[5]*v[1]+m[9]*v[2]+m[13]*v[3],
+ m[2]*v[0]+m[6]*v[1]+m[10]*v[2]+m[14]*v[3],
+ m[3]*v[0]+m[7]*v[1]+m[11]*v[2]+m[15]*v[3]
+]}
+function updateARLabels(view){
+ const box=$("arLabels"); if(!box||!projectRoot)return;
+ let pv=mul4(view.projectionMatrix,view.transform.inverse.matrix),mvp=mul4(pv,projectRoot);
+ let pts=arRasterPoints(), live=new Set();
+ for(let p of pts){
+   let clip=transform4(mvp,[p.x,p.y,p.z,1]); if(clip[3]<=0)continue;
+   let nx=clip[0]/clip[3],ny=clip[1]/clip[3],nz=clip[2]/clip[3];
+   if(nz < -1 || nz > 1 || nx < -1.2 || nx > 1.2 || ny < -1.2 || ny > 1.2)continue;
+   let id="arlbl"+p.index,el=$(id);
+   if(!el){el=document.createElement("div");el.id=id;el.className="arPointLabel";box.appendChild(el)}
+   el.textContent="P"+String(p.index).padStart(2,"0");
+   el.style.left=((nx*.5+.5)*innerWidth)+"px";
+   el.style.top=((-.5*ny+.5)*innerHeight)+"px";
+   el.style.display="block";live.add(id);
+ }
+ [...box.children].forEach(el=>{if(!live.has(el.id))el.style.display="none"});
+}
+function yawMatrix(yaw){let c=Math.cos(yaw),sn=Math.sin(yaw);return new Float32Array([c,0,-sn,0, 0,1,0,0, sn,0,c,0, 0,0,0,1])}
+function updateProjectRootFromAnchor(frame){
+ anchorTracked=false;
+ if(!p00Anchor){projectRoot=null;return}
+ // Follow the anchor pose every XR frame. This is the core change vs v0.7.2.1.
+ if(frame.trackedAnchors && !frame.trackedAnchors.has(p00Anchor)){projectRoot=null;return}
+ let ap=frame.getPose(p00Anchor.anchorSpace,xrRef);
+ if(!ap){projectRoot=null;return}
+ anchorTracked=true;
+ projectRoot=mul4(ap.transform.matrix,yawMatrix(anchorYaw));
+}
+function drawARRaster(view){if(!projectRoot)return;for(let p of arRasterPoints())drawMarker(view,p,p.index);updateARLabels(view);}
+function onXRFrame(t,frame){
+ if(!xrSession)return;xrSession.requestAnimationFrame(onXRFrame);let pose=frame.getViewerPose(xrRef);if(!pose)return;
+ let layer=xrSession.renderState.baseLayer;xrGL.bindFramebuffer(xrGL.FRAMEBUFFER,layer.framebuffer);xrGL.enable(xrGL.DEPTH_TEST);xrGL.clearColor(0,0,0,0);xrGL.clear(xrGL.COLOR_BUFFER_BIT|xrGL.DEPTH_BUFFER_BIT);
+ let hits=frame.getHitTestResults(xrHitSource);
+ lastHitResult=hits.length?hits[0]:null;
+ reticlePose=lastHitResult?lastHitResult.getPose(xrRef):null;
+ updateProjectRootFromAnchor(frame);
+ arCross.classList.toggle("hit",!!reticlePose);
+ if(alignStage===0)arVisualBottom.textContent=reticlePose?"Groen vizier — tik voor P00":"Beweeg rustig: oppervlak zoeken…";
+ else if(alignStage===1)arVisualBottom.textContent=!anchorTracked?"P00-anchor tijdelijk niet gevolgd — beweeg rustig…":(reticlePose?"Plaats vizier op fysieke P"+String(alignIndex).padStart(2,"0")+" — tik om richting vast te leggen":"Zoek oppervlak bij P"+String(alignIndex).padStart(2,"0")+"…");
+ else if(alignStage===2&&!anchorTracked)arVisualBottom.textContent="P00-anchor tijdelijk niet gevolgd — raster verborgen tot tracking terug is";
+ for(let view of pose.views){let vp=layer.getViewport(view);xrGL.viewport(vp.x,vp.y,vp.width,vp.height);drawARRaster(view);drawConnection(view)}
+}
+$("stopAR").onclick=()=>{if(xrSession)xrSession.end()};
+load();renderInputs();render();
+})();
 </script></body></html>
