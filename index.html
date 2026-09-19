@@ -67,7 +67,7 @@ body.ar-mode #arCanvas{display:block!important}
 
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.9.4 · Offset Zero Fix</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.9.5 · Offset Zero Fix</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -209,6 +209,7 @@ function end(e){pointers.delete(e.pointerId);if(pointers.size<2)pinch=null;if(!p
 // ---- v0.7.2.3 isolated TRUE WebXR P00 anchor test ----
 let lastHitResult=null;
 let heightAssist=false;
+let rigidRasterFrame=null;
 let visualHeightOffset=0; // metres; visual overlay only, anchors remain untouched
 const VISUAL_HEIGHT_STEP=0.002;
 const VISUAL_HEIGHT_MIN=-0.020;
@@ -313,19 +314,15 @@ function drawHeightAssist(view,p0,p3){
 }
 
 function drawFullRaster(view,p0,p3){
- // P00 + P03 define only placement/orientation.
- // Exact raster geometry remains the entered design geometry from coords().
- const pts=coords().filter(p=>s.active[p.i]);
- if(!pts.length)return;
-
- const x0=p0.transform.position.x, y0=p0.transform.position.y+visualHeightOffset, z0=p0.transform.position.z;
- const x3=p3.transform.position.x, z3=p3.transform.position.z;
- const dyx=x3-x0,dyz=z3-z0,L=Math.hypot(dyx,dyz); if(L<.05)return;
-
- // +Y raster direction = P00 -> P03. +X is its right-hand horizontal perpendicular.
- const uyx=dyx/L, uyz=dyz/L;
- const uxx=-uyz, uxz=uyx;
-
+ const pts=coords().filter(p=>s.active[p.i]); if(!pts.length)return;
+ let x0,y0,z0,uyx,uyz,uxx,uxz;
+ if(rigidRasterFrame){
+  ({x0,y0,z0,uyx,uyz,uxx,uxz}=rigidRasterFrame); y0+=visualHeightOffset;
+ }else{
+  x0=p0.transform.position.x;y0=p0.transform.position.y+visualHeightOffset;z0=p0.transform.position.z;
+  const dx=p3.transform.position.x-x0,dz=p3.transform.position.z-z0,L=Math.hypot(dx,dz);if(L<.05)return;
+  uyx=dx/L;uyz=dz/L;uxx=-uyz;uxz=uyx;
+ }
  const byIndex=new Map(pts.map(q=>[q.i,q]));
  const verts=[];
 
@@ -480,13 +477,13 @@ function onXRFrame(t,frame){
    const hitNow=lastHitResult;
    hitNow.createAnchor().then(a=>{
      if(kindNow==="P00"){
-       p00Anchor=a;
+       rigidRasterFrame=null;p00Anchor=a;
        arVisualMsg.textContent="✓ P00 GEANKERD";
        placeP00Btn.textContent="● P03 PRECISIE VASTZETTEN";
        placeP00Btn.style.display="block";placeP00Btn.disabled=false;
        arVisualBottom.textContent="P00 echte WebXR-anchor · richt nu op P03.";
      }else if(kindNow==="P03"){
-       p03Anchor=a;
+       rigidRasterFrame=null;p03Anchor=a;
        arVisualMsg.textContent="✓ P03 GEANKERD";
        placeP00Btn.style.display="none";placeP00Btn.disabled=true;
        arVisualBottom.textContent="P00 + P03 zijn echte WebXR-anchors.";
@@ -502,6 +499,15 @@ function onXRFrame(t,frame){
  if(!p03Anchor){placeP00Btn.style.display="block";placeP00Btn.disabled=!reticlePose||anchorCreating;}
  let ap=p00Anchor?frame.getPose(p00Anchor.anchorSpace,xrRef):null;
  let ap03=p03Anchor?frame.getPose(p03Anchor.anchorSpace,xrRef):null;
+ if(ap&&ap03&&!rigidRasterFrame){
+  const x0=ap.transform.position.x,y0=ap.transform.position.y,z0=ap.transform.position.z;
+  const dx=ap03.transform.position.x-x0,dz=ap03.transform.position.z-z0,L=Math.hypot(dx,dz);
+  if(L>=.05){const uyx=dx/L,uyz=dz/L;rigidRasterFrame={x0,y0,z0,uyx,uyz,uxx:-uyz,uxz:uyx};
+   arVisualMsg.textContent="✓ RASTER VERGRENDELD";
+   arVisualBottom.textContent="P00–P14 vormen één rigide raster.";
+  }
+ }
+
  if(!p00Anchor)arVisualBottom.textContent=reticlePose?"Groen vizier — druk onderaan om P00 vast te zetten":"Beweeg rustig: oppervlak zoeken…";
  else if(!p03Anchor)arVisualBottom.textContent=reticlePose?"P00 staat vast — richt op P03 en druk onderaan":"Zoek een oppervlak voor P03…";
  else if(!ap||!ap03)arVisualBottom.textContent="Anchor tijdelijk niet gevolgd — beweeg rustig tot tracking terugkomt";

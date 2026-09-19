@@ -1,2 +1,2 @@
-# Bomal Fundering v0.7.9.4 — Offset Zero Fix
-Gerichte correctie van v0.7.9.3. OFFSET 0 mm is nu werkelijk het WebXR-anchorvlak. De vaste visuele verhogingen voor labels (+35 mm), assen (+8 mm) en P00-marker (+6 mm) zijn verwijderd. Raster, labels, assen en marker gebruiken dezelfde `visualHeightOffset`. De anchorarchitectuur is niet gewijzigd.
+# Bomal Fundering v0.7.9.5 — Rigid Raster Lock
+P00 en P03 zijn echte WebXR-anchors. Zodra beide poses beschikbaar zijn wordt oorsprong en richting éénmalig vastgelegd. P00–P14 vormen daarna één rigide raster; de app herberekent de rasterrichting niet meer per frame.
