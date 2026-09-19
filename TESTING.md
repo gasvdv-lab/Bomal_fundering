@@ -1,19 +1,20 @@
-# TESTING v0.7.3
-## Statische controles
-- flat smartphone release
-- P00 translation blijft rasteroorsprong
-- yaw-formule van v0.7.2.1 behouden
-- rasterpunten delen één ProjectRoot
-- WebXR anchors zijn optioneel; fallback blijft actief
+# TESTING v0.7.3.1
 
-## Ter plaatse
-1. X exact op P00 centreren.
+## UI
+1. Raster-tab toont raster en X/Y.
+2. Weergave-tab toont volledig raster.
+3. AR-tab laat tweede referentie kiezen.
+4. Na Start AR mogen raster/configuratiepanelen NIET over de camera blijven staan.
+5. Alleen compacte HUD, vizier, Herijk en Stop AR mogen zichtbaar zijn.
+
+## World-lock
+1. Houten X exact centreren op P00.
 2. P00 plaatsen.
-3. P03 (of gekozen referentie) plaatsen.
-4. P00/P03 onmiddellijk controleren.
-5. 2–5 m weg lopen en terugkomen.
-6. P00-afwijking schatten: <2 / 2–5 / 5–10 / >10 cm.
-7. Rond raster lopen en opnieuw controleren.
-8. Herijk testen.
+3. P03 of gekozen tweede punt plaatsen.
+4. Controleer P00/P03 direct.
+5. Loop 2–5 m weg en terug.
+6. Schat drift: <2 cm / 2–5 cm / 5–10 cm / >10 cm.
+7. Loop rondom het raster en controleer opnieuw.
+8. Test Herijk.
 
-Maak bij voorkeur screenshots vóór en na het rondlopen.
+Laser/controlemetingen blijven de definitieve maatvoering.
