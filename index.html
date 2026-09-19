@@ -55,7 +55,7 @@ body.ar-mode #arCanvas{display:block!important}
 #arVisualBottom{font-size:14px}
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.2.5.1 · Dual Anchor Fix</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.2.6 · Anchored Axis Test</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -198,7 +198,7 @@ async function checkAR(){
  if(!window.isSecureContext){setAR("AR vereist HTTPS.","bad");return false}
  if(!navigator.xr){setAR("WebXR niet beschikbaar. Gebruik Android Chrome + ARCore.","bad");return false}
  try{const ok=await navigator.xr.isSessionSupported("immersive-ar");
-  if(ok){setAR("AR beschikbaar — P00 Anchor Isolation Test klaar.","good");startAR.disabled=false;return true}
+  if(ok){setAR("AR beschikbaar — Anchored Axis Test klaar.","good");startAR.disabled=false;return true}
   setAR("Immersive AR wordt niet ondersteund.","bad")
  }catch(e){setAR("AR-controle mislukt: "+e.message,"bad")} return false
 }
@@ -222,6 +222,27 @@ function drawP00(view,anchorPose){
  let mvp=mul4(pv,anchorPose.transform.matrix);
  xrGL.uniformMatrix4fv(xrGL.getUniformLocation(markerProgram,"mvp"),false,mvp);
  xrGL.lineWidth(6);xrGL.drawArrays(xrGL.LINES,0,4);
+}
+function drawAxes(view,p0,p3){
+ // World/reference-space coordinates from the TWO CURRENT anchor poses.
+ // Y-axis follows P00 -> P03. X-axis is the horizontal perpendicular through P00.
+ const x0=p0.transform.position.x, y0=p0.transform.position.y+.008, z0=p0.transform.position.z;
+ const x3=p3.transform.position.x, y3=p3.transform.position.y+.008, z3=p3.transform.position.z;
+ const dx=x3-x0,dz=z3-z0,len=Math.hypot(dx,dz); if(len<.05)return;
+ const ux=dx/len,uz=dz/len;       // raster Y direction
+ const xx=-uz,xz=ux;              // raster X direction, perpendicular
+ const axisLen=Math.max(1.0,Math.min(3.0,len));
+ const verts=new Float32Array([
+   x0,y0,z0, x3,y3,z3,             // exact P00 -> P03
+   x0,y0,z0, x0+xx*axisLen,y0,z0+xz*axisLen // perpendicular X axis
+ ]);
+ xrGL.useProgram(markerProgram);xrGL.bindBuffer(xrGL.ARRAY_BUFFER,markerBuf);
+ xrGL.bufferData(xrGL.ARRAY_BUFFER,verts,xrGL.DYNAMIC_DRAW);
+ let loc=xrGL.getAttribLocation(markerProgram,"p");xrGL.enableVertexAttribArray(loc);
+ xrGL.vertexAttribPointer(loc,3,xrGL.FLOAT,false,0,0);
+ let pv=mul4(view.projectionMatrix,view.transform.inverse.matrix);
+ xrGL.uniformMatrix4fv(xrGL.getUniformLocation(markerProgram,"mvp"),false,pv);
+ xrGL.lineWidth(5);xrGL.drawArrays(xrGL.LINES,0,4);
 }
 startAR.onclick=async()=>{
  if(!(await checkAR()))return;
@@ -255,9 +276,9 @@ async function placeP00(){
      arVisualBottom.textContent="P00 staat vast. Richt nu het middenvizier exact op P03.";
    }else if(!p03Anchor){
      p03Anchor=a;
-     arVisualMsg.textContent="✓ P00 + P03 VERANKERD";
+     arVisualMsg.textContent="✓ ASSEN VERANKERD";
      placeP00Btn.disabled=true;placeP00Btn.style.display="none";
-     arVisualBottom.textContent="Loop rond en controleer of BEIDE kruisen op hun fysieke plek blijven.";
+     arVisualBottom.textContent="Y-as = P00→P03. X-as = loodrecht door P00. Loop rond en controleer stabiliteit.";
    }else{
      a.delete();
    }
@@ -277,8 +298,9 @@ function onXRFrame(t,frame){
  let ap03=p03Anchor?frame.getPose(p03Anchor.anchorSpace,xrRef):null;
  if(!p00Anchor)arVisualBottom.textContent=reticlePose?"Groen vizier — druk onderaan om P00 vast te zetten":"Beweeg rustig: oppervlak zoeken…";
  else if(!p03Anchor)arVisualBottom.textContent=reticlePose?"P00 staat vast — richt op P03 en druk onderaan":"Zoek een oppervlak voor P03…";
- else if(!ap)arVisualBottom.textContent="P00-anchor tijdelijk niet gevolgd — beweeg rustig tot tracking terugkomt";
- for(let view of pose.views){let vp=layer.getViewport(view);xrGL.viewport(vp.x,vp.y,vp.width,vp.height);if(ap)drawP00(view,ap);if(ap03)drawP00(view,ap03)}
+ else if(!ap||!ap03)arVisualBottom.textContent="Anchor tijdelijk niet gevolgd — beweeg rustig tot tracking terugkomt";
+ else arVisualBottom.textContent="P00 + P03 stabiel · lijn = Y-as · loodrechte lijn = X-as";
+ for(let view of pose.views){let vp=layer.getViewport(view);xrGL.viewport(vp.x,vp.y,vp.width,vp.height);if(ap&&ap03)drawAxes(view,ap,ap03);if(ap)drawP00(view,ap);if(ap03)drawP00(view,ap03)}
 }
 $("placeP00Btn").onclick=placeP00;
 $("stopAR").onclick=()=>{if(xrSession)xrSession.end()};

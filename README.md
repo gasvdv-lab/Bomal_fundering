@@ -1,13 +1,13 @@
-# Bomal Fundering v0.7.2.5.1 — Dual Anchor Fix
+# Bomal Fundering v0.7.2.6 — Anchored Axis Test
 
-Gerichte hotfix op v0.7.2.5.
+Gebaseerd op de fysiek geslaagde dual-anchor v0.7.2.5.1.
 
-## Gecorrigeerd
-- `p03Anchor` wordt nu expliciet gedeclareerd.
-- Na P00 schakelt de onderste knop naar `P03 HIER VASTZETTEN`.
-- P03 wordt met dezelfde `XRHitTestResult.createAnchor()`-methode als P00 gemaakt.
-- P00 en P03 worden iedere frame rechtstreeks vanuit hun eigen `anchorSpace` opgehaald.
-- Beide anchorposes worden nu werkelijk gerenderd.
-- Beide anchors worden bij afsluiten verwijderd.
+Nieuw:
+- P00 en P03 blijven twee echte, onafhankelijke WebXR anchors.
+- Iedere frame worden beide actuele anchorposes gelezen.
+- De lijn P00 → P03 vormt de lokale Y-as.
+- Door P00 wordt een horizontaal loodrechte X-as getekend.
+- Geen opgeslagen P03-worldmatrix, geen ProjectRoot en nog geen 3×5 raster.
 
-Nog bewust afwezig: raster, ProjectRoot en yawberekening.
+Doel: bewijzen dat een geometrische constructie die rechtstreeks uit de twee actuele anchors
+wordt afgeleid stabiel op het terrein blijft.
