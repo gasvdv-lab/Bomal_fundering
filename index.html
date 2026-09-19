@@ -55,7 +55,7 @@ body.ar-mode #arCanvas{display:block!important}
 #arVisualBottom{font-size:14px}
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.2.4 · P00 Anchor Button Test</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.2.5 · Dual Anchor Stability Test</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -235,7 +235,7 @@ startAR.onclick=async()=>{
   xrRef=await xrSession.requestReferenceSpace("local");
   xrViewer=await xrSession.requestReferenceSpace("viewer");
   xrHitSource=await xrSession.requestHitTestSource({space:xrViewer});
-  initMarkerGL();p00Anchor=null;lastHitResult=null;reticlePose=null;anchorCreating=false;placeP00Btn.style.display="block";placeP00Btn.disabled=true;
+  initMarkerGL();p00Anchor=null;p03Anchor=null;lastHitResult=null;reticlePose=null;anchorCreating=false;placeP00Btn.textContent="● P00 HIER VASTZETTEN";placeP00Btn.style.display="block";placeP00Btn.disabled=true;
   document.body.classList.add("ar-mode");arVisual.classList.add("on");
   arVisualMsg.textContent="P00 ANCHOR TEST";arVisualBottom.textContent="Zoek een oppervlak — groen vizier = klaar om P00 te plaatsen";
   xrSession.addEventListener("end",()=>{setAR("AR-test beëindigd.","warn");startAR.disabled=false;document.body.classList.remove("ar-mode");arVisual.classList.remove("on");if(p00Anchor){try{p00Anchor.delete()}catch(_){}}p00Anchor=null;if(xrCanvas)xrCanvas.remove();xrCanvas=null;lastHitResult=null;reticlePose=null;xrSession=null});
@@ -243,15 +243,28 @@ startAR.onclick=async()=>{
  }catch(e){document.body.classList.remove("ar-mode");arVisual.classList.remove("on");setAR("AR kon niet starten: "+e.message,"bad");startAR.disabled=false}
 };
 async function placeP00(){
- if(p00Anchor||anchorCreating||!lastHitResult)return;
- if(typeof lastHitResult.createAnchor!=="function"){arVisualMsg.textContent="ANCHOR API ONTBREEKT";arVisualBottom.textContent="XRHitTestResult.createAnchor() is niet beschikbaar.";return}
+ if(anchorCreating||!lastHitResult)return;
+ anchorCreating=true;placeP00Btn.disabled=true;
  try{
-  anchorCreating=true;arVisualMsg.textContent="P00 VERANKEREN…";
-  p00Anchor=await lastHitResult.createAnchor();
-  arVisualMsg.textContent="✓ P00 ECHT VERANKERD";
-  placeP00Btn.disabled=true;placeP00Btn.style.display="none";
-  arVisualBottom.textContent="Loop nu 1 m, 3 m en 5 m weg en terug. Het groene + moet op exact dezelfde fysieke plek blijven.";
- }catch(e){arVisualMsg.textContent="P00 ANCHOR MISLUKT";arVisualBottom.textContent=e.message||String(e)}finally{anchorCreating=false}
+   const a=await lastHitResult.createAnchor();
+   if(!p00Anchor){
+     p00Anchor=a;
+     arVisualMsg.textContent="✓ P00 VERANKERD";
+     placeP00Btn.textContent="● P03 HIER VASTZETTEN";
+     placeP00Btn.style.display="block";
+     arVisualBottom.textContent="P00 staat vast. Richt nu het middenvizier exact op P03.";
+   }else if(!p03Anchor){
+     p03Anchor=a;
+     arVisualMsg.textContent="✓ P00 + P03 VERANKERD";
+     placeP00Btn.disabled=true;placeP00Btn.style.display="none";
+     arVisualBottom.textContent="Loop rond en controleer of BEIDE kruisen op hun fysieke plek blijven.";
+   }else{
+     a.delete();
+   }
+ }catch(e){
+   arVisualMsg.textContent="Anchor fout";
+   arVisualBottom.textContent=(e&&e.message)?e.message:String(e);
+ }finally{anchorCreating=false}
 }
 function onXRFrame(t,frame){
  if(!xrSession)return;xrSession.requestAnimationFrame(onXRFrame);
@@ -259,9 +272,11 @@ function onXRFrame(t,frame){
  let layer=xrSession.renderState.baseLayer;xrGL.bindFramebuffer(xrGL.FRAMEBUFFER,layer.framebuffer);xrGL.enable(xrGL.DEPTH_TEST);xrGL.clearColor(0,0,0,0);xrGL.clear(xrGL.COLOR_BUFFER_BIT|xrGL.DEPTH_BUFFER_BIT);
  let hits=frame.getHitTestResults(xrHitSource);lastHitResult=hits.length?hits[0]:null;reticlePose=lastHitResult?lastHitResult.getPose(xrRef):null;
  arCross.classList.toggle("hit",!!reticlePose);
- if(!p00Anchor){placeP00Btn.style.display="block";placeP00Btn.disabled=!reticlePose||anchorCreating;}
+ if(!p03Anchor){placeP00Btn.style.display="block";placeP00Btn.disabled=!reticlePose||anchorCreating;}
  let ap=p00Anchor?frame.getPose(p00Anchor.anchorSpace,xrRef):null;
+ let ap03=p03Anchor?frame.getPose(p03Anchor.anchorSpace,xrRef):null;
  if(!p00Anchor)arVisualBottom.textContent=reticlePose?"Groen vizier — druk onderaan om P00 vast te zetten":"Beweeg rustig: oppervlak zoeken…";
+ else if(!p03Anchor)arVisualBottom.textContent=reticlePose?"P00 staat vast — richt op P03 en druk onderaan":"Zoek een oppervlak voor P03…";
  else if(!ap)arVisualBottom.textContent="P00-anchor tijdelijk niet gevolgd — beweeg rustig tot tracking terugkomt";
  for(let view of pose.views){let vp=layer.getViewport(view);xrGL.viewport(vp.x,vp.y,vp.width,vp.height);if(ap)drawP00(view,ap)}
 }
