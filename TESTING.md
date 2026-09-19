@@ -1,11 +1,9 @@
-# TESTING — v0.7.9.3
-
-1. Richt het vizier exact op het zwarte middelpunt van P00.
-2. Zet P00 vast en wacht op `P00 GEANKERD`.
-3. Loop weg en terug en controleer P00.
-4. Herhaal voor P03.
-5. Loop weg en terug en controleer beide anchors.
-6. UNDO 1 verwijdert P03; UNDO 2 verwijdert P00.
-7. Test OFFSET en HOOGTEHULP.
-
-Laser blijft de definitieve controle.
+# TESTING v0.7.9.4
+1. Start AR: OFFSET moet 0 mm tonen.
+2. Plaats P00 op zwart middelpunt.
+3. OFFSET 0: raster/marker/as moeten op hetzelfde geankerde vlak liggen.
+4. Plaats P03.
+5. OFFSET +2 mm: visualisatie moet samen 2 mm stijgen.
+6. Terug naar 0 mm.
+7. Test UNDO P03 en daarna P00.
+8. Loop weg en terug en controleer anchors.
