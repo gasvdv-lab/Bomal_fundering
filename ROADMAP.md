@@ -1,11 +1,7 @@
 # ROADMAP
-- [x] v0.5.0 Interactive Raster
-- [x] v0.6.0 AR Proof of Concept
-- [x] v0.6.1 AR Visual Fix
-- [x] v0.6.2 Clean AR View
-- [x] v0.6.3 Persistent 3D Markers + Object Selector
+- [x] v0.6.3 Persistent 3D Markers
 - [x] v0.6.4 Anchor & Recalibration
-- [ ] v0.6.5 Two-reference translation + orientation calibration
+- [x] v0.6.5 Two-Reference Calibration
 - [ ] v0.7.0 Full AR Raster
 - [ ] v0.8.0 Site Placement / rigid lock
 - [ ] v0.9.0 Site Verification
