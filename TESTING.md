@@ -1,12 +1,16 @@
-# TESTING v0.7.3.3
-1. Controleer dat buiten AR raster/configuratie zichtbaar is.
-2. Start AR: configuratie moet volledig verdwijnen.
-3. Richt op X-snijding P00 en druk `P00 HIER VASTLEGGEN`.
-4. Richt op gekozen tweede punt en druk de groene plaatsknop.
-5. Raster verschijnt.
-6. Elk punt moet een groen vierkant van 300 × 300 mm tonen, met centrumkruis.
-7. Vierkant moet in wereldschaal overeenkomen met een tegel van 300 × 300 mm.
-8. Loop 2–5 m weg en terug; controleer drift bij P00.
-9. Test Herijk.
+# TESTING v0.7.4.0
 
-Laser/controlemetingen blijven definitieve maatvoering.
+1. P00 op houten X vastleggen.
+2. P03 vastleggen.
+3. Controleer raster.
+4. Loop weg totdat zichtbare drift optreedt.
+5. Ga terug naar P00.
+6. Vizier exact op X-snijding.
+7. Druk `P00 positie corrigeren`.
+8. P00 moet direct terug onder het fysieke middelpunt komen; hele raster beweegt rigide mee.
+9. Richt daarna op P03 en druk `P03 richting corrigeren`.
+10. Controleer P00 én P03.
+11. Controleer P01/P02 en overige rasterpunten.
+12. Herhaal na rondlopen.
+
+Acceptatie: correctie moet zonder nieuwe AR-sessie kunnen gebeuren en mag het raster nooit vervormen.
