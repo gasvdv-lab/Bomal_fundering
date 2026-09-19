@@ -1,15 +1,23 @@
-# bomal_fundering v0.6.1 — AR Visual Fix
+# bomal_fundering v0.6.2 — Clean AR View
 
-## Live app / vaste testlink
+Live app:
 https://gasvdv-lab.github.io/Bomal_fundering/
 
-Hotfix:
-- verborgen WebXR canvas uit v0.6.0 verwijderd;
-- AR canvas zichtbaar;
-- transparante WebXR framebuffer;
-- fullscreen AR HUD;
-- rood/groen richtvizier;
-- P00/P01 status zichtbaar;
-- Stop-knop.
+## Wijziging
+Tijdens een actieve AR-sessie wordt de volledige gewone app-interface verborgen:
+- geen header;
+- geen Invoer/Raster/Geometrie/AR Test-tabs;
+- geen AR Proof of Concept-kaart;
+- geen testprotocol.
 
-Let op: deze versie valideert eerst zichtbaar camerabeeld en hit-test. Echte persistent gerenderde 3D-markers volgen na deze fysieke Android-test.
+In AR blijven alleen zichtbaar:
+- camerabeeld;
+- centraal rood/groen vizier;
+- compacte status bovenaan;
+- Stop-knop;
+- compacte instructie/afstand onderaan.
+
+Na `Stop` verschijnt de normale app opnieuw.
+
+## Testdoel
+Deze release is specifiek bedoeld om de vloer vrij zichtbaar te maken en de hit-test praktisch te kunnen testen. De laser blijft de referentie voor exacte maatvoering.

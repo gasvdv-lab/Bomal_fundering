@@ -2,7 +2,8 @@
 - [x] v0.5.0 Interactive Raster
 - [x] v0.6.0 AR Proof of Concept
 - [x] v0.6.1 AR Visual Fix
-- [ ] v0.6.2 Persistent 3D P00/P01 markers
+- [x] v0.6.2 Clean AR View
+- [ ] v0.6.3 Persistent visible 3D P00/P01 markers
 - [ ] v0.7.0 AR Raster
 - [ ] v0.8.0 Site Placement
 - [ ] v0.9.0 Site Verification

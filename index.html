@@ -41,9 +41,15 @@ svg{width:100%;height:100%;display:block}.edge{stroke:#59636e;stroke-width:3}.po
 #arCross.hit{border-color:#4ade80;color:#4ade80}#arVisualMsg{position:absolute;top:12px;left:10px;right:95px;background:rgba(8,12,17,.82);padding:11px;border-radius:13px;font-weight:800;color:#fff}
 #stopAR{position:absolute;right:10px;top:10px;pointer-events:auto;background:#b42318;color:#fff}
 #arVisualBottom{position:absolute;left:10px;right:10px;bottom:12px;background:rgba(8,12,17,.82);padding:11px;border-radius:13px;text-align:center;font-weight:800;color:#fff}
+
+body.ar-mode #mainHeader,body.ar-mode #normalMain{display:none!important}
+body.ar-mode{background:transparent!important;overflow:hidden}
+body.ar-mode #arCanvas{display:block!important}
+#arVisualMsg{font-size:15px;line-height:1.25}
+#arVisualBottom{font-size:14px}
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.6.1 · AR Visual Fix</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.6.2 · Clean AR View</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -178,21 +184,21 @@ document.body.appendChild(xrCanvas);
   xrViewer=await xrSession.requestReferenceSpace("viewer");
   xrHitSource=await xrSession.requestHitTestSource({space:xrViewer});
   placed=[];reticlePose=null;xrStart=performance.now();
-  arVisual.classList.add("on");arVisualMsg.textContent="Beweeg rustig en zoek de vloer";arVisualBottom.textContent="Rood vizier = nog geen oppervlak";
+  document.body.classList.add("ar-mode");arVisual.classList.add("on");arVisualMsg.textContent="Zoek vloer";arVisualBottom.textContent="Rood vizier = nog geen oppervlak";
   xrSession.addEventListener("select",onXRSelect);
-  xrSession.addEventListener("end",()=>{setAR("AR-test beëindigd. Start opnieuw om P00/P01 opnieuw te plaatsen.","warn");startAR.disabled=false;arVisual.classList.remove("on");if(xrCanvas)xrCanvas.remove();xrSession=null});
+  xrSession.addEventListener("end",()=>{setAR("AR-test beëindigd. Start opnieuw om P00/P01 opnieuw te plaatsen.","warn");startAR.disabled=false;document.body.classList.remove("ar-mode");arVisual.classList.remove("on");if(xrCanvas)xrCanvas.remove();xrSession=null});
   startAR.disabled=true;setAR("AR actief — beweeg rustig tot een oppervlak gevonden is. Tik voor P00.","good");
   xrSession.requestAnimationFrame(onXRFrame);
- }catch(e){setAR("AR kon niet starten: "+e.message,"bad");startAR.disabled=false}
+ }catch(e){document.body.classList.remove("ar-mode");arVisual.classList.remove("on");setAR("AR kon niet starten: "+e.message,"bad");startAR.disabled=false}
 };
 function onXRSelect(){
  if(!reticlePose||placed.length>=2)return;
  let m=reticlePose.transform.matrix;
  placed.push({x:m[12],y:m[13],z:m[14]});
- if(placed.length===1){setAR("P00 geplaatst. Richt nu op de tweede fysieke markering (1000 mm verder) en tik voor P01.","good");arVisualMsg.textContent="P00 geplaatst";arVisualBottom.textContent="Richt op P01 en tik";}
+ if(placed.length===1){setAR("P00 geplaatst. Richt nu op de tweede fysieke markering (1000 mm verder) en tik voor P01.","good");arVisualMsg.textContent="P00 geplaatst";arVisualBottom.textContent="Richt op P01 (1000 mm) en tik";}
  else{
   let a=placed[0],b=placed[1],d=Math.hypot(b.x-a.x,b.y-a.y,b.z-a.z)*1000;
-  setAR("P00 → P01 volgens AR: "+d.toFixed(0)+" mm. Loop nu rond en controleer of beide markeringen visueel blijven liggen.","good");arVisualMsg.textContent="P00 → P01: "+d.toFixed(0)+" mm";arVisualBottom.textContent="Afstand geregistreerd";
+  setAR("P00 → P01 volgens AR: "+d.toFixed(0)+" mm. Loop nu rond en controleer of beide markeringen visueel blijven liggen.","good");arVisualMsg.textContent="P00 → P01: "+d.toFixed(0)+" mm";arVisualBottom.textContent="Loop rond en controleer stabiliteit";
  }
 }
 function onXRFrame(t,frame){
