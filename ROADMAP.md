@@ -1,11 +1,8 @@
 # ROADMAP
-- [x] v0.1.0 Foundation
-- [x] v0.2.x Raster Builder
-- [x] v0.3.0 Raster View
-- [x] v0.4.0 Geometry Check
 - [x] v0.5.0 Interactive Raster
 - [x] v0.6.0 AR Proof of Concept
-- [ ] v0.6.1 Persistent visible P00/P01 AR markers after device test
+- [x] v0.6.1 AR Visual Fix
+- [ ] v0.6.2 Persistent 3D P00/P01 markers
 - [ ] v0.7.0 AR Raster
 - [ ] v0.8.0 Site Placement
 - [ ] v0.9.0 Site Verification

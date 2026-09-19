@@ -35,9 +35,15 @@ svg{width:100%;height:100%;display:block}.edge{stroke:#59636e;stroke-width:3}.po
 .arActions{display:grid;gap:8px}.arActions button{width:100%}
 .arHelp{line-height:1.45}.good{color:#7ee2a8}.warn{color:#f2cc60}.bad{color:#ff7b72}
 @media(max-width:560px){.tabs{grid-template-columns:repeat(4,1fr)}.tabs button{font-size:12px}}
+#arVisual{display:none;position:fixed;inset:0;z-index:9999;pointer-events:none}
+#arVisual.on{display:block}#arCross{position:absolute;left:50%;top:50%;width:54px;height:54px;transform:translate(-50%,-50%);border:3px solid #ff7b72;border-radius:50%;color:#ff7b72}
+#arCross:before,#arCross:after{content:"";position:absolute;left:50%;top:50%;background:currentColor;transform:translate(-50%,-50%)}#arCross:before{width:28px;height:3px}#arCross:after{width:3px;height:28px}
+#arCross.hit{border-color:#4ade80;color:#4ade80}#arVisualMsg{position:absolute;top:12px;left:10px;right:95px;background:rgba(8,12,17,.82);padding:11px;border-radius:13px;font-weight:800;color:#fff}
+#stopAR{position:absolute;right:10px;top:10px;pointer-events:auto;background:#b42318;color:#fff}
+#arVisualBottom{position:absolute;left:10px;right:10px;bottom:12px;background:rgba(8,12,17,.82);padding:11px;border-radius:13px;text-align:center;font-weight:800;color:#fff}
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.6.0 · AR Proof of Concept</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.6.1 · AR Visual Fix</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -85,6 +91,7 @@ svg{width:100%;height:100%;display:block}.edge{stroke:#59636e;stroke-width:3}.po
 </div>
 </section>
 
+<div id="arVisual"><div id="arVisualMsg">AR starten…</div><button id="stopAR">Stop</button><div id="arCross"></div><div id="arVisualBottom">Zoek een oppervlak…</div></div>
 <script>
 (()=>{"use strict";
 const KEY="bomal_fundering_state_v050", OLD=["bomal_fundering_state","bomal_fundering_v030"];
@@ -143,6 +150,7 @@ function end(e){pointers.delete(e.pointerId);if(pointers.size<2)pinch=null;if(!p
 // ---- v0.6.0 WebXR AR proof of concept ----
 let xrSession=null,xrRef=null,xrViewer=null,xrHitSource=null,xrGL=null,xrCanvas=null;
 let reticlePose=null,placed=[],xrStart=0;
+const arVisual=$("arVisual"),arCross=$("arCross"),arVisualMsg=$("arVisualMsg"),arVisualBottom=$("arVisualBottom");
 const arSupport=$("arSupport"),startAR=$("startAR");
 function setAR(msg,cls=""){arSupport.className="arState "+cls;arSupport.textContent=msg}
 async function checkAR(){
@@ -160,7 +168,9 @@ startAR.onclick=async()=>{
  if(!(await checkAR()))return;
  try{
   xrSession=await navigator.xr.requestSession("immersive-ar",{requiredFeatures:["hit-test"],optionalFeatures:["dom-overlay","local-floor"],domOverlay:{root:document.body}});
-  xrCanvas=document.createElement("canvas");xrCanvas.style.display="none";document.body.appendChild(xrCanvas);
+  xrCanvas=document.createElement("canvas");xrCanvas.id="arCanvas";
+xrCanvas.style.cssText="position:fixed;inset:0;width:100%;height:100%;z-index:9990;display:block;pointer-events:none";
+document.body.appendChild(xrCanvas);
   xrGL=xrCanvas.getContext("webgl",{xrCompatible:true,alpha:true});
   await xrGL.makeXRCompatible();
   xrSession.updateRenderState({baseLayer:new XRWebGLLayer(xrSession,xrGL)});
@@ -168,8 +178,9 @@ startAR.onclick=async()=>{
   xrViewer=await xrSession.requestReferenceSpace("viewer");
   xrHitSource=await xrSession.requestHitTestSource({space:xrViewer});
   placed=[];reticlePose=null;xrStart=performance.now();
+  arVisual.classList.add("on");arVisualMsg.textContent="Beweeg rustig en zoek de vloer";arVisualBottom.textContent="Rood vizier = nog geen oppervlak";
   xrSession.addEventListener("select",onXRSelect);
-  xrSession.addEventListener("end",()=>{setAR("AR-test beëindigd. Start opnieuw om P00/P01 opnieuw te plaatsen.","warn");startAR.disabled=false;if(xrCanvas)xrCanvas.remove();xrSession=null});
+  xrSession.addEventListener("end",()=>{setAR("AR-test beëindigd. Start opnieuw om P00/P01 opnieuw te plaatsen.","warn");startAR.disabled=false;arVisual.classList.remove("on");if(xrCanvas)xrCanvas.remove();xrSession=null});
   startAR.disabled=true;setAR("AR actief — beweeg rustig tot een oppervlak gevonden is. Tik voor P00.","good");
   xrSession.requestAnimationFrame(onXRFrame);
  }catch(e){setAR("AR kon niet starten: "+e.message,"bad");startAR.disabled=false}
@@ -178,10 +189,10 @@ function onXRSelect(){
  if(!reticlePose||placed.length>=2)return;
  let m=reticlePose.transform.matrix;
  placed.push({x:m[12],y:m[13],z:m[14]});
- if(placed.length===1)setAR("P00 geplaatst. Richt nu op de tweede fysieke markering (1000 mm verder) en tik voor P01.","good");
+ if(placed.length===1){setAR("P00 geplaatst. Richt nu op de tweede fysieke markering (1000 mm verder) en tik voor P01.","good");arVisualMsg.textContent="P00 geplaatst";arVisualBottom.textContent="Richt op P01 en tik";}
  else{
   let a=placed[0],b=placed[1],d=Math.hypot(b.x-a.x,b.y-a.y,b.z-a.z)*1000;
-  setAR("P00 → P01 volgens AR: "+d.toFixed(0)+" mm. Loop nu rond en controleer of beide markeringen visueel blijven liggen.","good");
+  setAR("P00 → P01 volgens AR: "+d.toFixed(0)+" mm. Loop nu rond en controleer of beide markeringen visueel blijven liggen.","good");arVisualMsg.textContent="P00 → P01: "+d.toFixed(0)+" mm";arVisualBottom.textContent="Afstand geregistreerd";
  }
 }
 function onXRFrame(t,frame){
@@ -189,12 +200,19 @@ function onXRFrame(t,frame){
  xrSession.requestAnimationFrame(onXRFrame);
  let pose=frame.getViewerPose(xrRef);
  if(!pose)return;
+ let layer=xrSession.renderState.baseLayer;
+ xrGL.bindFramebuffer(xrGL.FRAMEBUFFER,layer.framebuffer);
+ xrGL.viewport(0,0,layer.framebufferWidth,layer.framebufferHeight);
+ xrGL.clearColor(0,0,0,0);xrGL.clear(xrGL.COLOR_BUFFER_BIT|xrGL.DEPTH_BUFFER_BIT);
  let hits=frame.getHitTestResults(xrHitSource);
  reticlePose=hits.length?hits[0].getPose(xrRef):null;
+ arCross.classList.toggle("hit",!!reticlePose);
+ if(placed.length===0)arVisualBottom.textContent=reticlePose?"Groen vizier — tik voor P00":"Beweeg rustig: oppervlak zoeken…";
  // This POC deliberately uses WebXR hit-test positions only.
  // Persistent rendered 3D markers are the next step after device validation.
 }
 
+$("stopAR").onclick=()=>{if(xrSession)xrSession.end()};
 load();renderInputs();render();
 })();
 </script></body></html>
