@@ -49,7 +49,7 @@ body.ar-mode #arCanvas{display:block!important}
 #arVisualBottom{font-size:14px}
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.6.7 · Native Anchor Pin Test</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.6.7.1 · Native Anchor Startup Fix</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -171,6 +171,7 @@ else if(drag&&drag.id===e.pointerId){if(Math.hypot(e.clientX-drag.x,e.clientY-dr
 function end(e){pointers.delete(e.pointerId);if(pointers.size<2)pinch=null;if(!pointers.size)drag=null}wrap.addEventListener("pointerup",end);wrap.addEventListener("pointercancel",end);
 
 // ---- v0.6.3 persistent raw-WebGL AR markers ----
+let lastHitResult=null;
 let xrSession=null,xrRef=null,xrViewer=null,xrHitSource=null,xrGL=null,xrCanvas=null;
 let reticlePose=null,placed=[],xrStart=0,markerProgram=null,markerBuf=null;
 let p00=null,p00Frozen=null,p00Anchor=null,p00AnchorPose=null,anchorRequested=false;

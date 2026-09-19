@@ -1,4 +1,4 @@
-# TESTING — v0.6.7
+# TESTING — v0.6.7.1
 
 ## Automatisch/static
 - PASS: één P00
@@ -20,3 +20,6 @@
 7. Kijk terug naar dezelfde fysieke markering.
 8. Noteer: stabiel / springt / tracking verloren / keert correct terug.
 9. Indien `NATIVE ANCHOR NIET BESCHIKBAAR` verschijnt: meld dit exact; de app plaatst dan bewust geen nep-fallback.
+
+- PASS: `lastHitResult` expliciet in globale XR-state gedeclareerd
+- PASS: Node JavaScript syntaxcontrole

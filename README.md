@@ -1,4 +1,4 @@
-# bomal_fundering v0.6.7 — Native Anchor Pin Test
+# bomal_fundering v0.6.7.1 — Native Anchor Startup Fix
 
 Deze release test één enkele P00 als echte native WebXR Anchor.
 
@@ -23,3 +23,6 @@ Native AR-anchors zijn geen garantie voor landmeetkundige nauwkeurigheid. De las
 
 ## Live app
 https://gasvdv-lab.github.io/Bomal_fundering/
+
+## Hotfix 0.6.7.1
+Herstelt de startupfout `lastHitResult is not defined`. De native-anchor test zelf blijft ongewijzigd.
