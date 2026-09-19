@@ -1,15 +1,21 @@
-# bomal_fundering v0.7.2 — Two Point Raster Alignment
+# bomal_fundering v0.7.2.1 — Rotation Direction Fix
 
-## Nieuwe werkwijze
-1. Stel raster in.
-2. Kies in AR een richtingspunt, bv. P03.
-3. Start AR en plaats P00 op het fysieke middelpunt.
-4. De app vraagt nu het gekozen punt te plaatsen.
-5. Richt het groene vizier op het fysieke middelpunt van bv. P03 en tik.
-6. De app berekent de horizontale rotatie tussen de theoretische vector P00→P03 en de gemeten AR-vector P00→P03.
-7. P00 blijft vast; het volledige raster draait als één rigide geheel.
-8. HUD bevestigt `RASTER UITGELIJND VIA P00 → P03`.
+Gerichte hotfix op v0.7.2.
 
-Gebruik liefst een betrouwbaar, verder gelegen punt om hoekfout te beperken. Laser blijft definitieve maatcontrole.
+De tweede fysieke referentie (bv. P03) werd correct geregistreerd, maar de yaw-rotatie werd met het verkeerde teken toegepast voor de gebruikte WebXR X/Z-matrixconventie.
 
-Live: https://gasvdv-lab.github.io/Bomal_fundering/
+Fix:
+- oud: `yaw = aWorld - aLocal`
+- nieuw: `yaw = aLocal - aWorld`
+
+Werkwijze:
+1. Kies bv. P03 als richtingspunt.
+2. Plaats P00.
+3. Richt het vizier op het echte middelpunt van P03.
+4. Tik.
+5. P00 blijft vast en het volledige raster roteert rigide zodat de theoretische P03 naar de aangewezen richting draait.
+
+Laser blijft de definitieve maatcontrole.
+
+Live:
+https://gasvdv-lab.github.io/Bomal_fundering/

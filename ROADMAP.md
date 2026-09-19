@@ -15,3 +15,5 @@
 
 - [x] v0.7.2 Two Point Raster Alignment: P00 + vrij gekozen Pxx bepaalt rasterrichting
 - [ ] derde punt als onafhankelijke controle
+
+- [x] v0.7.2.1 Rotation Direction Fix

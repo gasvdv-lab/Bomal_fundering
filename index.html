@@ -51,7 +51,7 @@ body.ar-mode #arCanvas{display:block!important}
 #arVisualBottom{font-size:14px}
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.2 · Two Point Raster Alignment</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.2.1 · Rotation Direction Fix</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -275,7 +275,7 @@ function onXRSelect(){
    let wx=M[12]-projectRoot[12], wz=M[14]-projectRoot[14];
    let lx=target.x/1000, lz=-target.y/1000;
    // yaw needed to rotate theoretical local P00->target onto measured world P00->target
-   let aLocal=Math.atan2(lz,lx), aWorld=Math.atan2(wz,wx), yaw=aWorld-aLocal;
+   let aLocal=Math.atan2(lz,lx), aWorld=Math.atan2(wz,wx), yaw=aLocal-aWorld;
    let c=Math.cos(yaw),sn=Math.sin(yaw);
    // Preserve P00 translation; use horizontal yaw only so the raster remains level/rigid.
    projectRoot=new Float32Array([
