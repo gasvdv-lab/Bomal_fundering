@@ -1,25 +1,18 @@
-# Bomal Fundering v0.7.7.0.1 — Camera Hotfix
+# Bomal Fundering v0.7.7.1 — Stability Assisted Anchoring
 
-Gerichte hotfix op v0.7.7.0.
+Basis: v0.7.7.0.1.
 
-Probleem:
-`Cannot set properties of null (setting 'srcObject')`
+## Verwijderd
+De experimentele tegelherkenning is volledig verwijderd. Er wordt buiten WebXR geen aparte camera meer gestart.
 
-Oorzaak:
-de JavaScript-code bewaarde verwijzingen naar de video/canvas-interface voordat die elementen beschikbaar waren.
+## Nieuw: stabiliteitsmeting P00/P03
+Bij `PRECISIE VASTZETTEN`:
+- de app verzamelt ongeveer 0,85 seconde geldige hit-testposities;
+- horizontale spreiding van de metingen wordt berekend;
+- bij meer dan 18 mm spreiding wordt de plaatsing geweigerd met `TE VEEL BEWEGING`;
+- bij voldoende stabiliteit kiest de app de echte hit-testmeting die het dichtst bij de mediaan ligt;
+- op precies die `XRHitTestResult` wordt de echte WebXR-anchor aangemaakt.
 
-Fix:
-- camera-elementen worden pas opgezocht wanneer de tegelherkenning daadwerkelijk start;
-- er is een expliciete controle toegevoegd dat video, canvas en overlay bestaan;
-- de achtercamera-stream wordt daarna pas aan `video.srcObject` gekoppeld;
-- camera-stream wordt netjes gestopt bij sluiten of een startfout.
+Dit vermijdt het verzinnen van een anchorpositie: `createAnchor()` blijft op een echte gemeten hit-test gebeuren.
 
-Niet gewijzigd:
-- P00/P03 WebXR anchors;
-- 3×5 raster;
-- Undo;
-- labels/cirkels/kruisen;
-- hoogtehulp;
-- rastergeometrie.
-
-Geen afbeeldingen in de ZIP.
+Behouden: P00/P03 anchorarchitectuur, Undo, 3×5 raster, labels, cirkel+kruis en schakelbare hoogtehulp.

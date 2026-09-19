@@ -1,12 +1,14 @@
-# TESTING — v0.7.7.0.1
+# TESTING — v0.7.7.1
 
-1. Open de app buiten AR.
-2. Druk `TEGELHERKENNING TEST`.
-3. Sta cameratoegang toe indien Chrome dit vraagt.
-4. De achtercamera moet beeld tonen zonder `srcObject`-fout.
-5. Richt het midden ongeveer op één tegel.
-6. Controleer of de herkenning een kandidaat en berekend middelpunt probeert te tonen.
-7. Sluit de test; camera moet stoppen.
-8. Start daarna AR en controleer P00, P03, Undo, raster en hoogtehulp.
+1. Controleer dat `TEGELHERKENNING TEST` verdwenen is.
+2. Start AR en richt op P00.
+3. Druk `P00 PRECISIE VASTZETTEN`.
+4. Houd de telefoon ongeveer 0,85 s stil.
+5. Bij grote beweging moet `TE VEEL BEWEGING` verschijnen en mag P00 niet vastgelegd zijn.
+6. Bij voldoende stabiliteit moet P00 een echte anchor krijgen.
+7. Herhaal voor P03.
+8. Test UNDO: eerst P03 verwijderen, daarna eventueel P00.
+9. Controleer raster, labels, cirkels/kruisen en hoogtehulp.
+10. Loop 1 m, 3 m en 5 m weg en terug en controleer stabiliteit.
 
-Deze hotfix verandert de bewezen WebXR-anchorarchitectuur niet.
+Drempel huidige testrelease: maximaal 18 mm horizontale spreiding tijdens de meetperiode.

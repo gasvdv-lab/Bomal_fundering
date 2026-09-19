@@ -1,7 +1,6 @@
 # ROADMAP
 
-- v0.7.6.0: schakelbare hoogtehulp.
-- v0.7.7.0: Undo + eerste tegelherkenning; camera-startbug gevonden.
-- v0.7.7.0.1: camera-interface hotfix — huidige release.
-- Na geslaagde camerastart: kwaliteit van tegelherkenning buiten beoordelen.
-- Daarna: `Middelpunt correct?` + AANPASSEN/OPNIEUW en stabilisatie over meerdere frames.
+- v0.7.7.0.1: technische baseline; tegelherkenning fysiek mislukt.
+- v0.7.7.1: tegelherkenning verwijderd + stabiliteitsmeting voor P00/P03 — huidige release.
+- Volgende stap na terreinproef: drempel en meetduur finetunen indien nodig.
+- Daarna: controle-anchors voor fysiek gelegde en met laser gecontroleerde tegelpunten.
