@@ -42,6 +42,10 @@ svg{width:100%;height:100%;display:block}.edge{stroke:#59636e;stroke-width:3}.po
 #stopAR{position:absolute;right:10px;top:10px;pointer-events:auto;background:#b42318;color:#fff}
 #arLabels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .arPointLabel{position:absolute;transform:translate(-50%,-115%);padding:4px 7px;border-radius:8px;background:rgba(8,18,12,.82);border:1px solid rgba(74,222,128,.9);color:#7ee2a8;font-size:13px;font-weight:900;white-space:nowrap;text-shadow:0 1px 2px #000}
+#placeP00Btn{position:absolute;left:10px;right:10px;bottom:68px;z-index:10;pointer-events:auto;
+background:#4ade80;color:#08110b;border:0;border-radius:14px;min-height:54px;font-size:17px;font-weight:900;
+box-shadow:0 3px 12px rgba(0,0,0,.35)}
+#placeP00Btn:disabled{opacity:.45;background:#5b6570;color:#d7dde3}
 #arVisualBottom{position:absolute;left:10px;right:10px;bottom:12px;background:rgba(8,12,17,.82);padding:11px;border-radius:13px;text-align:center;font-weight:800;color:#fff}
 
 body.ar-mode #mainHeader,body.ar-mode #normalMain{display:none!important}
@@ -51,7 +55,7 @@ body.ar-mode #arCanvas{display:block!important}
 #arVisualBottom{font-size:14px}
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.2.3 · P00 Anchor Isolation Test</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.2.4 · P00 Anchor Button Test</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -121,7 +125,7 @@ body.ar-mode #arCanvas{display:block!important}
 </div>
 </section>
 
-<div id="arVisual"><div id="arLabels"></div><div id="arVisualMsg">AR starten…</div><button id="stopAR">Stop</button><div id="arCross"></div><div id="arVisualBottom">Zoek een oppervlak…</div></div>
+<div id="arVisual"><div id="arLabels"></div><div id="arVisualMsg">AR starten…</div><button id="stopAR">Stop</button><div id="arCross"></div><button id="placeP00Btn" disabled>● P00 HIER VASTZETTEN</button><div id="arVisualBottom">Zoek een oppervlak…</div></div>
 <script>
 (()=>{"use strict";
 const KEY="bomal_fundering_state_v050", OLD=["bomal_fundering_state","bomal_fundering_v030"];
@@ -231,10 +235,9 @@ startAR.onclick=async()=>{
   xrRef=await xrSession.requestReferenceSpace("local");
   xrViewer=await xrSession.requestReferenceSpace("viewer");
   xrHitSource=await xrSession.requestHitTestSource({space:xrViewer});
-  initMarkerGL();p00Anchor=null;lastHitResult=null;reticlePose=null;anchorCreating=false;
+  initMarkerGL();p00Anchor=null;lastHitResult=null;reticlePose=null;anchorCreating=false;placeP00Btn.style.display="block";placeP00Btn.disabled=true;
   document.body.classList.add("ar-mode");arVisual.classList.add("on");
   arVisualMsg.textContent="P00 ANCHOR TEST";arVisualBottom.textContent="Zoek een oppervlak — groen vizier = klaar om P00 te plaatsen";
-  xrSession.addEventListener("select",placeP00);
   xrSession.addEventListener("end",()=>{setAR("AR-test beëindigd.","warn");startAR.disabled=false;document.body.classList.remove("ar-mode");arVisual.classList.remove("on");if(p00Anchor){try{p00Anchor.delete()}catch(_){}}p00Anchor=null;if(xrCanvas)xrCanvas.remove();xrCanvas=null;lastHitResult=null;reticlePose=null;xrSession=null});
   startAR.disabled=true;xrSession.requestAnimationFrame(onXRFrame);
  }catch(e){document.body.classList.remove("ar-mode");arVisual.classList.remove("on");setAR("AR kon niet starten: "+e.message,"bad");startAR.disabled=false}
@@ -246,6 +249,7 @@ async function placeP00(){
   anchorCreating=true;arVisualMsg.textContent="P00 VERANKEREN…";
   p00Anchor=await lastHitResult.createAnchor();
   arVisualMsg.textContent="✓ P00 ECHT VERANKERD";
+  placeP00Btn.disabled=true;placeP00Btn.style.display="none";
   arVisualBottom.textContent="Loop nu 1 m, 3 m en 5 m weg en terug. Het groene + moet op exact dezelfde fysieke plek blijven.";
  }catch(e){arVisualMsg.textContent="P00 ANCHOR MISLUKT";arVisualBottom.textContent=e.message||String(e)}finally{anchorCreating=false}
 }
@@ -255,11 +259,13 @@ function onXRFrame(t,frame){
  let layer=xrSession.renderState.baseLayer;xrGL.bindFramebuffer(xrGL.FRAMEBUFFER,layer.framebuffer);xrGL.enable(xrGL.DEPTH_TEST);xrGL.clearColor(0,0,0,0);xrGL.clear(xrGL.COLOR_BUFFER_BIT|xrGL.DEPTH_BUFFER_BIT);
  let hits=frame.getHitTestResults(xrHitSource);lastHitResult=hits.length?hits[0]:null;reticlePose=lastHitResult?lastHitResult.getPose(xrRef):null;
  arCross.classList.toggle("hit",!!reticlePose);
+ if(!p00Anchor){placeP00Btn.style.display="block";placeP00Btn.disabled=!reticlePose||anchorCreating;}
  let ap=p00Anchor?frame.getPose(p00Anchor.anchorSpace,xrRef):null;
- if(!p00Anchor)arVisualBottom.textContent=reticlePose?"Groen vizier — tik om P00 echt te verankeren":"Beweeg rustig: oppervlak zoeken…";
+ if(!p00Anchor)arVisualBottom.textContent=reticlePose?"Groen vizier — druk onderaan om P00 vast te zetten":"Beweeg rustig: oppervlak zoeken…";
  else if(!ap)arVisualBottom.textContent="P00-anchor tijdelijk niet gevolgd — beweeg rustig tot tracking terugkomt";
  for(let view of pose.views){let vp=layer.getViewport(view);xrGL.viewport(vp.x,vp.y,vp.width,vp.height);if(ap)drawP00(view,ap)}
 }
+$("placeP00Btn").onclick=placeP00;
 $("stopAR").onclick=()=>{if(xrSession)xrSession.end()};
 load();renderInputs();render();
 })();

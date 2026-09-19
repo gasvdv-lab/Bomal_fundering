@@ -1,7 +1,12 @@
-# Bomal Fundering v0.7.2.3 — P00 Anchor Isolation Test
+# Bomal Fundering v0.7.2.4 — P00 Anchor Button Test
 
-Doel: één echte WebXR Anchor isoleren en vergelijken met de officiële WebXR anchor-demo die op het toestel stabiel bleef.
+Gebaseerd op de fysiek geslaagde v0.7.2.3 anchor-baseline.
 
-Bewust NIET aanwezig in AR: P03, raster, ProjectRoot, yaw/rotatie, tegelvorm of houten marker.
+Wijziging:
+- P00 wordt niet meer geplaatst door ergens op het AR-scherm te tikken.
+- Onderaan staat nu expliciet `● P00 HIER VASTZETTEN`.
+- De knop wordt pas actief wanneer het middenvizier een bruikbaar hit-testoppervlak heeft.
+- Na plaatsing verdwijnt de knop.
+- De bewezen echte WebXR-anchorlogica van v0.7.2.3 blijft verder ongewijzigd.
 
-Werkwijze: start AR, zoek oppervlak, tik één keer voor P00, loop 1 m / 3 m / 5 m weg en terug. Het groene kruis wordt elke frame rechtstreeks uit `frame.getPose(p00Anchor.anchorSpace, xrRef)` gerenderd.
+Doel: dezelfde stabiele P00-anchor behouden met duidelijkere bediening.
