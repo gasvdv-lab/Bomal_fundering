@@ -53,9 +53,10 @@ body.ar-mode{background:transparent!important;overflow:hidden}
 body.ar-mode #arCanvas{display:block!important}
 #arVisualMsg{font-size:15px;line-height:1.25}
 #arVisualBottom{font-size:14px}
+.arPointLabel{position:absolute;transform:translate(-50%,-100%);background:rgba(8,17,11,.88);color:#fff;border:2px solid #4ade80;border-radius:8px;padding:3px 6px;font-size:13px;font-weight:900;line-height:1;white-space:nowrap;pointer-events:none;text-shadow:0 1px 2px #000;box-shadow:0 2px 5px rgba(0,0,0,.35)}
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.3.0 · Anchored Full Raster</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.3.2 · Raster Targets + Labels</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -224,6 +225,41 @@ function drawP00(view,anchorPose){
  xrGL.lineWidth(6);xrGL.drawArrays(xrGL.LINES,0,4);
 }
 
+
+function updateRasterLabels(view,p0,p3){
+ const layer=xrSession&&xrSession.renderState.baseLayer;
+ const box=xrCanvas&&xrCanvas.getBoundingClientRect();
+ if(!layer||!box)return;
+ const pts=coords().filter(p=>s.active[p.i]);
+ const x0=p0.transform.position.x,y0=p0.transform.position.y+.035,z0=p0.transform.position.z;
+ const x3=p3.transform.position.x,z3=p3.transform.position.z;
+ const dyx=x3-x0,dyz=z3-z0,L=Math.hypot(dyx,dyz); if(L<.05)return;
+ const uyx=dyx/L,uyz=dyz/L,uxx=-uyz,uxz=uyx;
+ const pv=mul4(view.projectionMatrix,view.transform.inverse.matrix);
+ const wanted=new Set();
+ for(const q of pts){
+   const xm=q.x/1000,ym=q.y/1000;
+   const wx=x0+uxx*xm+uyx*ym,wz=z0+uxz*xm+uyz*ym;
+   const clip=transform4(pv,[wx,y0,wz,1]);
+   if(clip[3]<=0)continue;
+   const nx=clip[0]/clip[3],ny=clip[1]/clip[3],nz=clip[2]/clip[3];
+   if(nz < -1 || nz > 1)continue;
+   const id="arPointLabel"+q.i; wanted.add(id);
+   let el=document.getElementById(id);
+   if(!el){
+     el=document.createElement("div");el.id=id;el.className="arPointLabel";
+     el.textContent="P"+String(q.i).padStart(2,"0");
+     arLabels.appendChild(el);
+   }
+   el.style.display="block";
+   el.style.left=((nx*.5+.5)*box.width)+"px";
+   el.style.top=((-ny*.5+.5)*box.height-22)+"px";
+ }
+ for(const el of arLabels.querySelectorAll(".arPointLabel")){
+   if(!wanted.has(el.id))el.style.display="none";
+ }
+}
+
 function drawFullRaster(view,p0,p3){
  // P00 + P03 define only placement/orientation.
  // Exact raster geometry remains the entered design geometry from coords().
@@ -256,10 +292,25 @@ function drawFullRaster(view,p0,p3){
    if(row<4 && byIndex.has(q.i+3)) line(world(q),world(byIndex.get(q.i+3)));
  }
 
- // Cross target at every active design point.
- const cross=.055;
+ // Clear target at every active design point:
+ // a circle around the point + a centered cross exactly where raster lines intersect.
+ const radius=.10, cross=.045, segments=28;
  for(const q of pts){
    const w=world(q);
+   // Circle lies in the same rigid raster plane.
+   let prev=null;
+   for(let k=0;k<=segments;k++){
+     const a=(k/segments)*Math.PI*2;
+     const ca=Math.cos(a),sa=Math.sin(a);
+     const cur=[
+       w[0] + uxx*(ca*radius) + uyx*(sa*radius),
+       w[1],
+       w[2] + uxz*(ca*radius) + uyz*(sa*radius)
+     ];
+     if(prev)line(prev,cur);
+     prev=cur;
+   }
+   // Small + at the exact theoretical tile centre / line intersection.
    line([w[0]-uxx*cross,w[1],w[2]-uxz*cross],[w[0]+uxx*cross,w[1],w[2]+uxz*cross]);
    line([w[0]-uyx*cross,w[1],w[2]-uyz*cross],[w[0]+uyx*cross,w[1],w[2]+uyz*cross]);
  }
@@ -350,8 +401,13 @@ function onXRFrame(t,frame){
  if(!p00Anchor)arVisualBottom.textContent=reticlePose?"Groen vizier — druk onderaan om P00 vast te zetten":"Beweeg rustig: oppervlak zoeken…";
  else if(!p03Anchor)arVisualBottom.textContent=reticlePose?"P00 staat vast — richt op P03 en druk onderaan":"Zoek een oppervlak voor P03…";
  else if(!ap||!ap03)arVisualBottom.textContent="Anchor tijdelijk niet gevolgd — beweeg rustig tot tracking terugkomt";
- else arVisualBottom.textContent="Raster P00–P14 · controleer tegelmiddelpunten tijdens het rondlopen";
- for(let view of pose.views){let vp=layer.getViewport(view);xrGL.viewport(vp.x,vp.y,vp.width,vp.height);if(ap&&ap03){drawFullRaster(view,ap,ap03);drawAxes(view,ap,ap03)}if(ap)drawP00(view,ap);if(ap03)drawP00(view,ap03)}
+ else arVisualBottom.textContent="P00–P14 · label + cirkel + kruis op ieder tegelmiddelpunt";
+ let firstView=true;
+ for(let view of pose.views){
+  let vp=layer.getViewport(view);xrGL.viewport(vp.x,vp.y,vp.width,vp.height);
+  if(ap&&ap03){drawFullRaster(view,ap,ap03);drawAxes(view,ap,ap03);if(firstView)updateRasterLabels(view,ap,ap03)}
+  if(ap)drawP00(view,ap);if(ap03)drawP00(view,ap03);firstView=false
+ }
 }
 $("placeP00Btn").onclick=placeP00;
 $("stopAR").onclick=()=>{if(xrSession)xrSession.end()};

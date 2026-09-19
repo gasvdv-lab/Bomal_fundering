@@ -1,15 +1,11 @@
-# TESTING — v0.7.3.0
+# TESTING — v0.7.3.2
 
-1. Controleer buiten AR dat het raster 3 kolommen × 5 rijen bevat.
-2. Start AR.
-3. Zet P00 exact op het fysieke centrum van P00.
-4. Zet P03 exact op het fysieke centrum van P03.
-5. Controleer dat het volledige raster verschijnt.
-6. P00→P03 moet de raster-Y-richting zijn.
-7. P01/P02 moeten loodrecht vanaf P00 in de X-richting liggen.
-8. Loop 1 m, 3 m en 5 m weg en terug.
-9. Controleer dat het raster als één geheel blijft liggen.
-10. Vergelijk enkele rastercentra met lasermaatvoering.
+1. Plaats P00 en daarna P03.
+2. Controleer het volledige 3×5 raster.
+3. Ieder actief punt heeft een cirkel en gecentreerd kruis.
+4. Ieder actief punt heeft het juiste label P00 t/m P14.
+5. Labels moeten bij hun doelpunt blijven tijdens bewegen.
+6. Controleer de nummering: onderaan P00 P01 P02; daarboven P03 P04 P05; bovenaan P12 P13 P14.
+7. Loop rond en controleer dat raster en targets rigide blijven.
 
-Hoogteverschil:
-Het raster blijft bewust een rigide ontwerpvlak. Het wordt niet per punt vervormd naar het terrein.
+Anchorarchitectuur is ongewijzigd.
