@@ -1,12 +1,13 @@
-# TESTING — v0.7.2.2
+# TESTING v0.7.2.3
 
-1. Start AR in Android Chrome.
-2. Plaats P00 op een exact herkenbaar fysiek punt. Controleer melding `P00 ECHT VERANKERD`.
-3. Plaats P03 (of gekozen referentiepunt) op zijn fysieke positie.
-4. Controleer dat het volledige raster verschijnt en correct draait.
-5. Loop 1 m, 3 m en 5 m weg en terug.
-6. Controleer P00 en meerdere verre rasterpunten tegen dezelfde fysieke grondposities.
-7. Beweeg rond het raster en keer terug.
-8. Bij tijdelijk anchor-trackingverlies moet het raster verborgen worden, niet op een oude pose blijven staan.
+## P00 Anchor Isolation
+1. Open in Android Chrome via HTTPS.
+2. Start AR en beweeg rustig tot hit-test groen is.
+3. Tik exact één keer op het gewenste P00-punt.
+4. Controleer dat `P00 ECHT VERANKERD` verschijnt.
+5. Loop 1 m weg en terug. Noteer visuele afwijking.
+6. Loop 3 m weg en terug. Noteer visuele afwijking.
+7. Loop 5 m weg en terug. Noteer visuele afwijking.
+8. Loop links/rechts/rond P00 en keer terug.
 
-Belangrijkste regressietest: P00 mag niet meer als een eenmalig opgeslagen hit-testmatrix worden behandeld.
+Go/no-go: pas P03/raster toevoegen als dit kale P00-kruis vergelijkbaar stabiel blijft met de officiële succesvolle WebXR anchor-demo.

@@ -1,7 +1,7 @@
-# bomal_fundering v0.7.2.2 — True WebXR Anchor World Lock
+# Bomal Fundering v0.7.2.3 — P00 Anchor Isolation Test
 
-Gebaseerd rechtstreeks op v0.7.2.1. De rasterlogica blijft behouden, maar P00 wordt nu met `XRHitTestResult.createAnchor()` als echte WebXR Anchor gemaakt. Iedere XR-frame wordt de actuele `anchor.anchorSpace` pose opnieuw opgehaald. Pxx bepaalt alleen de horizontale rasterrichting.
+Doel: één echte WebXR Anchor isoleren en vergelijken met de officiële WebXR anchor-demo die op het toestel stabiel bleef.
 
-Geen houten X, geen tegelvorm, geen persistentie na afsluiten.
+Bewust NIET aanwezig in AR: P03, raster, ProjectRoot, yaw/rotatie, tegelvorm of houten marker.
 
-Live app: https://gasvdv-lab.github.io/Bomal_fundering/
+Werkwijze: start AR, zoek oppervlak, tik één keer voor P00, loop 1 m / 3 m / 5 m weg en terug. Het groene kruis wordt elke frame rechtstreeks uit `frame.getPose(p00Anchor.anchorSpace, xrRef)` gerenderd.

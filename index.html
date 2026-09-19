@@ -51,7 +51,7 @@ body.ar-mode #arCanvas{display:block!important}
 #arVisualBottom{font-size:14px}
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.2.2 · True WebXR Anchor World Lock</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.2.3 · P00 Anchor Isolation Test</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -183,12 +183,10 @@ if(pointers.size===2&&pinch){let a=[...pointers.values()],d=Math.hypot(a[1].x-a[
 else if(drag&&drag.id===e.pointerId){if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>5)moved=true;view.tx=drag.tx+e.clientX-drag.x;view.ty=drag.ty+e.clientY-drag.y;applyTransform()}});
 function end(e){pointers.delete(e.pointerId);if(pointers.size<2)pinch=null;if(!pointers.size)drag=null}wrap.addEventListener("pointerup",end);wrap.addEventListener("pointercancel",end);
 
-// ---- v0.6.3 persistent raw-WebGL AR markers ----
+// ---- v0.7.2.3 isolated TRUE WebXR P00 anchor test ----
 let lastHitResult=null;
 let xrSession=null,xrRef=null,xrViewer=null,xrHitSource=null,xrGL=null,xrCanvas=null;
-let reticlePose=null,placed=[],xrStart=0,markerProgram=null,markerBuf=null;
-let projectRoot=null,alignStage=0,alignIndex=3;
-let p00Anchor=null,anchorYaw=0,anchorTracked=false,anchorCreating=false;
+let reticlePose=null,p00Anchor=null,anchorCreating=false,markerProgram=null,markerBuf=null;
 const arSupport=$("arSupport"),startAR=$("startAR"),anchorSupport=$("anchorSupport");
 const arVisual=$("arVisual"),arCross=$("arCross"),arVisualMsg=$("arVisualMsg"),arVisualBottom=$("arVisualBottom");
 function setAR(msg,cls=""){arSupport.className="arState "+cls;arSupport.textContent=msg}
@@ -196,170 +194,71 @@ async function checkAR(){
  if(!window.isSecureContext){setAR("AR vereist HTTPS.","bad");return false}
  if(!navigator.xr){setAR("WebXR niet beschikbaar. Gebruik Android Chrome + ARCore.","bad");return false}
  try{const ok=await navigator.xr.isSessionSupported("immersive-ar");
-  if(ok){setAR("AR beschikbaar. Klaar voor de 3D-markertest.","good");startAR.disabled=false;return true}
+  if(ok){setAR("AR beschikbaar — P00 Anchor Isolation Test klaar.","good");startAR.disabled=false;return true}
   setAR("Immersive AR wordt niet ondersteund.","bad")
  }catch(e){setAR("AR-controle mislukt: "+e.message,"bad")} return false
 }
 $("checkAR").onclick=checkAR;
-
-function shader(type,src){let s=xrGL.createShader(type);xrGL.shaderSource(s,src);xrGL.compileShader(s);if(!xrGL.getShaderParameter(s,xrGL.COMPILE_STATUS))throw Error(xrGL.getShaderInfoLog(s));return s}
+function shader(type,src){let sh=xrGL.createShader(type);xrGL.shaderSource(sh,src);xrGL.compileShader(sh);if(!xrGL.getShaderParameter(sh,xrGL.COMPILE_STATUS))throw Error(xrGL.getShaderInfoLog(sh));return sh}
 function initMarkerGL(){
- const vs=`attribute vec3 p;uniform mat4 vp;uniform vec3 origin;uniform float size;void main(){gl_Position=vp*vec4(origin+p*size,1.0);}`;
- const fs=`precision mediump float;uniform vec4 color;void main(){gl_FragColor=color;}`;
+ const vs=`attribute vec3 p;uniform mat4 mvp;void main(){gl_Position=mvp*vec4(p,1.0);}`;
+ const fs=`precision mediump float;void main(){gl_FragColor=vec4(0.1,1.0,0.25,1.0);}`;
  markerProgram=xrGL.createProgram();xrGL.attachShader(markerProgram,shader(xrGL.VERTEX_SHADER,vs));xrGL.attachShader(markerProgram,shader(xrGL.FRAGMENT_SHADER,fs));xrGL.linkProgram(markerProgram);
  if(!xrGL.getProgramParameter(markerProgram,xrGL.LINK_STATUS))throw Error(xrGL.getProgramInfoLog(markerProgram));
  markerBuf=xrGL.createBuffer();
 }
-function markerVerts(kind){
- let v=[], seg=32;
- const line=(a,b,c,d,e,f)=>v.push(a,b,c,d,e,f);
- if(kind==="cross"||kind==="target"){line(-1,0,0,1,0,0);line(0,0,-1,0,0,1)}
- if(kind==="ring"||kind==="target"){for(let i=0;i<seg;i++){let a=i*2*Math.PI/seg,b=(i+1)*2*Math.PI/seg;line(Math.cos(a),0,Math.sin(a),Math.cos(b),0,Math.sin(b))}}
- if(kind==="pin"){line(0,0,0,0,2,0);for(let i=0;i<seg;i++){let a=i*2*Math.PI/seg,b=(i+1)*2*Math.PI/seg;line(.45*Math.cos(a),2,.45*Math.sin(a),.45*Math.cos(b),2,.45*Math.sin(b))}}
- if(kind==="post"){let s=.35;line(-s,0,-s,-s,2,-s);line(s,0,-s,s,2,-s);line(s,0,s,s,2,s);line(-s,0,s,-s,2,s)}
- if(kind==="tile"){let s=1;line(-s,0,-s,s,0,-s);line(s,0,-s,s,0,s);line(s,0,s,-s,0,s);line(-s,0,s,-s,0,-s);line(-.35,0,0,.35,0,0);line(0,0,-.35,0,0,.35)}
- if(kind==="cube"){let s=.65,y=1.3;let pts=[[-s,0,-s],[s,0,-s],[s,0,s],[-s,0,s],[-s,y,-s],[s,y,-s],[s,y,s],[-s,y,s]];let E=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];for(let e of E){let A=pts[e[0]],B=pts[e[1]];line(...A,...B)}}
- return new Float32Array(v)
-}
 function mul4(a,b){let o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)o[c*4+r]=a[r]*b[c*4]+a[4+r]*b[c*4+1]+a[8+r]*b[c*4+2]+a[12+r]*b[c*4+3];return o}
-function drawMarker(view,pos,index){
- if(!projectRoot)return;
- let kind="target",verts=markerVerts(kind),sz=.25;
- xrGL.useProgram(markerProgram);xrGL.bindBuffer(xrGL.ARRAY_BUFFER,markerBuf);
- xrGL.bufferData(xrGL.ARRAY_BUFFER,new Float32Array(verts),xrGL.DYNAMIC_DRAW);
- let a=xrGL.getAttribLocation(markerProgram,"p");xrGL.enableVertexAttribArray(a);xrGL.vertexAttribPointer(a,3,xrGL.FLOAT,false,0,0);
- let pv=mul4(view.projectionMatrix,view.transform.inverse.matrix),mvp=mul4(pv,projectRoot);
- xrGL.uniformMatrix4fv(xrGL.getUniformLocation(markerProgram,"vp"),false,mvp);
- xrGL.uniform3f(xrGL.getUniformLocation(markerProgram,"origin"),pos.x,pos.y,pos.z);
- xrGL.uniform1f(xrGL.getUniformLocation(markerProgram,"size"),sz);
- xrGL.uniform4f(xrGL.getUniformLocation(markerProgram,"color"),0.15,1.0,0.35,1.0);
- xrGL.drawArrays(xrGL.LINES,0,verts.length/3);
-}
-function drawConnection(view){
- if(placed.length<2)return;
- let a=placed[0],b=placed[1],verts=new Float32Array([a.x,a.y+.01,a.z,b.x,b.y+.01,b.z]);
+function drawP00(view,anchorPose){
+ // Marker coordinates are LOCAL to the anchor. No ProjectRoot, yaw or cached world matrix.
+ const s=.08,y=.006;
+ const verts=new Float32Array([-s,y,0,s,y,0, 0,y,-s,0,y,s]);
  xrGL.useProgram(markerProgram);xrGL.bindBuffer(xrGL.ARRAY_BUFFER,markerBuf);xrGL.bufferData(xrGL.ARRAY_BUFFER,verts,xrGL.DYNAMIC_DRAW);
  let loc=xrGL.getAttribLocation(markerProgram,"p");xrGL.enableVertexAttribArray(loc);xrGL.vertexAttribPointer(loc,3,xrGL.FLOAT,false,0,0);
- let vp=mul4(view.projectionMatrix,view.transform.inverse.matrix);xrGL.uniformMatrix4fv(xrGL.getUniformLocation(markerProgram,"vp"),false,vp);
- xrGL.uniform3f(xrGL.getUniformLocation(markerProgram,"origin"),0,0,0);xrGL.uniform1f(xrGL.getUniformLocation(markerProgram,"size"),1);
- xrGL.uniform4f(xrGL.getUniformLocation(markerProgram,"color"),1,1,1,.9);xrGL.drawArrays(xrGL.LINES,0,2);
+ let pv=mul4(view.projectionMatrix,view.transform.inverse.matrix);
+ let mvp=mul4(pv,anchorPose.transform.matrix);
+ xrGL.uniformMatrix4fv(xrGL.getUniformLocation(markerProgram,"mvp"),false,mvp);
+ xrGL.lineWidth(6);xrGL.drawArrays(xrGL.LINES,0,4);
 }
 startAR.onclick=async()=>{
  if(!(await checkAR()))return;
  try{
-  xrSession=await navigator.xr.requestSession("immersive-ar",{requiredFeatures:["hit-test","anchors"],optionalFeatures:["dom-overlay","local-floor"],domOverlay:{root:document.body}});
+  // Match the successful WebXR pattern: anchors + hit-test, with DOM overlay only as optional UI.
+  xrSession=await navigator.xr.requestSession("immersive-ar",{requiredFeatures:["hit-test","anchors"],optionalFeatures:["dom-overlay"],domOverlay:{root:document.body}});
   xrCanvas=document.createElement("canvas");xrCanvas.id="arCanvas";xrCanvas.style.cssText="position:fixed;inset:0;width:100%;height:100%;z-index:9990;display:block;pointer-events:none";document.body.appendChild(xrCanvas);
   xrGL=xrCanvas.getContext("webgl",{xrCompatible:true,alpha:true,premultipliedAlpha:false,antialias:true});await xrGL.makeXRCompatible();
   xrSession.updateRenderState({baseLayer:new XRWebGLLayer(xrSession,xrGL),depthNear:.01,depthFar:50});
-  try{xrRef=await xrSession.requestReferenceSpace("local-floor")}catch(_){xrRef=await xrSession.requestReferenceSpace("local")}
-  xrViewer=await xrSession.requestReferenceSpace("viewer");xrHitSource=await xrSession.requestHitTestSource({space:xrViewer});
-  initMarkerGL();placed=[];projectRoot=null;p00Anchor=null;anchorYaw=0;anchorTracked=false;anchorCreating=false;alignStage=0;alignIndex=+$("alignPoint").value||3;lastHitResult=null;reticlePose=null;$("arLabels").innerHTML="";xrStart=performance.now();document.body.classList.add("ar-mode");arVisual.classList.add("on");arVisualMsg.textContent="Zoek vloer";arVisualBottom.textContent="Rood vizier = nog geen oppervlak";
-  xrSession.addEventListener("select",onXRSelect);xrSession.addEventListener("end",()=>{setAR("AR-test beëindigd.","warn");startAR.disabled=false;document.body.classList.remove("ar-mode");arVisual.classList.remove("on");if(p00Anchor){try{p00Anchor.delete()}catch(_){}}p00Anchor=null;if(xrCanvas)xrCanvas.remove();xrCanvas=null;projectRoot=null;alignStage=0;lastHitResult=null;$("arLabels").innerHTML="";xrSession=null});
-  startAR.disabled=true;xrSession.requestAnimationFrame(onXRFrame)
+  // Deliberately use local only in this isolation test; no local-floor transform is introduced.
+  xrRef=await xrSession.requestReferenceSpace("local");
+  xrViewer=await xrSession.requestReferenceSpace("viewer");
+  xrHitSource=await xrSession.requestHitTestSource({space:xrViewer});
+  initMarkerGL();p00Anchor=null;lastHitResult=null;reticlePose=null;anchorCreating=false;
+  document.body.classList.add("ar-mode");arVisual.classList.add("on");
+  arVisualMsg.textContent="P00 ANCHOR TEST";arVisualBottom.textContent="Zoek een oppervlak — groen vizier = klaar om P00 te plaatsen";
+  xrSession.addEventListener("select",placeP00);
+  xrSession.addEventListener("end",()=>{setAR("AR-test beëindigd.","warn");startAR.disabled=false;document.body.classList.remove("ar-mode");arVisual.classList.remove("on");if(p00Anchor){try{p00Anchor.delete()}catch(_){}}p00Anchor=null;if(xrCanvas)xrCanvas.remove();xrCanvas=null;lastHitResult=null;reticlePose=null;xrSession=null});
+  startAR.disabled=true;xrSession.requestAnimationFrame(onXRFrame);
  }catch(e){document.body.classList.remove("ar-mode");arVisual.classList.remove("on");setAR("AR kon niet starten: "+e.message,"bad");startAR.disabled=false}
 };
-async function onXRSelect(){
- if(!reticlePose||!lastHitResult||anchorCreating)return;
- if(alignStage===0){
-   if(typeof lastHitResult.createAnchor!=="function"){
-     arVisualMsg.textContent="ANCHORS API NIET BESCHIKBAAR";
-     arVisualBottom.textContent="Deze sessie biedt geen XRHitTestResult.createAnchor().";
-     return;
-   }
-   try{
-     anchorCreating=true;
-     arVisualMsg.textContent="P00 VERANKEREN…";
-     p00Anchor=await lastHitResult.createAnchor();
-     anchorYaw=0; projectRoot=null; anchorTracked=false;
-     $("arLabels").innerHTML="";
-     alignIndex=+$("alignPoint").value;
-     if(!Number.isFinite(alignIndex)||alignIndex===0)alignIndex=3;
-     alignStage=1;
-     arVisualMsg.textContent="✓ P00 ECHT VERANKERD · PLAATS P"+String(alignIndex).padStart(2,"0");
-     arVisualBottom.textContent="P00 gebruikt nu een echte WebXR Anchor. Richt op P"+String(alignIndex).padStart(2,"0")+" en tik voor de richting.";
-   }catch(e){
-     p00Anchor=null; alignStage=0;
-     arVisualMsg.textContent="P00 ANCHOR MISLUKT";
-     arVisualBottom.textContent=e.message||String(e);
-   }finally{anchorCreating=false}
-   return;
- }
- if(alignStage===1){
-   if(!p00Anchor||!projectRoot||!anchorTracked){
-     arVisualBottom.textContent="Wacht tot P00-anchor opnieuw TRACKING heeft…"; return;
-   }
-   let target=coords().find(q=>q.i===alignIndex); if(!target)return;
-   let M=reticlePose.transform.matrix;
-   // projectRoot is currently the live P00 anchor pose (anchorYaw=0).
-   let ax=projectRoot[12],az=projectRoot[14];
-   let wx=M[12]-ax,wz=M[14]-az;
-   let lx=target.x/1000,lz=-target.y/1000;
-   if(Math.hypot(wx,wz)<0.05){arVisualBottom.textContent="Tweede punt ligt te dicht bij P00.";return}
-   let aLocal=Math.atan2(lz,lx),aWorld=Math.atan2(wz,wx);
-   // Horizontal world angle of the anchor's local +X axis.
-   let aAnchor=Math.atan2(projectRoot[2],projectRoot[0]);
-   // Our Y-yaw matrix rotates a horizontal vector by -yaw.
-   anchorYaw=aAnchor+aLocal-aWorld;
-   alignStage=2; $("arLabels").innerHTML="";
-   arVisualMsg.textContent="✓ TRUE ANCHOR WORLD LOCK · P00 → P"+String(alignIndex).padStart(2,"0");
-   arVisualBottom.textContent="Raster volgt iedere frame de echte P00-anchor; P"+String(alignIndex).padStart(2,"0")+" bepaalt alleen de richting.";
- }
+async function placeP00(){
+ if(p00Anchor||anchorCreating||!lastHitResult)return;
+ if(typeof lastHitResult.createAnchor!=="function"){arVisualMsg.textContent="ANCHOR API ONTBREEKT";arVisualBottom.textContent="XRHitTestResult.createAnchor() is niet beschikbaar.";return}
+ try{
+  anchorCreating=true;arVisualMsg.textContent="P00 VERANKEREN…";
+  p00Anchor=await lastHitResult.createAnchor();
+  arVisualMsg.textContent="✓ P00 ECHT VERANKERD";
+  arVisualBottom.textContent="Loop nu 1 m, 3 m en 5 m weg en terug. Het groene + moet op exact dezelfde fysieke plek blijven.";
+ }catch(e){arVisualMsg.textContent="P00 ANCHOR MISLUKT";arVisualBottom.textContent=e.message||String(e)}finally{anchorCreating=false}
 }
-function arRasterPoints(){
- return coords().filter(p=>s.active[p.i]).map(p=>({
-   x:p.x/1000,
-   y:0.012,
-   z:-p.y/1000,
-   index:p.i
- }));
-}
-function transform4(m,v){return [
- m[0]*v[0]+m[4]*v[1]+m[8]*v[2]+m[12]*v[3],
- m[1]*v[0]+m[5]*v[1]+m[9]*v[2]+m[13]*v[3],
- m[2]*v[0]+m[6]*v[1]+m[10]*v[2]+m[14]*v[3],
- m[3]*v[0]+m[7]*v[1]+m[11]*v[2]+m[15]*v[3]
-]}
-function updateARLabels(view){
- const box=$("arLabels"); if(!box||!projectRoot)return;
- let pv=mul4(view.projectionMatrix,view.transform.inverse.matrix),mvp=mul4(pv,projectRoot);
- let pts=arRasterPoints(), live=new Set();
- for(let p of pts){
-   let clip=transform4(mvp,[p.x,p.y,p.z,1]); if(clip[3]<=0)continue;
-   let nx=clip[0]/clip[3],ny=clip[1]/clip[3],nz=clip[2]/clip[3];
-   if(nz < -1 || nz > 1 || nx < -1.2 || nx > 1.2 || ny < -1.2 || ny > 1.2)continue;
-   let id="arlbl"+p.index,el=$(id);
-   if(!el){el=document.createElement("div");el.id=id;el.className="arPointLabel";box.appendChild(el)}
-   el.textContent="P"+String(p.index).padStart(2,"0");
-   el.style.left=((nx*.5+.5)*innerWidth)+"px";
-   el.style.top=((-.5*ny+.5)*innerHeight)+"px";
-   el.style.display="block";live.add(id);
- }
- [...box.children].forEach(el=>{if(!live.has(el.id))el.style.display="none"});
-}
-function yawMatrix(yaw){let c=Math.cos(yaw),sn=Math.sin(yaw);return new Float32Array([c,0,-sn,0, 0,1,0,0, sn,0,c,0, 0,0,0,1])}
-function updateProjectRootFromAnchor(frame){
- anchorTracked=false;
- if(!p00Anchor){projectRoot=null;return}
- // Follow the anchor pose every XR frame. This is the core change vs v0.7.2.1.
- if(frame.trackedAnchors && !frame.trackedAnchors.has(p00Anchor)){projectRoot=null;return}
- let ap=frame.getPose(p00Anchor.anchorSpace,xrRef);
- if(!ap){projectRoot=null;return}
- anchorTracked=true;
- projectRoot=mul4(ap.transform.matrix,yawMatrix(anchorYaw));
-}
-function drawARRaster(view){if(!projectRoot)return;for(let p of arRasterPoints())drawMarker(view,p,p.index);updateARLabels(view);}
 function onXRFrame(t,frame){
- if(!xrSession)return;xrSession.requestAnimationFrame(onXRFrame);let pose=frame.getViewerPose(xrRef);if(!pose)return;
+ if(!xrSession)return;xrSession.requestAnimationFrame(onXRFrame);
+ let pose=frame.getViewerPose(xrRef);if(!pose)return;
  let layer=xrSession.renderState.baseLayer;xrGL.bindFramebuffer(xrGL.FRAMEBUFFER,layer.framebuffer);xrGL.enable(xrGL.DEPTH_TEST);xrGL.clearColor(0,0,0,0);xrGL.clear(xrGL.COLOR_BUFFER_BIT|xrGL.DEPTH_BUFFER_BIT);
- let hits=frame.getHitTestResults(xrHitSource);
- lastHitResult=hits.length?hits[0]:null;
- reticlePose=lastHitResult?lastHitResult.getPose(xrRef):null;
- updateProjectRootFromAnchor(frame);
+ let hits=frame.getHitTestResults(xrHitSource);lastHitResult=hits.length?hits[0]:null;reticlePose=lastHitResult?lastHitResult.getPose(xrRef):null;
  arCross.classList.toggle("hit",!!reticlePose);
- if(alignStage===0)arVisualBottom.textContent=reticlePose?"Groen vizier — tik voor P00":"Beweeg rustig: oppervlak zoeken…";
- else if(alignStage===1)arVisualBottom.textContent=!anchorTracked?"P00-anchor tijdelijk niet gevolgd — beweeg rustig…":(reticlePose?"Plaats vizier op fysieke P"+String(alignIndex).padStart(2,"0")+" — tik om richting vast te leggen":"Zoek oppervlak bij P"+String(alignIndex).padStart(2,"0")+"…");
- else if(alignStage===2&&!anchorTracked)arVisualBottom.textContent="P00-anchor tijdelijk niet gevolgd — raster verborgen tot tracking terug is";
- for(let view of pose.views){let vp=layer.getViewport(view);xrGL.viewport(vp.x,vp.y,vp.width,vp.height);drawARRaster(view);drawConnection(view)}
+ let ap=p00Anchor?frame.getPose(p00Anchor.anchorSpace,xrRef):null;
+ if(!p00Anchor)arVisualBottom.textContent=reticlePose?"Groen vizier — tik om P00 echt te verankeren":"Beweeg rustig: oppervlak zoeken…";
+ else if(!ap)arVisualBottom.textContent="P00-anchor tijdelijk niet gevolgd — beweeg rustig tot tracking terugkomt";
+ for(let view of pose.views){let vp=layer.getViewport(view);xrGL.viewport(vp.x,vp.y,vp.width,vp.height);if(ap)drawP00(view,ap)}
 }
 $("stopAR").onclick=()=>{if(xrSession)xrSession.end()};
 load();renderInputs();render();
