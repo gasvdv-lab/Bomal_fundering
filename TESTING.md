@@ -1,16 +1,19 @@
-# TESTING — v0.7.2.1
+# TESTING v0.7.3
+## Statische controles
+- flat smartphone release
+- P00 translation blijft rasteroorsprong
+- yaw-formule van v0.7.2.1 behouden
+- rasterpunten delen één ProjectRoot
+- WebXR anchors zijn optioneel; fallback blijft actief
 
-Automatisch/static:
-- PASS JavaScript syntax
-- PASS yaw-richting gewijzigd naar aLocal-aWorld
-- PASS P00-translatie blijft behouden
-- PASS volledige raster blijft één rigide ProjectRoot
-- PASS AR-labels behouden
-- PASS groene doelwitten behouden
+## Ter plaatse
+1. X exact op P00 centreren.
+2. P00 plaatsen.
+3. P03 (of gekozen referentie) plaatsen.
+4. P00/P03 onmiddellijk controleren.
+5. 2–5 m weg lopen en terugkomen.
+6. P00-afwijking schatten: <2 / 2–5 / 5–10 / >10 cm.
+7. Rond raster lopen en opnieuw controleren.
+8. Herijk testen.
 
-Fysieke acceptatietest:
-1. Kies P03.
-2. Plaats P00 exact.
-3. Plaats fysieke P03.
-4. Na uitlijning moeten P00 en P03 tegelijk in de aangewezen richting liggen.
-5. Controleer daarna pas de overige punten.
+Maak bij voorkeur screenshots vóór en na het rondlopen.
