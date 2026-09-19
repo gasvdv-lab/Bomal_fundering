@@ -1,24 +1,20 @@
-# bomal_fundering v0.6.3 — Persistent 3D Markers
+# bomal_fundering v0.6.4 — Anchor & Recalibration
 
 ## Live app
 https://gasvdv-lab.github.io/Bomal_fundering/
 
+Doel: het probleem aanpakken waarbij een marker goed blijft staan zolang hij zichtbaar is, maar na uit beeld gaan en terugkeren verschoven kan zijn.
+
 Nieuw:
-- P00 en P01 worden als echte WebGL-objecten in de WebXR-wereld gerenderd.
-- P00 = groen, P01 = geel.
-- verbindingslijn zodra beide punten geplaatst zijn.
-- keuze uit: Doelwit, Kruis, Cirkel, Pin, Paaltje, Vlak/tegel, Kubus.
-- instelbare grootte.
-- markerkeuze verandert uitsluitend de visualisatie; de geometrische positie blijft identiek.
-- geen externe 3D-library/CDN.
+- vraagt WebXR `anchors` als optionele feature;
+- toont of native WebXR Anchors werkelijk beschikbaar zijn;
+- probeert P00/P01 aan een native anchor te koppelen;
+- gebruikt tijdens rendering de actuele anchor-pose wanneer die beschikbaar is;
+- nieuwe `Herijk`-knop;
+- herijking: richt opnieuw exact op de fysieke P00 en tik;
+- de correctie wordt als één translatie op ALLE geplaatste punten toegepast;
+- de onderlinge rastergeometrie wordt dus niet vervormd;
+- fallback blijft bruikbaar als browser/toestel geen WebXR Anchors ondersteunt.
 
-Test:
-1. kies objecttype vóór Start AR;
-2. Start AR en zoek vloer;
-3. plaats P00;
-4. P00 moet zichtbaar blijven wanneer de camera beweegt;
-5. plaats P01;
-6. beide markers + verbindingslijn moeten zichtbaar blijven;
-7. loop weg en terug om world-lock/drift visueel te beoordelen.
-
-De laser blijft de definitieve maatvoering.
+Belangrijk:
+Anchors zijn geen garantie voor millimeterprecisie. De laser blijft de definitieve maatvoering. Deze release test of anchors + expliciete herijking de relokalisatie praktisch bruikbaar maken.
