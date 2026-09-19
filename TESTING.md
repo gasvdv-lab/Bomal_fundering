@@ -1,9 +1,9 @@
-# TESTING — v0.7.10.1
-1. Open configuratiescherm: er mag geen leeg `Richtingspunt na P00`-veld meer staan.
-2. Start AR.
-3. Zet P00 vast.
-4. Zet P03 vast.
-5. Controleer `MASTER RASTER GEANKERD`.
-6. Loop weg en terug en controleer P00, P03 en P14.
-7. Controleer OFFSET 0 mm.
-8. Test Undo.
+# TESTING — v0.7.10.2
+1. Start AR vóór P00 te plaatsen.
+2. Camerabeeld moet normaal zichtbaar zijn; géén groen scherm.
+3. Plaats P00.
+4. Plaats P03.
+5. Wacht op `MASTER RASTER GEANKERD`.
+6. Alleen rasterlijnen/cirkels/kruisen mogen gekleurd zijn.
+7. Loop weg en terug en controleer P00/P03/P14.
+8. Controleer OFFSET 0 mm.

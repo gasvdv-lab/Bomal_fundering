@@ -67,7 +67,7 @@ body.ar-mode #arCanvas{display:block!important}
 
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.10.1 · Offset Zero Fix</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.10.2 · Offset Zero Fix</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -473,7 +473,13 @@ function updateMasterRasterLabels(view,p0){
 function onXRFrame(t,frame){
  if(!xrSession)return;xrSession.requestAnimationFrame(onXRFrame);
  let pose=frame.getViewerPose(xrRef);if(!pose)return;
- let layer=xrSession.renderState.baseLayer;xrGL.bindFramebuffer(xrGL.FRAMEBUFFER,layer.framebuffer);xrGL.enable(xrGL.DEPTH_TEST);xrGL.clearColor(0,0,0,0);xrGL.clear(xrGL.COLOR_BUFFER_BIT|xrGL.DEPTH_BUFFER_BIT);
+ let layer=xrSession.renderState.baseLayer;xrGL.bindFramebuffer(xrGL.FRAMEBUFFER,layer.framebuffer);
+ xrGL.disable(xrGL.CULL_FACE);
+ xrGL.enable(xrGL.DEPTH_TEST);
+ xrGL.depthMask(true);
+ xrGL.enable(xrGL.BLEND);
+ xrGL.blendFunc(xrGL.SRC_ALPHA,xrGL.ONE_MINUS_SRC_ALPHA);
+ xrGL.clearColor(0,0,0,0);xrGL.clear(xrGL.COLOR_BUFFER_BIT|xrGL.DEPTH_BUFFER_BIT);
  let hits=frame.getHitTestResults(xrHitSource);lastHitResult=hits.length?hits[0]:null;reticlePose=lastHitResult?lastHitResult.getPose(xrRef):null;
  if(pendingAnchorKind && lastHitResult && !anchorCreating){
    const kindNow=pendingAnchorKind;pendingAnchorKind=null;anchorCreating=true;
@@ -527,7 +533,7 @@ function onXRFrame(t,frame){
  let firstView=true;
  for(let view of pose.views){
   let vp=layer.getViewport(view);xrGL.viewport(vp.x,vp.y,vp.width,vp.height);
-  if(ap&&ap03){drawFullRaster(view,ap,ap03);if(firstView)updateMasterRasterLabels(view,ap);if(firstView)updateRasterLabels(view,ap,ap03)}
+  if(ap&&ap03&&rigidRasterFrame){drawFullRaster(view,ap,ap03);if(firstView)updateMasterRasterLabels(view,ap);if(firstView)updateRasterLabels(view,ap,ap03)}
   if(ap)drawP00(view,ap);if(ap03)drawP00(view,ap03);firstView=false
  }
 }
