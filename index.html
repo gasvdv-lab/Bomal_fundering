@@ -61,19 +61,19 @@ body.ar-mode #arCanvas{display:block!important}
 
 
 
-#visualHeightControl{position:absolute;right:10px;top:54px;z-index:13;display:none;align-items:center;gap:5px;background:rgba(8,17,11,.82);padding:5px;border-radius:10px}
+#visualHeightControl{position:absolute;left:50%;top:104px;transform:translateX(-50%);z-index:13;display:none;align-items:center;gap:5px;background:rgba(8,17,11,.82);padding:5px;border-radius:10px}
 #visualHeightControl button{width:42px;height:38px;padding:0;font-size:24px;font-weight:900;line-height:1}
 #visualHeightValue{min-width:92px;text-align:center;color:#fff;font-size:12px;font-weight:900}
 
 
-#placementControl{position:absolute;left:10px;top:54px;z-index:13;display:none;align-items:center;gap:6px;background:rgba(8,17,11,.82);padding:5px;border-radius:10px}
+#placementControl{position:absolute;left:50%;top:154px;transform:translateX(-50%);z-index:13;display:none;align-items:center;gap:6px;background:rgba(8,17,11,.82);padding:5px;border-radius:10px}
 #placementControl button,#placementControl select{height:38px;font-weight:900}
-#placementControl select{min-width:74px;padding:0 7px}
+#placementControl select{min-width:78px;padding:0 7px}
 #placementControl.active{outline:2px solid rgba(74,222,128,.9)}
 
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.8.0 · Placement Mode</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.8.1.1 · Correctness Fix</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -145,14 +145,14 @@ body.ar-mode #arCanvas{display:block!important}
 
 <div id="arVisual"><div id="arLabels"></div><div id="arVisualMsg">AR starten…</div><button id="stopAR">Stop</button>
  <button id="heightAssistBtn">HOOGTEHULP: UIT</button>
- <button id="undoARBtn" disabled>↶ UNDO</button><div id="arCross"></div><button id="placeP00Btn" disabled>● P00 PRECISIE VASTZETTEN</button><div id="placementControl">
+ <button id="undoARBtn" disabled>↶ UNDO</button><div id="arCross"></div><button id="placeP00Btn" disabled>● P00 PRECISIE VASTZETTEN</button><div id="visualHeightControl">
+ <button id="visualHeightMinus" type="button">−</button>
+ <span id="visualHeightValue">OFFSET 0 mm</span>
+ <button id="visualHeightPlus" type="button">+</button>
+</div>
+<div id="placementControl">
  <button id="placementToggle" type="button">PLAATSMODUS</button>
  <select id="placementPointSelect" aria-label="Kies rasterpunt"></select>
-</div>
-<div id="visualHeightControl">
- <button id="visualHeightMinus" type="button">−</button>
- <span id="visualHeightValue">HOOGTE 0 mm</span>
- <button id="visualHeightPlus" type="button">+</button>
 </div>
 <div id="arVisualBottom">Zoek een oppervlak…</div></div>
 <script>
@@ -226,9 +226,9 @@ const VISUAL_HEIGHT_MAX=0.050;
 let placementMode=false;
 let placementPoint=0;
 
-
 let stabilitySamples=[],stabilityStarted=0,stabilityRAF=0;
-const STABILITY_MS=850, STABILITY_MAX_SPREAD=0.018; // 18 mm max horizontal spread
+const STABILITY_MS=850, STABILITY_MAX_SPREAD=0.018; // 18 mm horizontal
+const STABILITY_MAX_VERTICAL_SPREAD=0.012; // 12 mm vertical
 let xrSession=null,xrRef=null,xrViewer=null,xrHitSource=null,xrGL=null,xrCanvas=null;
 let reticlePose=null,p00Anchor=null,p03Anchor=null,anchorCreating=false,markerProgram=null,markerBuf=null;
 const arSupport=$("arSupport"),startAR=$("startAR"),anchorSupport=$("anchorSupport");
@@ -270,7 +270,7 @@ function updateRasterLabels(view,p0,p3){
  const box=xrCanvas&&xrCanvas.getBoundingClientRect();
  if(!layer||!box)return;
  const pts=coords().filter(p=>s.active[p.i]);
- const x0=p0.transform.position.x,y0=p0.transform.position.y+.035,z0=p0.transform.position.z;
+ const x0=p0.transform.position.x,y0=p0.transform.position.y+visualHeightOffset,z0=p0.transform.position.z;
  const x3=p3.transform.position.x,z3=p3.transform.position.z;
  const dyx=x3-x0,dyz=z3-z0,L=Math.hypot(dyx,dyz); if(L<.05)return;
  const uyx=dyx/L,uyz=dyz/L,uxx=-uyz,uxz=uyx;
@@ -288,13 +288,11 @@ function updateRasterLabels(view,p0,p3){
    if(!el){
      el=document.createElement("div");el.id=id;el.className="arPointLabel";
      el.textContent="P"+String(q.i).padStart(2,"0");
-   el.style.opacity=String(placementAlphaFor(q.i));
-   el.style.transform=(placementMode&&q.i===placementPoint)?"translate(-50%,-50%) scale(1.35)":"translate(-50%,-50%)";
-   el.style.fontWeight=(placementMode&&q.i===placementPoint)?"900":"700";
-
      arLabels.appendChild(el);
    }
    el.style.display="block";
+   el.style.opacity=String(placementAlphaFor(q.i));
+   el.style.fontWeight=(placementMode&&q.i===placementPoint)?"900":"700";
    el.style.left=((nx*.5+.5)*box.width)+"px";
    el.style.top=((-ny*.5+.5)*box.height-22)+"px";
  }
@@ -303,16 +301,6 @@ function updateRasterLabels(view,p0,p3){
  }
 }
 
-
-
-function placementAlphaFor(i){
- if(!placementMode)return 1;
- return i===placementPoint?1:0.18;
-}
-function placementScaleFor(i){
- if(!placementMode)return 1;
- return i===placementPoint?1.75:0.72;
-}
 
 function drawHeightAssist(view,p0,p3){
  if(!heightAssist)return;
@@ -374,8 +362,8 @@ function drawFullRaster(view,p0,p3){
  // a circle around the point + a centered cross exactly where raster lines intersect.
  const baseRadius=.10, baseCross=.045, segments=28;
  for(const q of pts){
-   const ps=placementScaleFor(q.i);
-   const radius=baseRadius*ps, cross=baseCross*ps;
+   const scale=placementScaleFor(q.i);
+   const radius=baseRadius*scale, cross=baseCross*scale;
 
    const w=world(q);
    // Circle lies in the same rigid raster plane.
@@ -409,8 +397,8 @@ function drawFullRaster(view,p0,p3){
 function drawAxes(view,p0,p3){
  // World/reference-space coordinates from the TWO CURRENT anchor poses.
  // Y-axis follows P00 -> P03. X-axis is the horizontal perpendicular through P00.
- const x0=p0.transform.position.x, y0=p0.transform.position.y+.008, z0=p0.transform.position.z;
- const x3=p3.transform.position.x, y3=p3.transform.position.y+.008, z3=p3.transform.position.z;
+ const x0=p0.transform.position.x, y0=p0.transform.position.y+visualHeightOffset, z0=p0.transform.position.z;
+ const x3=p3.transform.position.x, y3=p3.transform.position.y+visualHeightOffset, z3=p3.transform.position.z;
  const dx=x3-x0,dz=z3-z0,len=Math.hypot(dx,dz); if(len<.05)return;
  const ux=dx/len,uz=dz/len;       // raster Y direction
  const xx=-uz,xz=ux;              // raster X direction, perpendicular
@@ -471,11 +459,12 @@ async function placeP00(){
 
  try{
    if(stabilitySamples.length<8)throw new Error("Te weinig geldige metingen");
-   const xs=stabilitySamples.map(v=>v.x),zs=stabilitySamples.map(v=>v.z);
+   const xs=stabilitySamples.map(v=>v.x),ys=stabilitySamples.map(v=>v.y),zs=stabilitySamples.map(v=>v.z);
    const spread=Math.hypot(Math.max(...xs)-Math.min(...xs),Math.max(...zs)-Math.min(...zs));
-   if(spread>STABILITY_MAX_SPREAD){
+   const verticalSpread=Math.max(...ys)-Math.min(...ys);
+   if(spread>STABILITY_MAX_SPREAD || verticalSpread>STABILITY_MAX_VERTICAL_SPREAD){
     arVisualMsg.textContent="TE VEEL BEWEGING";
-    arVisualBottom.textContent="Spreiding "+Math.round(spread*1000)+" mm · probeer opnieuw.";
+    arVisualBottom.textContent="Horiz. "+Math.round(spread*1000)+" mm · vert. "+Math.round(verticalSpread*1000)+" mm · probeer opnieuw.";
     return;
    }
    // Choose the sample closest to the median X/Z. createAnchor() must be called
@@ -494,13 +483,13 @@ async function placeP00(){
      arVisualMsg.textContent="✓ P00 STABIEL VERANKERD";
      placeP00Btn.textContent="● P03 PRECISIE VASTZETTEN";
      placeP00Btn.style.display="block";
-     arVisualBottom.textContent="P00 vast · spreiding "+Math.round(spread*1000)+" mm. Richt nu op P03.";
+     arVisualBottom.textContent="P00 vast · H "+Math.round(spread*1000)+" mm · V "+Math.round(verticalSpread*1000)+" mm. Richt nu op P03.";
      $("undoARBtn").disabled=false;
    }else if(!p03Anchor){
      p03Anchor=a;
      arVisualMsg.textContent="✓ RASTER STABIEL VERANKERD";
      placeP00Btn.disabled=true;placeP00Btn.style.display="none";
-     arVisualBottom.textContent="P03 vast · spreiding "+Math.round(spread*1000)+" mm.";
+     arVisualBottom.textContent="P03 vast · H "+Math.round(spread*1000)+" mm · V "+Math.round(verticalSpread*1000)+" mm.";
      $("undoARBtn").disabled=false;
    }else{try{a.delete()}catch(_){}}
  }catch(e){
@@ -549,9 +538,9 @@ function initPlacementUI(){
  const sel=$("placementPointSelect");
  sel.innerHTML="";
  for(let i=0;i<15;i++){
-  const o=document.createElement("option");
-  o.value=String(i);o.textContent="P"+String(i).padStart(2,"0");
-  sel.appendChild(o);
+   const o=document.createElement("option");
+   o.value=String(i); o.textContent="P"+String(i).padStart(2,"0");
+   sel.appendChild(o);
  }
  sel.value=String(placementPoint);
 }
@@ -565,20 +554,30 @@ $("placementToggle").onclick=()=>{
  placementMode=!placementMode;
  updatePlacementUI();
  if(placementMode){
-  arVisualMsg.textContent="PLAATSMODUS · P"+String(placementPoint).padStart(2,"0");
-  arVisualBottom.textContent="Kies zelf P00–P14. Het gekozen punt wordt uitgelicht.";
+   arVisualMsg.textContent="PLAATSMODUS · P"+String(placementPoint).padStart(2,"0");
+   arVisualBottom.textContent="Kies zelf P00–P14. Alleen de weergave verandert.";
  }
 };
 $("placementPointSelect").onchange=e=>{
  placementPoint=Number(e.target.value)||0;
  arVisualMsg.textContent="DOEL · P"+String(placementPoint).padStart(2,"0");
- arVisualBottom.textContent="Loop naar het uitgelichte punt. Laser blijft de definitieve controle.";
+ arVisualBottom.textContent="Loop naar het uitgelichte punt. Controleer exact met de laser.";
 };
 initPlacementUI();updatePlacementUI();
 
+function placementRasterAlpha(){ return placementMode ? 0.22 : 1.0; }
+function placementScaleFor(i){
+ if(!placementMode)return 1;
+ return i===placementPoint?1.75:0.72;
+}
+function placementAlphaFor(i){
+ if(!placementMode)return 1;
+ return i===placementPoint?1:0.22;
+}
+
 function updateVisualHeightUI(){
  const mm=Math.round(visualHeightOffset*1000);
- $("visualHeightValue").textContent="HOOGTE "+(mm>0?"+":"")+mm+" mm";
+ $("visualHeightValue").textContent="OFFSET "+(mm>0?"+":"")+mm+" mm";
  $("visualHeightMinus").disabled=visualHeightOffset<=VISUAL_HEIGHT_MIN+1e-9;
  $("visualHeightPlus").disabled=visualHeightOffset>=VISUAL_HEIGHT_MAX-1e-9;
 }

@@ -1,19 +1,15 @@
-# Bomal Fundering v0.7.8.0 — Placement Mode
+# Bomal Fundering v0.7.8.1.1 — Correctness Fix
 
-Basis: v0.7.7.1.1.
+Gerichte reparatie van v0.7.8.1.
 
-Nieuw: PLAATSMODUS in AR.
-- plaatsmodus kan aan/uit;
-- gebruiker kiest zelf P00 t/m P14 via een compacte keuzelijst;
-- gekozen doelpunt wordt groter en duidelijker weergegeven;
-- overige rasterpunten blijven zichtbaar maar worden visueel teruggenomen;
-- wisselen van doelpunt verandert geen rastergeometrie en maakt geen nieuwe anchor.
+## Gecorrigeerd
+- Raster, cirkels/kruisen, rasterassen, labels en hoogtehulp gebruiken nu dezelfde visuele Y-basis: `P00 Y + OFFSET`.
+- De oude afzonderlijke +35 mm labelhoogte en +8 mm ashoogte zijn verwijderd.
+- `OFFSET 0 mm` betekent nu voor alle rastergerelateerde visualisatie dezelfde basis.
+- Stabiliteitsmeting controleert naast horizontale beweging ook verticale spreiding.
+- Huidige limieten: 18 mm horizontaal en 12 mm verticaal gedurende circa 0,85 s.
+- Na P00/P03 wordt H/V-spreiding gemeld.
+- Plaatsmodus houdt het gekozen punt nadrukkelijk zichtbaar en probeert de algemene rasterlijnen visueel terug te nemen.
 
-Ongewijzigd:
-- P00/P03 echte WebXR-anchors;
-- stabiliteitsmeting;
-- Undo;
-- 3×5 exacte rastergeometrie;
-- instelbare visuele hoogte −20 t/m +50 mm;
-- hoogtehulp;
-- laser blijft definitieve maatcontrole.
+## Bewust niet gewijzigd
+De bewezen P00/P03 WebXR `createAnchor()`-werkwijze is niet herschreven. De exacte 3×5 geometrie blijft rigide en de laser blijft de definitieve controle.
