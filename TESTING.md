@@ -1,21 +1,16 @@
-# TESTING — v0.7.12.0
-
+# TESTING — v0.7.12.1
 Automatisch PASS:
 - JavaScript node --check
-- PRECISIE-knop aanwezig
-- DIRECT-knop aanwezig
-- geen `best.hit`
-- geen opgeslagen XRHitTestResult in stabiliteit
-- Undo reset rasterstate
+- PRECISIE boven DIRECT
+- DIRECT-knop heeft eigen CSS
+- beide knoppen pointer-events/touch-action
+- beforexrselect guard
 - groene fullscreen-overlayfix behouden
-- ZIP-integriteit en 5-file structuur
 
 Fysiek:
-1. Start AR — geen groene fullscreen laag.
-2. Test P00 DIRECT.
-3. Undo.
-4. Test P00 PRECISIE.
-5. Plaats P03 DIRECT of PRECISIE.
-6. Controleer `MASTER RASTER GEANKERD`.
-7. Loop weg en terug naar P00/P03/P14.
-8. Controleer dat P00–P14 als één geheel blijven.
+1. Start AR.
+2. Controleer twee aparte knoppen.
+3. Test P00 DIRECT.
+4. Undo.
+5. Test P00 PRECISIE.
+6. Plaats P03 met gewenste methode.

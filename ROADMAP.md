@@ -1,2 +1,2 @@
 # ROADMAP
-v0.7.12.0: fysiek testen van PRECISIE versus DIRECT voor P00/P03, daarna rondlooptest van het rigide master-raster.
+Eerst fysiek bevestigen dat PRECISIE en DIRECT beide zichtbaar en klikbaar zijn. Daarna P00/P03 en rondlooptest.

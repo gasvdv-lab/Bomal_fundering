@@ -42,10 +42,16 @@ svg{width:100%;height:100%;display:block}.edge{stroke:#59636e;stroke-width:3}.po
 #stopAR{position:absolute;right:10px;top:10px;pointer-events:auto;background:#b42318;color:#fff}
 #arLabels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .arPointLabel{position:absolute;transform:translate(-50%,-115%);padding:4px 7px;border-radius:8px;background:rgba(8,18,12,.82);border:1px solid rgba(74,222,128,.9);color:#7ee2a8;font-size:13px;font-weight:900;white-space:nowrap;text-shadow:0 1px 2px #000}
-#placeP00Btn{position:absolute;left:10px;right:10px;bottom:68px;z-index:10;pointer-events:auto;
+#placeP00Btn{position:absolute;left:10px;right:10px;bottom:128px;z-index:10;pointer-events:auto;
 background:#4ade80;color:#08110b;border:0;border-radius:14px;min-height:54px;font-size:17px;font-weight:900;
-box-shadow:0 3px 12px rgba(0,0,0,.35)}
+box-shadow:0 3px 12px rgba(0,0,0,.35);touch-action:manipulation}
 #placeP00Btn:disabled{opacity:.45;background:#5b6570;color:#d7dde3}
+
+#directPlaceBtn{position:absolute;left:10px;right:10px;bottom:68px;z-index:10;pointer-events:auto;
+background:#1f6feb;color:#fff;border:0;border-radius:14px;min-height:54px;font-size:17px;font-weight:900;
+box-shadow:0 3px 12px rgba(0,0,0,.35);touch-action:manipulation}
+#directPlaceBtn:disabled{opacity:.45;background:#5b6570;color:#d7dde3}
+
 #arVisualBottom{position:absolute;left:10px;right:10px;bottom:12px;background:rgba(8,12,17,.82);padding:11px;border-radius:13px;text-align:center;font-weight:800;color:#fff}
 
 body.ar-mode #mainHeader,body.ar-mode #normalMain{display:none!important}
@@ -67,7 +73,7 @@ body.ar-mode{background:transparent!important;overflow:hidden}
 
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.12.0 · Offset Zero Fix</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.12.1 · Offset Zero Fix</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -534,6 +540,11 @@ $("undoARBtn").onclick=()=>{
 };
 
 
+
+for(const id of ["placeP00Btn","directPlaceBtn","undoARBtn","stopAR"]){
+ const el=$(id);
+ if(el) el.addEventListener("beforexrselect",e=>e.preventDefault());
+}
 $("directPlaceBtn").onclick=async()=>{
  await placeDirectAnchor();
 };
