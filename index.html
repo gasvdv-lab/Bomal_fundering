@@ -67,7 +67,7 @@ body.ar-mode{background:transparent!important;overflow:hidden}
 
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.11.4 · Offset Zero Fix</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.12.0 · Offset Zero Fix</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -136,7 +136,8 @@ body.ar-mode{background:transparent!important;overflow:hidden}
 
 <div id="arVisual"><div id="arLabels"></div><div id="arVisualMsg">AR starten…</div><button id="stopAR">Stop</button>
  
- <button id="undoARBtn" disabled>↶ UNDO</button><div id="arCross"></div><button id="placeP00Btn" disabled>● P00 PRECISIE VASTZETTEN</button><div id="visualHeightControl">
+ <button id="undoARBtn" disabled>↶ UNDO</button><div id="arCross"></div><button id="placeP00Btn" disabled>● P00 PRECISIE VASTZETTEN</button>
+<button id="directPlaceBtn" disabled>● P00 DIRECT VASTZETTEN</button><div id="visualHeightControl">
  <button id="visualHeightMinus" type="button">−</button>
  <span id="visualHeightValue">OFFSET 0 mm</span>
  <button id="visualHeightPlus" type="button">+</button>
@@ -218,6 +219,7 @@ let xrSession=null,xrRef=null,xrViewer=null,xrHitSource=null,xrGL=null,xrCanvas=
 let reticlePose=null,p00Anchor=null,p03Anchor=null,anchorCreating=false,markerProgram=null,markerBuf=null;
 const arSupport=$("arSupport"),startAR=$("startAR"),anchorSupport=$("anchorSupport");
 const arVisual=$("arVisual"),arCross=$("arCross"),arVisualMsg=$("arVisualMsg"),arVisualBottom=$("arVisualBottom");
+const directPlaceBtn=$("directPlaceBtn");
 function setAR(msg,cls=""){arSupport.className="arState "+cls;arSupport.textContent=msg}
 async function checkAR(){
  if(!window.isSecureContext){setAR("AR vereist HTTPS.","bad");return false}
@@ -279,7 +281,9 @@ $("visualHeightControl").style.display="flex";
   document.body.classList.add("ar-mode");arVisual.classList.add("on");
   arVisualMsg.textContent="BOMAL RASTER AR";arVisualBottom.textContent="Zoek een oppervlak — groen vizier = klaar om P00 te plaatsen";
   xrSession.addEventListener("end",()=>{
- visualHeightOffset=0;updateVisualHeightUI();$("visualHeightControl").style.display="none";setAR("AR-test beëindigd.","warn");startAR.disabled=false;document.body.classList.remove("ar-mode");arVisual.classList.remove("on");if(p00Anchor){try{p00Anchor.delete()}catch(_){}}if(p03Anchor){try{p03Anchor.delete()}catch(_){}}p00Anchor=null;p03Anchor=null;if(xrCanvas)xrCanvas.remove();xrCanvas=null;lastHitResult=null;reticlePose=null;xrSession=null});
+ visualHeightOffset=0;updateVisualHeightUI();$("visualHeightControl").style.display="none";setAR("AR-test beëindigd.","warn");startAR.disabled=false;document.body.classList.remove("ar-mode");arVisual.classList.remove("on");if(p00Anchor){
+  rigidRasterFrame=null;try{p00Anchor.delete()}catch(_){}}if(p03Anchor){
+  rigidRasterFrame=null;try{p03Anchor.delete()}catch(_){}}p00Anchor=null;p03Anchor=null;if(xrCanvas)xrCanvas.remove();xrCanvas=null;lastHitResult=null;reticlePose=null;xrSession=null});
   startAR.disabled=true;xrSession.requestAnimationFrame(onXRFrame);
  }catch(e){document.body.classList.remove("ar-mode");arVisual.classList.remove("on");setAR("AR kon niet starten: "+e.message,"bad");startAR.disabled=false}
 };
@@ -322,7 +326,6 @@ async function placeP00(){
     const d=(v.x-mx)**2+(v.z-mz)**2;
     if(d<bestD){bestD=d;best=v}
    }
-   if(!best.hit||typeof best.hit.createAnchor!=="function")throw new Error("Anchor API ontbreekt");
    pendingAnchorKind=!p00Anchor?"P00":(!p03Anchor?"P03":null);
    arVisualMsg.textContent=(pendingAnchorKind||"PUNT")+" ANKEREN…";
    arVisualBottom.textContent="Stabiliteit OK · actueel WebXR-hitpunt gebruiken.";
@@ -393,6 +396,34 @@ function updateMasterRasterLabels(view,p0){
   el.style.display="block";el.style.left=((c[0]/c[3]*.5+.5)*innerWidth)+"px";el.style.top=((-c[1]/c[3]*.5+.5)*innerHeight)+"px";
  }
 }
+
+
+function syncPlacementButtons(){
+ const kind=!p00Anchor?"P00":(!p03Anchor?"P03":null);
+ const ready=!!lastHitResult && !pendingAnchorKind;
+ const p=$("placeP00Btn"),d=$("directPlaceBtn");
+ if(p){
+  p.disabled=!ready || !kind;
+  p.textContent=kind ? "● "+kind+" PRECISIE VASTZETTEN" : "✓ P00 + P03 VASTGEZET";
+ }
+ if(d){
+  d.disabled=!ready || !kind;
+  d.textContent=kind ? "● "+kind+" DIRECT VASTZETTEN" : "✓ DIRECT KLAAR";
+ }
+}
+async function placeDirectAnchor(){
+ if(!lastHitResult)return;
+ try{
+  if(pendingAnchorKind)return;
+  const kind = !p00Anchor ? "P00" : (!p03Anchor ? "P03" : null);
+  if(!kind)return;
+  pendingAnchorKind=kind;
+  arVisualBottom.textContent=kind+" direct vastzetten…";
+ }catch(e){
+  arVisualBottom.textContent="Direct vastzetten mislukt: "+e.message;
+  pendingAnchorKind=null;
+ }
+}
 function onXRFrame(t,frame){
  if(!xrSession)return;xrSession.requestAnimationFrame(onXRFrame);
  let pose=frame.getViewerPose(xrRef);if(!pose)return;
@@ -448,11 +479,13 @@ function onXRFrame(t,frame){
  let firstView=true;
  for(let view of pose.views){
   let vp=layer.getViewport(view);xrGL.viewport(vp.x,vp.y,vp.width,vp.height);
-  if(ap&&ap03&&rigidRasterFrame){drawFullRaster(view,ap);if(firstView)updateMasterRasterLabels(view,ap);if(firstView)if(ap03)drawP00(view,ap03);firstView=false
+  if(ap&&ap03&&rigidRasterFrame){drawFullRaster(view,ap);if(firstView)updateMasterRasterLabels(view,ap);if(firstView)if(ap03 && !rigidRasterFrame) drawP00(view,ap03);firstView=false
  }
 }
 
 $("placeP00Btn").onclick=placeP00;
+
+ syncPlacementButtons();
 };
 
 
@@ -472,6 +505,7 @@ $("visualHeightPlus").onclick=()=>changeVisualHeight(VISUAL_HEIGHT_STEP);
 updateVisualHeightUI();
 
 $("undoARBtn").onclick=()=>{
+ pendingAnchorKind=null; stabilitySamples=[];
  pendingAnchorKind=null;
  if(anchorCreating)return;
  if(p03Anchor){
@@ -499,6 +533,10 @@ $("undoARBtn").onclick=()=>{
  $("undoARBtn").disabled=!(p00Anchor||p03Anchor);
 };
 
+
+$("directPlaceBtn").onclick=async()=>{
+ await placeDirectAnchor();
+};
 $("stopAR").onclick=()=>{if(xrSession)xrSession.end()};
 load();renderInputs();render();
 })();

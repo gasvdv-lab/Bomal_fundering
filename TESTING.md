@@ -1,14 +1,21 @@
-# TESTING — v0.7.11.4
+# TESTING — v0.7.12.0
+
 Automatisch PASS:
-- generieke groene `.on` verwijderd
-- `#arVisual` transparant
-- START/STOP/UNDO handlers aanwezig
-- Node syntaxcheck alle inline scripts
-- ZIP-integriteit
+- JavaScript node --check
+- PRECISIE-knop aanwezig
+- DIRECT-knop aanwezig
+- geen `best.hit`
+- geen opgeslagen XRHitTestResult in stabiliteit
+- Undo reset rasterstate
+- groene fullscreen-overlayfix behouden
+- ZIP-integriteit en 5-file structuur
 
 Fysiek:
-1. Start AR.
-2. Plaats niets.
-3. Geen groene fullscreen laag.
-4. Test Stop.
-5. Daarna P00 → P03.
+1. Start AR — geen groene fullscreen laag.
+2. Test P00 DIRECT.
+3. Undo.
+4. Test P00 PRECISIE.
+5. Plaats P03 DIRECT of PRECISIE.
+6. Controleer `MASTER RASTER GEANKERD`.
+7. Loop weg en terug naar P00/P03/P14.
+8. Controleer dat P00–P14 als één geheel blijven.

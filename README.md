@@ -1,13 +1,17 @@
-# Bomal Fundering v0.7.11.4 — Green Overlay Root Cause Fix
+# Bomal Fundering v0.7.12.0 — Precision + Direct Anchor Placement
 
-Werkelijke oorzaak:
-`#arVisual` is fullscreen en krijgt tijdens AR de class `on`.
-Er stond óók een generieke CSS-regel `.on{background:rgba(74,222,128,.92);...}`.
-Daardoor werd de volledige AR-HUD groen.
+Nieuw:
+- P00 en P03 kunnen nu op twee manieren geplaatst worden:
+  - PRECISIE VASTZETTEN: korte stabiliteitscontrole, daarna echte WebXR anchor.
+  - DIRECT VASTZETTEN: het huidige geldige hit-testpunt wordt onmiddellijk gebruikt.
+- Beide methodes maken dezelfde echte XRAnchor.
+- P00 blijft master anchor; P03 bepaalt alleen de rasterrichting.
+- P00–P14 blijven één rigide raster.
 
-Fix:
-- generieke groene `.on`-regel verwijderd;
-- `#arVisual` en `#arVisual.on` expliciet transparant;
-- START/STOP/UNDO behouden;
-- WebXR/P00/P03-logica behouden;
+Fixes:
+- foutieve `best.hit`-logica verwijderd;
+- stabiliteitscontrole bewaart geen XRHitTestResult-objecten;
+- Undo wist `rigidRasterFrame` en pending placement state;
+- P03 wordt na master-rasterlock niet meer dubbel als aparte marker gerenderd;
+- groene fullscreen-overlayfix van v0.7.11.4 blijft behouden;
 - alle inline JavaScript gecontroleerd met `node --check`.
