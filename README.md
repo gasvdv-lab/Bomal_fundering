@@ -1,17 +1,13 @@
-# Bomal Fundering v0.7.2.5 — Dual Anchor Stability Test
+# Bomal Fundering v0.7.2.5.1 — Dual Anchor Fix
 
-Gebaseerd op de fysiek geslaagde P00-anchorbaseline.
+Gerichte hotfix op v0.7.2.5.
 
-Doel:
-- P00 plaatsen met een echte WebXR Anchor.
-- Daarna P03 plaatsen met exact dezelfde WebXR Anchor-methode.
-- Beide anchors rechtstreeks vanuit hun eigen `anchorSpace` renderen.
-- Nog GEEN raster, ProjectRoot of yawberekening.
+## Gecorrigeerd
+- `p03Anchor` wordt nu expliciet gedeclareerd.
+- Na P00 schakelt de onderste knop naar `P03 HIER VASTZETTEN`.
+- P03 wordt met dezelfde `XRHitTestResult.createAnchor()`-methode als P00 gemaakt.
+- P00 en P03 worden iedere frame rechtstreeks vanuit hun eigen `anchorSpace` opgehaald.
+- Beide anchorposes worden nu werkelijk gerenderd.
+- Beide anchors worden bij afsluiten verwijderd.
 
-Bediening:
-1. Start AR en zoek een oppervlak.
-2. Richt middenvizier op P00.
-3. Druk `P00 HIER VASTZETTEN`.
-4. Richt middenvizier op P03.
-5. Druk `P03 HIER VASTZETTEN`.
-6. Loop rond en controleer of beide virtuele kruisen fysiek blijven staan.
+Nog bewust afwezig: raster, ProjectRoot en yawberekening.
