@@ -1,2 +1,2 @@
 # ROADMAP
-Eerst fysiek bevestigen: START AR werkt en camerabeeld blijft zonder groene fullscreen laag. Daarna P00/P03.
+Eerst bevestigen dat de groene fullscreen HUD-overlay definitief verdwenen is. Daarna P00/P03 en master-raster testen.

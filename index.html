@@ -35,8 +35,8 @@ svg{width:100%;height:100%;display:block}.edge{stroke:#59636e;stroke-width:3}.po
 .arActions{display:grid;gap:8px}.arActions button{width:100%}
 .arHelp{line-height:1.45}.good{color:#7ee2a8}.warn{color:#f2cc60}.bad{color:#ff7b72}
 @media(max-width:560px){.tabs{grid-template-columns:repeat(4,1fr)}.tabs button{font-size:12px}}
-#arVisual{display:none;position:fixed;inset:0;z-index:9999;pointer-events:none}
-#arVisual.on{display:block}#arCross{position:absolute;left:50%;top:50%;width:54px;height:54px;transform:translate(-50%,-50%);border:3px solid #ff7b72;border-radius:50%;color:#ff7b72}
+#arVisual{display:none;position:fixed;inset:0;z-index:9999;pointer-events:none;background:transparent!important}
+#arVisual.on{display:block;background:transparent!important}#arCross{position:absolute;left:50%;top:50%;width:54px;height:54px;transform:translate(-50%,-50%);border:3px solid #ff7b72;border-radius:50%;color:#ff7b72}
 #arCross:before,#arCross:after{content:"";position:absolute;left:50%;top:50%;background:currentColor;transform:translate(-50%,-50%)}#arCross:before{width:28px;height:3px}#arCross:after{width:3px;height:28px}
 #arCross.hit{border-color:#4ade80;color:#4ade80}#arVisualMsg{position:absolute;top:12px;left:10px;right:95px;background:rgba(8,12,17,.82);padding:11px;border-radius:13px;font-weight:800;color:#fff}
 #stopAR{position:absolute;right:10px;top:10px;pointer-events:auto;background:#b42318;color:#fff}
@@ -54,7 +54,7 @@ body.ar-mode{background:transparent!important;overflow:hidden}
 #arVisualMsg{font-size:15px;line-height:1.25}
 #arVisualBottom{font-size:14px}
 .arPointLabel{position:absolute;transform:translate(-50%,-100%);background:rgba(8,17,11,.88);color:#fff;border:2px solid #4ade80;border-radius:8px;padding:3px 6px;font-size:13px;font-weight:900;line-height:1;white-space:nowrap;pointer-events:none;text-shadow:0 1px 2px #000;box-shadow:0 2px 5px rgba(0,0,0,.35)}
-.on{background:rgba(74,222,128,.92);color:#08110b;border-color:#4ade80}
+
 
 #undoARBtn{position:absolute;left:10px;top:58px;z-index:12;pointer-events:auto;border:1px solid rgba(255,255,255,.35);border-radius:10px;background:rgba(10,18,24,.82);color:#fff;padding:8px 12px;font-size:12px;font-weight:900}
 #undoARBtn:disabled{opacity:.4}
@@ -67,7 +67,7 @@ body.ar-mode{background:transparent!important;overflow:hidden}
 
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.11.3 · Offset Zero Fix</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.11.4 · Offset Zero Fix</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">

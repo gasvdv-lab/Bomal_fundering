@@ -1,2 +1,14 @@
-# TESTING — v0.7.11.3
-PASS: ZIP-integriteit; 5-file structuur; alle inline JavaScript via Node --check; START/STOP/UNDO handlers aanwezig; geen hoogtehulp-restcode; geen COLOR_BUFFER clear; XR-canvas offscreen.
+# TESTING — v0.7.11.4
+Automatisch PASS:
+- generieke groene `.on` verwijderd
+- `#arVisual` transparant
+- START/STOP/UNDO handlers aanwezig
+- Node syntaxcheck alle inline scripts
+- ZIP-integriteit
+
+Fysiek:
+1. Start AR.
+2. Plaats niets.
+3. Geen groene fullscreen laag.
+4. Test Stop.
+5. Daarna P00 → P03.
