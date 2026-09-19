@@ -1,20 +1,11 @@
-# TESTING — v0.7.9.2 Anchor Recovery
+# TESTING — v0.7.9.3
 
-## Belangrijkste fysieke test
-1. Start AR en richt op P00.
-2. Zet P00 vast.
-3. Loop weg en terug: P00 moet op dezelfde fysieke plaats blijven.
-4. Zet P03 vast.
-5. Loop rond en terug: P00 en P03 moeten beide verankerd blijven.
-6. Controleer het raster met de laser.
+1. Richt het vizier exact op het zwarte middelpunt van P00.
+2. Zet P00 vast en wacht op `P00 GEANKERD`.
+3. Loop weg en terug en controleer P00.
+4. Herhaal voor P03.
+5. Loop weg en terug en controleer beide anchors.
+6. UNDO 1 verwijdert P03; UNDO 2 verwijdert P00.
+7. Test OFFSET en HOOGTEHULP.
 
-## Undo
-7. Met P00 + P03: UNDO verwijdert alleen P03.
-8. Nogmaals UNDO: P00 wordt verwijderd.
-9. Plaats P00 opnieuw.
-
-## Visueel
-10. Rasterlijnen en puntcirkels/kruisjes moeten duidelijk verschillende kleuren hebben.
-11. OFFSET en HOOGTEHULP testen.
-
-Deze release moet eerst fysiek slagen voor verdere features worden toegevoegd.
+Laser blijft de definitieve controle.
