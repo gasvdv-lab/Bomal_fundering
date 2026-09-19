@@ -1,12 +1,19 @@
-# bomal_fundering v0.7.0.1 — Raster Visibility Fix
+# bomal_fundering v0.7.0.2 — WebGL Raster Render Fix
 
-Hotfix voor v0.7.0: de AR-renderer verwees naar niet-bestaande globale `rows/cols/active/xs/ys`, terwijl het raster in deze app in `s` en `coords()` zit. Daardoor verscheen wel `RASTER GEPLAATST`, maar werd het raster niet correct opgebouwd.
+Gerichte hotfix op v0.7.0.1.
 
-Fix:
-- AR gebruikt nu exact dezelfde `coords()` als de werkende 2D-rasterweergave;
-- actieve punten komen uit `s.active`;
-- mm -> meter in AR;
-- markers tijdelijk groter en rood voor zichtbaarheid;
-- HUD toont hoeveel rasterpunten geplaatst zijn.
+## Opgelost
+`drawMarker()` gebruikte per vergissing `gl.*`, terwijl de actieve WebXR/WebGL-context `xrGL` heet.
+Daardoor kon de HUD nog `RASTER GEPLAATST` tonen, maar stopte de rendering zodra het eerste rasterpunt getekend moest worden.
 
-Live: https://gasvdv-lab.github.io/Bomal_fundering/
+v0.7.0.2 gebruikt consequent `xrGL` in `drawMarker()`.
+
+De AR-rasterdata blijft:
+- dezelfde `coords()` als het 2D-raster;
+- alleen actieve punten;
+- mm -> meter;
+- één rigide ProjectRoot;
+- grote rode doelwitten voor de zichtbaarheidstest.
+
+Live app:
+https://gasvdv-lab.github.io/Bomal_fundering/

@@ -49,7 +49,7 @@ body.ar-mode #arCanvas{display:block!important}
 #arVisualBottom{font-size:14px}
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.0 · Full AR Raster Projection</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.0.2 · WebGL Raster Render Fix</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -211,15 +211,15 @@ function mul4(a,b){let o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<
 function drawMarker(view,pos,index){
  if(!projectRoot)return;
  let kind="target",verts=markerVerts(kind),sz=.25;
- gl.useProgram(markerProgram);gl.bindBuffer(gl.ARRAY_BUFFER,markerBuf);
- gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(verts),gl.DYNAMIC_DRAW);
- let a=gl.getAttribLocation(markerProgram,"p");gl.enableVertexAttribArray(a);gl.vertexAttribPointer(a,3,gl.FLOAT,false,0,0);
+ xrGL.useProgram(markerProgram);xrGL.bindBuffer(xrGL.ARRAY_BUFFER,markerBuf);
+ xrGL.bufferData(xrGL.ARRAY_BUFFER,new Float32Array(verts),xrGL.DYNAMIC_DRAW);
+ let a=xrGL.getAttribLocation(markerProgram,"p");xrGL.enableVertexAttribArray(a);xrGL.vertexAttribPointer(a,3,xrGL.FLOAT,false,0,0);
  let pv=mul4(view.projectionMatrix,view.transform.inverse.matrix),mvp=mul4(pv,projectRoot);
- gl.uniformMatrix4fv(gl.getUniformLocation(markerProgram,"vp"),false,mvp);
- gl.uniform3f(gl.getUniformLocation(markerProgram,"origin"),pos.x,pos.y,pos.z);
- gl.uniform1f(gl.getUniformLocation(markerProgram,"size"),sz);
- gl.uniform4f(gl.getUniformLocation(markerProgram,"color"),1.0,0.15,0.05,1.0);
- gl.drawArrays(gl.LINES,0,verts.length/3);
+ xrGL.uniformMatrix4fv(xrGL.getUniformLocation(markerProgram,"vp"),false,mvp);
+ xrGL.uniform3f(xrGL.getUniformLocation(markerProgram,"origin"),pos.x,pos.y,pos.z);
+ xrGL.uniform1f(xrGL.getUniformLocation(markerProgram,"size"),sz);
+ xrGL.uniform4f(xrGL.getUniformLocation(markerProgram,"color"),1.0,0.15,0.05,1.0);
+ xrGL.drawArrays(xrGL.LINES,0,verts.length/3);
 }
 function drawConnection(view){
  if(placed.length<2)return;

@@ -7,3 +7,5 @@
 - [ ] richting/orientatie verfijnen
 - [ ] world-lock/relocalisatie verbeteren
 - [ ] sitecontrole
+
+- [x] v0.7.0.2 WebGL Raster Render Fix
