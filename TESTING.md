@@ -1,7 +1,7 @@
-# TESTING — v0.6.6
+# TESTING — v0.6.6.1
 
 ## Automatische/static checks
-- PASS: versie v0.6.6
+- PASS: versie v0.6.6.1
 - PASS: AR-sessie vraagt geen anchors
 - PASS: één P00 wordt slechts eenmaal geplaatst
 - PASS: P00 X/Y/Z wordt na plaatsing bevroren
@@ -21,3 +21,6 @@
 8. Breng P00 uit beeld.
 9. Kijk terug naar P00.
 10. Meld exact: stabiel / schuift mee / springt / springt en keert terug.
+
+- PASS: foutieve extra sluitaccolade in AR-frame-loop verwijderd
+- PASS: knop-handlers kunnen opnieuw worden geïnitialiseerd

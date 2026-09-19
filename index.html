@@ -49,7 +49,7 @@ body.ar-mode #arCanvas{display:block!important}
 #arVisualBottom{font-size:14px}
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.6.6 · Single Point World-Lock Test</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.6.6.1 · Button Fix</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -208,7 +208,7 @@ function markerVerts(kind){
 }
 function mul4(a,b){let o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)o[c*4+r]=a[r]*b[c*4]+a[4+r]*b[c*4+1]+a[8+r]*b[c*4+2]+a[12+r]*b[c*4+3];return o}
 function drawMarker(view,pos,index){
- let kind=$("markerType").value, verts=markerVerts(kind), sz=(+$("markerSize").value)/100;
+ let kind="target", verts=markerVerts(kind), sz=.20;
  xrGL.useProgram(markerProgram);xrGL.bindBuffer(xrGL.ARRAY_BUFFER,markerBuf);xrGL.bufferData(xrGL.ARRAY_BUFFER,verts,xrGL.DYNAMIC_DRAW);
  let loc=xrGL.getAttribLocation(markerProgram,"p");xrGL.enableVertexAttribArray(loc);xrGL.vertexAttribPointer(loc,3,xrGL.FLOAT,false,0,0);
  let vp=mul4(view.projectionMatrix,view.transform.inverse.matrix);
@@ -257,7 +257,7 @@ function onXRFrame(t,frame){
    const unchanged=Math.abs(p00.x-p00Frozen.x)<1e-9&&Math.abs(p00.y-p00Frozen.y)<1e-9&&Math.abs(p00.z-p00Frozen.z)<1e-9;
    arVisualMsg.textContent=unchanged?"P00 GEPLAATST · COÖRDINATEN BEVROREN":"FOUT · P00 COÖRDINATEN GEWIJZIGD";
    arVisualBottom.textContent=`local · P00 ${p00Frozen.x.toFixed(3)} / ${p00Frozen.y.toFixed(3)} / ${p00Frozen.z.toFixed(3)} m`;
- }}arCross.classList.toggle("hit",!!reticlePose);
+ }arCross.classList.toggle("hit",!!reticlePose);
  if(placed.length===0)arVisualBottom.textContent=reticlePose?"Groen vizier — tik voor P00":"Beweeg rustig: oppervlak zoeken…";
  for(let view of pose.views){let vp=layer.getViewport(view);xrGL.viewport(vp.x,vp.y,vp.width,vp.height);for(let i=0;i<placed.length;i++)drawMarker(view,placed[i],i);drawConnection(view)}
 }

@@ -1,4 +1,4 @@
-# bomal_fundering v0.6.6 — Single Point World-Lock Test
+# bomal_fundering v0.6.6.1 — Button Fix
 
 Deze release is bewust teruggebracht tot één AR-doel: P00 correct world-locked krijgen.
 
@@ -25,3 +25,6 @@ De laser blijft de definitieve maatvoering.
 
 ## Live app
 De eerder gebruikte Pages-link was door de gebruiker als onjuist gemeld. Vul de correcte GitHub Pages-URL in zodra die bevestigd is.
+
+## Hotfix
+Herstelt een JavaScript-syntaxfout in v0.6.6 waardoor de knoppen niet reageerden. De AR-diagnose blijft één P00 zonder anchors of herijking.
