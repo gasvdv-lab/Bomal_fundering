@@ -1,2 +1,2 @@
 # ROADMAP
-Eerst uitsluitend bevestigen dat het groene fullscreen vlak verdwenen is. Pas daarna verder met P00/P03/raster.
+Eerst fysiek bevestigen: START AR werkt en camerabeeld blijft zonder groene fullscreen laag. Daarna P00/P03.
