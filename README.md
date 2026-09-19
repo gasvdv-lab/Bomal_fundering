@@ -1,10 +1,25 @@
-# Bomal Fundering v0.7.9.0 — Manual Stability + Rigid Lock
+# Bomal Fundering v0.7.9.2 — Anchor Recovery
 
-Gebouwd vanaf v0.7.8.2.
+Deze release is opnieuw opgebouwd vanaf de bewezen v0.7.7.1.1 technische baseline.
 
-- Nieuwe schakelaar `STABILISATIE: AAN/UIT`.
-- AAN: bestaande circa 0,85 s precisie/stabiliteitsmeting.
-- UIT: onmiddellijk het actuele WebXR hit-testpunt ankeren.
-- Na P00 en P03 wordt de horizontale rasterrichting éénmalig vastgezet. Daardoor kunnen kleine onafhankelijke P03-correcties niet langer ieder frame het hele raster verdraaien.
-- Undo/reset wist deze rigid lock zodat opnieuw kalibreren mogelijk is.
-- Plaatsmodus P00–P14, OFFSET, HOOGTEHULP en laserworkflow blijven behouden.
+Doel: eerst de echte WebXR-verankering herstellen en niet verder bouwen op de gewijzigde v0.7.9.x anchorcode.
+
+Behouden uit de bewezen baseline:
+- echte P00 WebXR-anchor;
+- echte P03 WebXR-anchor;
+- poses via `frame.getPose(anchor.anchorSpace, xrRef)`;
+- bestaande stabiliteitsmeting;
+- exact 3×5 raster;
+- OFFSET;
+- HOOGTEHULP;
+- labels en puntmarkeringen.
+
+Gerichte toevoegingen:
+- UNDO: eerst P03, daarna P00;
+- cirkels/kruisjes hebben een andere kleur dan de rasterlijnen.
+
+Niet meegenomen:
+- rigid orientation lock uit v0.7.9.0;
+- nieuwe wijzigingen aan de stabiliteits-/anchorarchitectuur.
+
+Laser blijft de definitieve maatcontrole.
