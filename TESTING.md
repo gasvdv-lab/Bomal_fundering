@@ -1,25 +1,8 @@
-# TESTING — v0.6.7.1
+# TESTING — v0.7.0
+- PASS JavaScript syntax
+- PASS één ProjectRoot
+- PASS actieve rasterpunten uit lokale mm-coördinaten
+- PASS mm->m alleen voor AR
+- PASS geen native-anchor afhankelijkheid
 
-## Automatisch/static
-- PASS: één P00
-- PASS: `anchors` als optionele WebXR feature aangevraagd
-- PASS: native anchor wordt vanaf XRHitTestResult aangemaakt
-- PASS: rendering gebruikt actuele `anchorSpace` pose
-- PASS: geen coordinate-fallback bij verloren anchor tracking
-- PASS: marker wordt verborgen bij verloren anchor-pose
-- PASS: bestaande AR Stop/start-flow behouden
-- PASS: flat 5-file ZIP
-
-## Fysieke test
-1. Open AR.
-2. Plaats P00 op een duidelijke fysieke markering.
-3. Controleer dat `P00 VASTGEPIND · TRACKING OK` verschijnt.
-4. Beweeg links/rechts en vooruit/achteruit.
-5. Loop rond P00.
-6. Breng P00 uit beeld.
-7. Kijk terug naar dezelfde fysieke markering.
-8. Noteer: stabiel / springt / tracking verloren / keert correct terug.
-9. Indien `NATIVE ANCHOR NIET BESCHIKBAAR` verschijnt: meld dit exact; de app plaatst dan bewust geen nep-fallback.
-
-- PASS: `lastHitResult` expliciet in globale XR-state gedeclareerd
-- PASS: Node JavaScript syntaxcontrole
+Fysiek: raster instellen, AR openen, P00 aantikken, controleren of volledig raster verschijnt en als één geheel blijft. Laser blijft eindcontrole.

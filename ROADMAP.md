@@ -1,7 +1,8 @@
 # ROADMAP
-- [x] v0.6.6.1 Single Point button fix
-- [x] v0.6.7 Native Anchor Pin Test
-- [ ] P00 native-anchor veldtest
-- [ ] pas na stabiele P00: tweede referentie
-- [ ] pas daarna: volledig rigide AR-raster
-- [ ] v1.0
+- [x] Raster invoer / 2D
+- [x] Geometry check
+- [x] AR camera/hit-test
+- [x] v0.7.0 Full AR Raster Projection als één rigide ProjectRoot
+- [ ] richting/orientatie verfijnen
+- [ ] world-lock/relocalisatie verbeteren
+- [ ] sitecontrole
