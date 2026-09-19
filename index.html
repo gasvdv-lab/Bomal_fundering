@@ -38,7 +38,7 @@ svg{width:100%;height:100%;display:block}.edge{stroke:#59636e;stroke-width:3}.po
 #arVisual{display:none;position:fixed;inset:0;z-index:9999;pointer-events:none}
 #arVisual.on{display:block}#arCross{position:absolute;left:50%;top:50%;width:54px;height:54px;transform:translate(-50%,-50%);border:3px solid #ff7b72;border-radius:50%;color:#ff7b72}
 #arCross:before,#arCross:after{content:"";position:absolute;left:50%;top:50%;background:currentColor;transform:translate(-50%,-50%)}#arCross:before{width:28px;height:3px}#arCross:after{width:3px;height:28px}
-#arCross.hit{border-color:#4ade80;color:#4ade80}#arVisualMsg{position:absolute;top:12px;left:10px;right:270px;background:rgba(8,12,17,.82);padding:11px;border-radius:13px;font-weight:800;color:#fff}
+#arCross.hit{border-color:#4ade80;color:#4ade80}#arVisualMsg{position:absolute;top:12px;left:10px;right:95px;background:rgba(8,12,17,.82);padding:11px;border-radius:13px;font-weight:800;color:#fff}
 #stopAR{position:absolute;right:10px;top:10px;pointer-events:auto;background:#b42318;color:#fff}
 #arVisualBottom{position:absolute;left:10px;right:10px;bottom:12px;background:rgba(8,12,17,.82);padding:11px;border-radius:13px;text-align:center;font-weight:800;color:#fff}
 
@@ -49,7 +49,7 @@ body.ar-mode #arCanvas{display:block!important}
 #arVisualBottom{font-size:14px}
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.6.5 · Two-Reference Calibration</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.6.6 · Single Point World-Lock Test</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -71,7 +71,7 @@ body.ar-mode #arCanvas{display:block!important}
 <div class="card">
 <h2>AR Proof of Concept</h2>
 <p class="muted arHelp">Doel van deze test: plaats <b>P00</b> op een echt oppervlak en plaats daarna <b>P01</b>. De app toont de gemeten AR-afstand. Voor de stabiliteitstest proberen we P01 zo dicht mogelijk bij <b>1000 mm</b> te plaatsen.</p>
-<div id="anchorSupport" class="arState">Anchors nog niet gecontroleerd.</div>
+<div id="anchorSupport" class="arState">Diagnosemodus: anchors UIT · één vast P00.</div>
 <div id="arSupport" class="arState">AR-ondersteuning nog niet gecontroleerd.</div>
 
 <div class="card" style="margin:10px 0">
@@ -114,7 +114,7 @@ body.ar-mode #arCanvas{display:block!important}
 </div>
 </section>
 
-<div id="arVisual"><div id="arVisualMsg">AR starten…</div><button id="cal2AR" style="position:absolute;right:145px;top:10px;pointer-events:auto;background:#244c36;color:#fff">2-punts ijk</button><button id="recalAR" style="position:absolute;right:72px;top:10px;pointer-events:auto;background:#243447;color:#fff">Herijk</button><button id="stopAR">Stop</button><div id="arCross"></div><div id="arVisualBottom">Zoek een oppervlak…</div></div>
+<div id="arVisual"><div id="arVisualMsg">AR starten…</div><button id="stopAR">Stop</button><div id="arCross"></div><div id="arVisualBottom">Zoek een oppervlak…</div></div>
 <script>
 (()=>{"use strict";
 const KEY="bomal_fundering_state_v050", OLD=["bomal_fundering_state","bomal_fundering_v030"];
@@ -173,7 +173,7 @@ function end(e){pointers.delete(e.pointerId);if(pointers.size<2)pinch=null;if(!p
 // ---- v0.6.3 persistent raw-WebGL AR markers ----
 let xrSession=null,xrRef=null,xrViewer=null,xrHitSource=null,xrGL=null,xrCanvas=null;
 let reticlePose=null,placed=[],xrStart=0,markerProgram=null,markerBuf=null;
-let anchors=[],recalMode=false,cal2Mode=0,cal2First=null,anchorCapable=false;
+let p00=null,p00Frozen=null;
 const arSupport=$("arSupport"),startAR=$("startAR"),anchorSupport=$("anchorSupport");
 const arVisual=$("arVisual"),arCross=$("arCross"),arVisualMsg=$("arVisualMsg"),arVisualBottom=$("arVisualBottom");
 function setAR(msg,cls=""){arSupport.className="arState "+cls;arSupport.textContent=msg}
@@ -230,59 +230,34 @@ function drawConnection(view){
 startAR.onclick=async()=>{
  if(!(await checkAR()))return;
  try{
-  xrSession=await navigator.xr.requestSession("immersive-ar",{requiredFeatures:["hit-test"],optionalFeatures:["dom-overlay","local-floor","anchors"],domOverlay:{root:document.body}});
-  anchorCapable=!!(xrSession.enabledFeatures&&xrSession.enabledFeatures.has&&xrSession.enabledFeatures.has("anchors"));
-  anchorSupport.textContent=anchorCapable?"WebXR Anchors actief.":"Anchors niet beschikbaar: herijking blijft beschikbaar.";
-  anchorSupport.className="arState "+(anchorCapable?"good":"warn");
+  xrSession=await navigator.xr.requestSession("immersive-ar",{requiredFeatures:["hit-test"],optionalFeatures:["dom-overlay","local-floor"],domOverlay:{root:document.body}});
   xrCanvas=document.createElement("canvas");xrCanvas.id="arCanvas";xrCanvas.style.cssText="position:fixed;inset:0;width:100%;height:100%;z-index:9990;display:block;pointer-events:none";document.body.appendChild(xrCanvas);
   xrGL=xrCanvas.getContext("webgl",{xrCompatible:true,alpha:true,premultipliedAlpha:false,antialias:true});await xrGL.makeXRCompatible();
   xrSession.updateRenderState({baseLayer:new XRWebGLLayer(xrSession,xrGL),depthNear:.01,depthFar:50});
   xrRef=await xrSession.requestReferenceSpace("local");xrViewer=await xrSession.requestReferenceSpace("viewer");xrHitSource=await xrSession.requestHitTestSource({space:xrViewer});
-  initMarkerGL();placed=[];anchors=[];recalMode=false;cal2Mode=0;cal2First=null;reticlePose=null;xrStart=performance.now();document.body.classList.add("ar-mode");arVisual.classList.add("on");arVisualMsg.textContent="Zoek vloer";arVisualBottom.textContent="Rood vizier = nog geen oppervlak";
-  xrSession.addEventListener("select",onXRSelect);xrSession.addEventListener("end",()=>{setAR("AR-test beëindigd.","warn");startAR.disabled=false;document.body.classList.remove("ar-mode");arVisual.classList.remove("on");if(xrCanvas)xrCanvas.remove();xrCanvas=null;anchors=[];recalMode=false;xrSession=null});
+  initMarkerGL();placed=[];p00=null;p00Frozen=null;reticlePose=null;xrStart=performance.now();document.body.classList.add("ar-mode");arVisual.classList.add("on");arVisualMsg.textContent="Zoek vloer";arVisualBottom.textContent="Rood vizier = nog geen oppervlak";
+  xrSession.addEventListener("select",onXRSelect);xrSession.addEventListener("end",()=>{setAR("AR-test beëindigd.","warn");startAR.disabled=false;document.body.classList.remove("ar-mode");arVisual.classList.remove("on");if(xrCanvas)xrCanvas.remove();xrCanvas=null;p00=null;p00Frozen=null;xrSession=null});
   startAR.disabled=true;xrSession.requestAnimationFrame(onXRFrame)
  }catch(e){document.body.classList.remove("ar-mode");arVisual.classList.remove("on");setAR("AR kon niet starten: "+e.message,"bad");startAR.disabled=false}
 };
-async function onXRSelect(){
- if(!reticlePose)return;
- let m=reticlePose.transform.matrix, hit={x:m[12],y:m[13],z:m[14]};
- if(cal2Mode===1){cal2First=hit;cal2Mode=2;arVisualMsg.textContent="2-PUNTS IJKING — P01";arVisualBottom.textContent="Richt exact op fysieke P01 en tik";return}
- if(cal2Mode===2){
-   let old0=placed[0],old1=placed[1],ovx=old1.x-old0.x,ovz=old1.z-old0.z,nvx=hit.x-cal2First.x,nvz=hit.z-cal2First.z;
-   let ang=Math.atan2(nvz,nvx)-Math.atan2(ovz,ovx),c=Math.cos(ang),s=Math.sin(ang);
-   placed=placed.map(q=>{let rx=q.x-old0.x,rz=q.z-old0.z;return{x:cal2First.x+rx*c-rz*s,y:q.y+(cal2First.y-old0.y),z:cal2First.z+rx*s+rz*c}});
-   anchors=[];cal2Mode=0;cal2First=null;arVisualMsg.textContent="2-punts ijking voltooid";arVisualBottom.textContent="Positie + richting rigide gecorrigeerd";return
- }
- if(recalMode){
-   if(!placed.length){recalMode=false;return}
-   let old=placed[0],dx=hit.x-old.x,dy=hit.y-old.y,dz=hit.z-old.z;
-   placed=placed.map(q=>({x:q.x+dx,y:q.y+dy,z:q.z+dz}));
-   recalMode=false;arVisualMsg.textContent="Rasterreferentie herijkt";arVisualBottom.textContent="Alle punten zijn rigide met P00 verschoven";
-   return;
- }
- if(placed.length>=2)return;
- placed.push(hit);
- // Try a native anchor from the exact hit-test pose when supported.
- if(anchorCapable&&reticlePose.createAnchor){
-   try{anchors.push(await reticlePose.createAnchor())}catch(e){anchors.push(null)}
- }else anchors.push(null);
- if(placed.length===1){arVisualMsg.textContent=anchors[0]?"P00 + anchor geplaatst":"P00 geplaatst";arVisualBottom.textContent="Richt op P01 en tik"}
- else{let a=placed[0],b=placed[1],d=Math.hypot(b.x-a.x,b.y-a.y,b.z-a.z)*1000;arVisualMsg.textContent="P00 → P01: "+d.toFixed(0)+" mm";arVisualBottom.textContent="Loop weg/terug. Bij drift: Herijk → fysieke P00 → tik"}
+function onXRSelect(){
+ if(!reticlePose || p00)return;
+ const m=reticlePose.transform.matrix;
+ p00={x:m[12],y:m[13],z:m[14]};
+ p00Frozen={x:p00.x,y:p00.y,z:p00.z};
+ placed=[p00];
+ arVisualMsg.textContent="P00 GEPLAATST";
+ arVisualBottom.textContent=`local · P00 ${p00.x.toFixed(3)} / ${p00.y.toFixed(3)} / ${p00.z.toFixed(3)} m`;
 }
-$("cal2AR").onclick=()=>{
- if(!xrSession||placed.length<2){arVisualMsg.textContent="Plaats eerst P00 en P01";return}
- cal2Mode=1;cal2First=null;arVisualMsg.textContent="2-PUNTS IJKING — P00";arVisualBottom.textContent="Richt exact op fysieke P00 en tik";
-};
-$("recalAR").onclick=()=>{
- if(!xrSession||!placed.length){arVisualMsg.textContent="Plaats eerst P00";return}
- recalMode=true;arVisualMsg.textContent="HERIJK P00";arVisualBottom.textContent="Richt groen vizier exact op de fysieke P00-markering en tik";
-};
 function onXRFrame(t,frame){
  if(!xrSession)return;xrSession.requestAnimationFrame(onXRFrame);let pose=frame.getViewerPose(xrRef);if(!pose)return;
  let layer=xrSession.renderState.baseLayer;xrGL.bindFramebuffer(xrGL.FRAMEBUFFER,layer.framebuffer);xrGL.enable(xrGL.DEPTH_TEST);xrGL.clearColor(0,0,0,0);xrGL.clear(xrGL.COLOR_BUFFER_BIT|xrGL.DEPTH_BUFFER_BIT);
  let hits=frame.getHitTestResults(xrHitSource);reticlePose=hits.length?hits[0].getPose(xrRef):null;
- // If native anchors are tracked, use their current poses instead of stale local coordinates.
- for(let i=0;i<anchors.length;i++){if(anchors[i]){let ap=frame.getPose(anchors[i].anchorSpace,xrRef);if(ap){let am=ap.transform.matrix;placed[i]={x:am[12],y:am[13],z:am[14]}}}}arCross.classList.toggle("hit",!!reticlePose);
+ if(p00Frozen){
+   const unchanged=Math.abs(p00.x-p00Frozen.x)<1e-9&&Math.abs(p00.y-p00Frozen.y)<1e-9&&Math.abs(p00.z-p00Frozen.z)<1e-9;
+   arVisualMsg.textContent=unchanged?"P00 GEPLAATST · COÖRDINATEN BEVROREN":"FOUT · P00 COÖRDINATEN GEWIJZIGD";
+   arVisualBottom.textContent=`local · P00 ${p00Frozen.x.toFixed(3)} / ${p00Frozen.y.toFixed(3)} / ${p00Frozen.z.toFixed(3)} m`;
+ }}arCross.classList.toggle("hit",!!reticlePose);
  if(placed.length===0)arVisualBottom.textContent=reticlePose?"Groen vizier — tik voor P00":"Beweeg rustig: oppervlak zoeken…";
  for(let view of pose.views){let vp=layer.getViewport(view);xrGL.viewport(vp.x,vp.y,vp.width,vp.height);for(let i=0;i<placed.length;i++)drawMarker(view,placed[i],i);drawConnection(view)}
 }
