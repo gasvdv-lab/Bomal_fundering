@@ -67,14 +67,14 @@ body.ar-mode #arCanvas{display:block!important}
 
 
 #placementControl{position:absolute;left:50%;top:110px;transform:translateX(-50%);z-index:14;display:none;gap:6px;background:rgba(8,17,11,.88);padding:5px;border-radius:10px;pointer-events:auto}
-#placementControl button{height:38px;font-weight:900;pointer-events:auto;touch-action:manipulation}
+#placementControl button{height:38px;font-weight:900;pointer-events:auto;touch-action:manipulation} #stabilityToggle{font-size:11px;white-space:nowrap}
 #placementPanel{position:absolute;left:50%;top:160px;transform:translateX(-50%);z-index:15;display:none;grid-template-columns:repeat(5,52px);gap:5px;background:rgba(8,17,11,.94);padding:8px;border-radius:10px;pointer-events:auto}
 #placementPanel button{height:40px;padding:0;font-size:12px;font-weight:900;pointer-events:auto;touch-action:manipulation}
 #placementPanel button.selected{outline:3px solid #4ade80;background:#1f6f43}
 
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.8.2 · AR Controls Fix</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.9.0 · Manual Stability + Rigid Lock</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -151,7 +151,7 @@ body.ar-mode #arCanvas{display:block!important}
  <span id="visualHeightValue">OFFSET 0 mm</span>
  <button id="visualHeightPlus" type="button">+</button>
 </div>
-<div id="placementControl">
+<div id="placementControl"><button id="stabilityToggle" type="button">STABILISATIE: AAN</button>
  <button id="placementToggle" type="button">PLAATSMODUS</button>
  <button id="placementChoose" type="button" disabled>P00 KIEZEN</button>
 </div>
@@ -229,6 +229,8 @@ let placementMode=false;
 let placementPoint=0;
 
 let stabilitySamples=[],stabilityStarted=0,stabilityRAF=0;
+let stabilityEnabled=true;
+let lockedRasterDir=null;
 const STABILITY_MS=850, STABILITY_MAX_SPREAD=0.018; // 18 mm max horizontal spread
 let xrSession=null,xrRef=null,xrViewer=null,xrHitSource=null,xrGL=null,xrCanvas=null;
 let reticlePose=null,p00Anchor=null,p03Anchor=null,anchorCreating=false,markerProgram=null,markerBuf=null;
@@ -274,7 +276,8 @@ function updateRasterLabels(view,p0,p3){
  const x0=p0.transform.position.x,y0=p0.transform.position.y+visualHeightOffset,z0=p0.transform.position.z;
  const x3=p3.transform.position.x,z3=p3.transform.position.z;
  const dyx=x3-x0,dyz=z3-z0,L=Math.hypot(dyx,dyz); if(L<.05)return;
- const uyx=dyx/L,uyz=dyz/L,uxx=-uyz,uxz=uyx;
+ if(!lockedRasterDir)lockedRasterDir={uyx:dyx/L,uyz:dyz/L};
+ const uyx=lockedRasterDir.uyx,uyz=lockedRasterDir.uyz,uxx=-uyz,uxz=uyx;
  const pv=mul4(view.projectionMatrix,view.transform.inverse.matrix);
  const wanted=new Set();
  for(const q of pts){
@@ -309,7 +312,8 @@ function drawHeightAssist(view,p0,p3){
  const x0=p0.transform.position.x,y0=p0.transform.position.y+visualHeightOffset,z0=p0.transform.position.z;
  const x3=p3.transform.position.x,z3=p3.transform.position.z;
  const dyx=x3-x0,dyz=z3-z0,L=Math.hypot(dyx,dyz); if(L<.05)return;
- const uyx=dyx/L,uyz=dyz/L,uxx=-uyz,uxz=uyx;
+ if(!lockedRasterDir)lockedRasterDir={uyx:dyx/L,uyz:dyz/L};
+ const uyx=lockedRasterDir.uyx,uyz=lockedRasterDir.uyz,uxx=-uyz,uxz=uyx;
  const verts=[];
  // Visual-only plumb lines: 1.0 m below and 1.0 m above every theoretical raster centre.
  // They do NOT alter point coordinates or the rigid raster.
@@ -427,15 +431,39 @@ $("visualHeightControl").style.display="flex";$("placementControl").style.displa
   xrRef=await xrSession.requestReferenceSpace("local");
   xrViewer=await xrSession.requestReferenceSpace("viewer");
   xrHitSource=await xrSession.requestHitTestSource({space:xrViewer});
-  initMarkerGL();p00Anchor=null;p03Anchor=null;lastHitResult=null;reticlePose=null;anchorCreating=false;placeP00Btn.textContent="● P00 PRECISIE VASTZETTEN";placeP00Btn.style.display="block";placeP00Btn.disabled=true;$("undoARBtn").disabled=true;
+  initMarkerGL();p00Anchor=null;p03Anchor=null;lockedRasterDir=null;lastHitResult=null;reticlePose=null;anchorCreating=false;placeP00Btn.textContent="● P00 PRECISIE VASTZETTEN";placeP00Btn.style.display="block";placeP00Btn.disabled=true;$("undoARBtn").disabled=true;
   document.body.classList.add("ar-mode");arVisual.classList.add("on");
   arVisualMsg.textContent="P00 + P03 ANCHOR TEST";arVisualBottom.textContent="Zoek een oppervlak — groen vizier = klaar om P00 te plaatsen";
   xrSession.addEventListener("end",()=>{
- visualHeightOffset=0;updateVisualHeightUI();$("visualHeightControl").style.display="none";$("placementControl").style.display="none";$("placementPanel").style.display="none";placementMode=false;updatePlacementButtons();setAR("AR-test beëindigd.","warn");startAR.disabled=false;document.body.classList.remove("ar-mode");arVisual.classList.remove("on");if(p00Anchor){try{p00Anchor.delete()}catch(_){}}if(p03Anchor){try{p03Anchor.delete()}catch(_){}}p00Anchor=null;p03Anchor=null;if(xrCanvas)xrCanvas.remove();xrCanvas=null;lastHitResult=null;reticlePose=null;xrSession=null});
+ visualHeightOffset=0;updateVisualHeightUI();$("visualHeightControl").style.display="none";$("placementControl").style.display="none";$("placementPanel").style.display="none";placementMode=false;updatePlacementButtons();setAR("AR-test beëindigd.","warn");startAR.disabled=false;document.body.classList.remove("ar-mode");arVisual.classList.remove("on");if(p00Anchor){try{p00Anchor.delete()}catch(_){}}if(p03Anchor){try{p03Anchor.delete()}catch(_){}}p00Anchor=null;p03Anchor=null;lockedRasterDir=null;if(xrCanvas)xrCanvas.remove();xrCanvas=null;lastHitResult=null;reticlePose=null;xrSession=null});
   startAR.disabled=true;xrSession.requestAnimationFrame(onXRFrame);
  }catch(e){document.body.classList.remove("ar-mode");arVisual.classList.remove("on");setAR("AR kon niet starten: "+e.message,"bad");startAR.disabled=false}
 };
 async function placeP00(){
+ if(!stabilityEnabled){
+  if(anchorCreating||!lastHitResult)return;
+  anchorCreating=true;placeP00Btn.disabled=true;
+  try{
+   const a=await lastHitResult.createAnchor();
+   if(!p00Anchor){
+    p00Anchor=a; lockedRasterDir=null;
+    placeP00Btn.textContent="● P03 MANUEEL VASTZETTEN";
+    placeP00Btn.style.display="block";
+    arVisualMsg.textContent="P00 MANUEEL VAST";
+    arVisualBottom.textContent="Richt nu op P03.";
+   }else if(!p03Anchor){
+    p03Anchor=a; lockedRasterDir=null;
+    placeP00Btn.disabled=true;placeP00Btn.style.display="none";
+    arVisualMsg.textContent="P03 MANUEEL VAST";
+    arVisualBottom.textContent="Rasterrichting wordt rigide vastgezet.";
+   }
+  }catch(e){
+   arVisualMsg.textContent="ANCHOR MISLUKT";
+   arVisualBottom.textContent=String(e&&e.message?e.message:e);
+  }finally{anchorCreating=false;}
+  return;
+ }
+
  if(anchorCreating||!lastHitResult)return;
  anchorCreating=true;placeP00Btn.disabled=true;
  stabilitySamples=[];stabilityStarted=performance.now();
@@ -520,7 +548,7 @@ function onXRFrame(t,frame){
 }
 
 
-for(const el of document.querySelectorAll("#visualHeightControl,#placementControl,#placementPanel,#heightAssistBtn,#undoARBtn,#stopAR,#placeP00Btn")){
+for(const el of document.querySelectorAll("#visualHeightControl,#placementControl,#placementPanel,#heightAssistBtn,#undoARBtn,#stopAR,#placeP00Btn,#stabilityToggle")){
  el.addEventListener("beforexrselect",e=>e.preventDefault());
 }
 
@@ -536,6 +564,18 @@ $("heightAssistBtn").onclick=()=>{
 };
 
 
+
+
+function updateStabilityUI(){
+ $("stabilityToggle").textContent="STABILISATIE: "+(stabilityEnabled?"AAN":"UIT");
+}
+$("stabilityToggle").onclick=(ev)=>{
+ ev.preventDefault();ev.stopPropagation();
+ stabilityEnabled=!stabilityEnabled;updateStabilityUI();
+ arVisualMsg.textContent=stabilityEnabled?"STABILISATIE AAN":"MANUEEL VASTZETTEN";
+ arVisualBottom.textContent=stabilityEnabled?"Precisiecontrole actief.":"Vastzetten gebruikt onmiddellijk het huidige AR-hitpunt.";
+};
+updateStabilityUI();
 
 function placementLabel(){return "P"+String(placementPoint).padStart(2,"0")}
 function buildPlacementPanel(){
@@ -605,7 +645,7 @@ $("undoARBtn").onclick=()=>{
  if(anchorCreating)return;
  if(p03Anchor){
    try{p03Anchor.delete()}catch(_){}
-   p03Anchor=null;
+   p03Anchor=null;lockedRasterDir=null;
    arLabels.innerHTML="";
    placeP00Btn.textContent="● P03 PRECISIE VASTZETTEN";
    placeP00Btn.style.display="block";
@@ -617,7 +657,7 @@ $("undoARBtn").onclick=()=>{
  }
  if(p00Anchor){
    try{p00Anchor.delete()}catch(_){}
-   p00Anchor=null;
+   p00Anchor=null;lockedRasterDir=null;
    arLabels.innerHTML="";
    placeP00Btn.textContent="● P00 PRECISIE VASTZETTEN";
    placeP00Btn.style.display="block";

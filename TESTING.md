@@ -1,16 +1,14 @@
-# TESTING — v0.7.8.2
+# TESTING — v0.7.9.0
 
-Kritieke fysieke Samsung/WebXR-test:
-1. Start AR.
-2. Druk OFFSET + eenmaal. Tekst moet onmiddellijk `OFFSET +2 mm` tonen.
-3. Druk nogmaals: `+4 mm`. Druk −: terug `+2 mm`.
-4. Controleer dat raster/cirkels/labels daadwerkelijk mee omhoog/omlaag gaan.
-5. HOOGTEHULP mag hierdoor niet schakelen.
-6. Druk PLAATSMODUS: tekst wordt `PLAATSEN: AAN`.
-7. Druk `P00 KIEZEN`: 15 knoppen P00–P14 moeten verschijnen.
-8. Kies P07: paneel sluit, knop toont `P07 KIEZEN`, P07 wordt uitgelicht.
-9. Kies daarna P14 en P03 zonder P00/P03 opnieuw te ankeren.
-10. Test P00/P03 precisieplaatsing, UNDO en hoogtehulp zoals voorheen.
-11. Loop weg en terug; controleer stabiliteit met laser.
+1. Start AR: STABILISATIE moet AAN staan.
+2. Plaats P00/P03 met AAN: bestaande stabiliteitsmeting moet lopen.
+3. Undo en zet STABILISATIE UIT.
+4. P00/P03 moeten nu onmiddellijk op het actuele hitpunt vastgezet worden.
+5. Plaats P00/P03 en loop rond: controleer of het raster minder roteert/bibbert.
+6. Loop terug naar referentiepunten en controleer met laser.
+7. Undo P03 en plaats opnieuw: rigid direction moet opnieuw gekalibreerd worden.
+8. Test OFFSET ±2 mm.
+9. Test PLAATSMODUS en vrije P00–P14-keuze.
+10. Test HOOGTEHULP en UNDO.
 
-Als stap 2 of 6 niet reageert, stop de test en meld exact welke knop geen visuele tekstwijziging geeft.
+Laser blijft definitieve maatcontrole.

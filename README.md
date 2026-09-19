@@ -1,14 +1,10 @@
-# Bomal Fundering v0.7.8.2 — AR Controls Fix
+# Bomal Fundering v0.7.9.0 — Manual Stability + Rigid Lock
 
-Opnieuw opgebouwd vanaf de door de gebruiker aangeleverde v0.7.7.1.1.
+Gebouwd vanaf v0.7.8.2.
 
-Belangrijkste oorzaak gevonden: `#arVisual` gebruikt `pointer-events:none`. De bestaande werkende AR-knoppen hadden expliciet `pointer-events:auto`, maar de OFFSET-bediening niet. Daardoor was ze zichtbaar zonder betrouwbare touch-input.
-
-Reparaties:
-- OFFSET-bediening expliciet touch/click-actief.
-- `beforexrselect` wordt op interactieve HUD-elementen tegengehouden.
-- OFFSET gebruikt ±2 mm en verandert alleen `visualHeightOffset`.
-- alle rastervisualisatie gebruikt dezelfde P00 + OFFSET-basis.
-- Plaatsmodus gebruikt geen native select maar een expliciet P00–P14 knoppenpaneel voor betrouwbaardere WebXR DOM-overlay bediening.
-- gekozen punt wordt groter; overige labels worden teruggenomen.
-- P00/P03 anchor- en stabiliteitslogica uit v0.7.7.1.1 blijft onaangeroerd.
+- Nieuwe schakelaar `STABILISATIE: AAN/UIT`.
+- AAN: bestaande circa 0,85 s precisie/stabiliteitsmeting.
+- UIT: onmiddellijk het actuele WebXR hit-testpunt ankeren.
+- Na P00 en P03 wordt de horizontale rasterrichting éénmalig vastgezet. Daardoor kunnen kleine onafhankelijke P03-correcties niet langer ieder frame het hele raster verdraaien.
+- Undo/reset wist deze rigid lock zodat opnieuw kalibreren mogelijk is.
+- Plaatsmodus P00–P14, OFFSET, HOOGTEHULP en laserworkflow blijven behouden.
