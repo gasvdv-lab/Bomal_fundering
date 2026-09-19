@@ -3,8 +3,9 @@
 - [x] v0.6.0 AR Proof of Concept
 - [x] v0.6.1 AR Visual Fix
 - [x] v0.6.2 Clean AR View
-- [ ] v0.6.3 Persistent visible 3D P00/P01 markers
-- [ ] v0.7.0 AR Raster
+- [x] v0.6.3 Persistent 3D Markers + Object Selector
+- [ ] v0.6.4 Marker refinement / calibration based on field test
+- [ ] v0.7.0 Full AR Raster
 - [ ] v0.8.0 Site Placement
 - [ ] v0.9.0 Site Verification
 - [ ] v0.10.0 Placement Assist

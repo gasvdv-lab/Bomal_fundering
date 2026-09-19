@@ -49,7 +49,7 @@ body.ar-mode #arCanvas{display:block!important}
 #arVisualBottom{font-size:14px}
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.6.2 · Clean AR View</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.6.3 · Persistent 3D Markers</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -72,6 +72,22 @@ body.ar-mode #arCanvas{display:block!important}
 <h2>AR Proof of Concept</h2>
 <p class="muted arHelp">Doel van deze test: plaats <b>P00</b> op een echt oppervlak en plaats daarna <b>P01</b>. De app toont de gemeten AR-afstand. Voor de stabiliteitstest proberen we P01 zo dicht mogelijk bij <b>1000 mm</b> te plaatsen.</p>
 <div id="arSupport" class="arState">AR-ondersteuning nog niet gecontroleerd.</div>
+
+<div class="card" style="margin:10px 0">
+<label>AR-punt / object</label>
+<select id="markerType">
+<option value="target">Doelwit</option>
+<option value="cross">Kruis</option>
+<option value="ring">Cirkel</option>
+<option value="pin">Pin</option>
+<option value="post">Paaltje</option>
+<option value="tile">Vlak / tegel</option>
+<option value="cube">Kubus</option>
+</select>
+<label style="margin-top:8px">Grootte</label>
+<input id="markerSize" type="range" min="5" max="50" value="20">
+<p class="muted">De keuze verandert alleen de AR-weergave, nooit de geometrische positie.</p>
+</div>
 <div class="arActions">
 <button id="checkAR">Controleer AR</button>
 <button id="startAR" class="primary" disabled>Start AR</button>
@@ -153,71 +169,87 @@ if(pointers.size===2&&pinch){let a=[...pointers.values()],d=Math.hypot(a[1].x-a[
 else if(drag&&drag.id===e.pointerId){if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>5)moved=true;view.tx=drag.tx+e.clientX-drag.x;view.ty=drag.ty+e.clientY-drag.y;applyTransform()}});
 function end(e){pointers.delete(e.pointerId);if(pointers.size<2)pinch=null;if(!pointers.size)drag=null}wrap.addEventListener("pointerup",end);wrap.addEventListener("pointercancel",end);
 
-// ---- v0.6.0 WebXR AR proof of concept ----
+// ---- v0.6.3 persistent raw-WebGL AR markers ----
 let xrSession=null,xrRef=null,xrViewer=null,xrHitSource=null,xrGL=null,xrCanvas=null;
-let reticlePose=null,placed=[],xrStart=0;
-const arVisual=$("arVisual"),arCross=$("arCross"),arVisualMsg=$("arVisualMsg"),arVisualBottom=$("arVisualBottom");
+let reticlePose=null,placed=[],xrStart=0,markerProgram=null,markerBuf=null;
 const arSupport=$("arSupport"),startAR=$("startAR");
+const arVisual=$("arVisual"),arCross=$("arCross"),arVisualMsg=$("arVisualMsg"),arVisualBottom=$("arVisualBottom");
 function setAR(msg,cls=""){arSupport.className="arState "+cls;arSupport.textContent=msg}
 async function checkAR(){
  if(!window.isSecureContext){setAR("AR vereist HTTPS.","bad");return false}
- if(!navigator.xr){setAR("WebXR niet beschikbaar in deze browser. Gebruik Android Chrome met ARCore.","bad");return false}
- try{
-  const ok=await navigator.xr.isSessionSupported("immersive-ar");
-  if(ok){setAR("AR beschikbaar. Klaar voor de P00/P01-test.","good");startAR.disabled=false;return true}
-  setAR("Immersive AR wordt op dit toestel/browser niet ondersteund.","bad")
- }catch(e){setAR("AR-controle mislukt: "+e.message,"bad")}
- return false
+ if(!navigator.xr){setAR("WebXR niet beschikbaar. Gebruik Android Chrome + ARCore.","bad");return false}
+ try{const ok=await navigator.xr.isSessionSupported("immersive-ar");
+  if(ok){setAR("AR beschikbaar. Klaar voor de 3D-markertest.","good");startAR.disabled=false;return true}
+  setAR("Immersive AR wordt niet ondersteund.","bad")
+ }catch(e){setAR("AR-controle mislukt: "+e.message,"bad")} return false
 }
 $("checkAR").onclick=checkAR;
+
+function shader(type,src){let s=xrGL.createShader(type);xrGL.shaderSource(s,src);xrGL.compileShader(s);if(!xrGL.getShaderParameter(s,xrGL.COMPILE_STATUS))throw Error(xrGL.getShaderInfoLog(s));return s}
+function initMarkerGL(){
+ const vs=`attribute vec3 p;uniform mat4 vp;uniform vec3 origin;uniform float size;void main(){gl_Position=vp*vec4(origin+p*size,1.0);}`;
+ const fs=`precision mediump float;uniform vec4 color;void main(){gl_FragColor=color;}`;
+ markerProgram=xrGL.createProgram();xrGL.attachShader(markerProgram,shader(xrGL.VERTEX_SHADER,vs));xrGL.attachShader(markerProgram,shader(xrGL.FRAGMENT_SHADER,fs));xrGL.linkProgram(markerProgram);
+ if(!xrGL.getProgramParameter(markerProgram,xrGL.LINK_STATUS))throw Error(xrGL.getProgramInfoLog(markerProgram));
+ markerBuf=xrGL.createBuffer();
+}
+function markerVerts(kind){
+ let v=[], seg=32;
+ const line=(a,b,c,d,e,f)=>v.push(a,b,c,d,e,f);
+ if(kind==="cross"||kind==="target"){line(-1,0,0,1,0,0);line(0,0,-1,0,0,1)}
+ if(kind==="ring"||kind==="target"){for(let i=0;i<seg;i++){let a=i*2*Math.PI/seg,b=(i+1)*2*Math.PI/seg;line(Math.cos(a),0,Math.sin(a),Math.cos(b),0,Math.sin(b))}}
+ if(kind==="pin"){line(0,0,0,0,2,0);for(let i=0;i<seg;i++){let a=i*2*Math.PI/seg,b=(i+1)*2*Math.PI/seg;line(.45*Math.cos(a),2,.45*Math.sin(a),.45*Math.cos(b),2,.45*Math.sin(b))}}
+ if(kind==="post"){let s=.35;line(-s,0,-s,-s,2,-s);line(s,0,-s,s,2,-s);line(s,0,s,s,2,s);line(-s,0,s,-s,2,s)}
+ if(kind==="tile"){let s=1;line(-s,0,-s,s,0,-s);line(s,0,-s,s,0,s);line(s,0,s,-s,0,s);line(-s,0,s,-s,0,-s);line(-.35,0,0,.35,0,0);line(0,0,-.35,0,0,.35)}
+ if(kind==="cube"){let s=.65,y=1.3;let pts=[[-s,0,-s],[s,0,-s],[s,0,s],[-s,0,s],[-s,y,-s],[s,y,-s],[s,y,s],[-s,y,s]];let E=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];for(let e of E){let A=pts[e[0]],B=pts[e[1]];line(...A,...B)}}
+ return new Float32Array(v)
+}
+function mul4(a,b){let o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)o[c*4+r]=a[r]*b[c*4]+a[4+r]*b[c*4+1]+a[8+r]*b[c*4+2]+a[12+r]*b[c*4+3];return o}
+function drawMarker(view,pos,index){
+ let kind=$("markerType").value, verts=markerVerts(kind), sz=(+$("markerSize").value)/100;
+ xrGL.useProgram(markerProgram);xrGL.bindBuffer(xrGL.ARRAY_BUFFER,markerBuf);xrGL.bufferData(xrGL.ARRAY_BUFFER,verts,xrGL.DYNAMIC_DRAW);
+ let loc=xrGL.getAttribLocation(markerProgram,"p");xrGL.enableVertexAttribArray(loc);xrGL.vertexAttribPointer(loc,3,xrGL.FLOAT,false,0,0);
+ let vp=mul4(view.projectionMatrix,view.transform.inverse.matrix);
+ xrGL.uniformMatrix4fv(xrGL.getUniformLocation(markerProgram,"vp"),false,vp);
+ xrGL.uniform3f(xrGL.getUniformLocation(markerProgram,"origin"),pos.x,pos.y+.006,pos.z);
+ xrGL.uniform1f(xrGL.getUniformLocation(markerProgram,"size"),sz);
+ if(index===0)xrGL.uniform4f(xrGL.getUniformLocation(markerProgram,"color"),.2,1,.45,1); else xrGL.uniform4f(xrGL.getUniformLocation(markerProgram,"color"),1,.8,.15,1);
+ xrGL.lineWidth(3);xrGL.drawArrays(xrGL.LINES,0,verts.length/3);
+}
+function drawConnection(view){
+ if(placed.length<2)return;
+ let a=placed[0],b=placed[1],verts=new Float32Array([a.x,a.y+.01,a.z,b.x,b.y+.01,b.z]);
+ xrGL.useProgram(markerProgram);xrGL.bindBuffer(xrGL.ARRAY_BUFFER,markerBuf);xrGL.bufferData(xrGL.ARRAY_BUFFER,verts,xrGL.DYNAMIC_DRAW);
+ let loc=xrGL.getAttribLocation(markerProgram,"p");xrGL.enableVertexAttribArray(loc);xrGL.vertexAttribPointer(loc,3,xrGL.FLOAT,false,0,0);
+ let vp=mul4(view.projectionMatrix,view.transform.inverse.matrix);xrGL.uniformMatrix4fv(xrGL.getUniformLocation(markerProgram,"vp"),false,vp);
+ xrGL.uniform3f(xrGL.getUniformLocation(markerProgram,"origin"),0,0,0);xrGL.uniform1f(xrGL.getUniformLocation(markerProgram,"size"),1);
+ xrGL.uniform4f(xrGL.getUniformLocation(markerProgram,"color"),1,1,1,.9);xrGL.drawArrays(xrGL.LINES,0,2);
+}
 startAR.onclick=async()=>{
  if(!(await checkAR()))return;
  try{
   xrSession=await navigator.xr.requestSession("immersive-ar",{requiredFeatures:["hit-test"],optionalFeatures:["dom-overlay","local-floor"],domOverlay:{root:document.body}});
-  xrCanvas=document.createElement("canvas");xrCanvas.id="arCanvas";
-xrCanvas.style.cssText="position:fixed;inset:0;width:100%;height:100%;z-index:9990;display:block;pointer-events:none";
-document.body.appendChild(xrCanvas);
-  xrGL=xrCanvas.getContext("webgl",{xrCompatible:true,alpha:true});
-  await xrGL.makeXRCompatible();
-  xrSession.updateRenderState({baseLayer:new XRWebGLLayer(xrSession,xrGL)});
-  xrRef=await xrSession.requestReferenceSpace("local");
-  xrViewer=await xrSession.requestReferenceSpace("viewer");
-  xrHitSource=await xrSession.requestHitTestSource({space:xrViewer});
-  placed=[];reticlePose=null;xrStart=performance.now();
-  document.body.classList.add("ar-mode");arVisual.classList.add("on");arVisualMsg.textContent="Zoek vloer";arVisualBottom.textContent="Rood vizier = nog geen oppervlak";
-  xrSession.addEventListener("select",onXRSelect);
-  xrSession.addEventListener("end",()=>{setAR("AR-test beëindigd. Start opnieuw om P00/P01 opnieuw te plaatsen.","warn");startAR.disabled=false;document.body.classList.remove("ar-mode");arVisual.classList.remove("on");if(xrCanvas)xrCanvas.remove();xrSession=null});
-  startAR.disabled=true;setAR("AR actief — beweeg rustig tot een oppervlak gevonden is. Tik voor P00.","good");
-  xrSession.requestAnimationFrame(onXRFrame);
+  xrCanvas=document.createElement("canvas");xrCanvas.id="arCanvas";xrCanvas.style.cssText="position:fixed;inset:0;width:100%;height:100%;z-index:9990;display:block;pointer-events:none";document.body.appendChild(xrCanvas);
+  xrGL=xrCanvas.getContext("webgl",{xrCompatible:true,alpha:true,premultipliedAlpha:false,antialias:true});await xrGL.makeXRCompatible();
+  xrSession.updateRenderState({baseLayer:new XRWebGLLayer(xrSession,xrGL),depthNear:.01,depthFar:50});
+  xrRef=await xrSession.requestReferenceSpace("local");xrViewer=await xrSession.requestReferenceSpace("viewer");xrHitSource=await xrSession.requestHitTestSource({space:xrViewer});
+  initMarkerGL();placed=[];reticlePose=null;xrStart=performance.now();document.body.classList.add("ar-mode");arVisual.classList.add("on");arVisualMsg.textContent="Zoek vloer";arVisualBottom.textContent="Rood vizier = nog geen oppervlak";
+  xrSession.addEventListener("select",onXRSelect);xrSession.addEventListener("end",()=>{setAR("AR-test beëindigd.","warn");startAR.disabled=false;document.body.classList.remove("ar-mode");arVisual.classList.remove("on");if(xrCanvas)xrCanvas.remove();xrCanvas=null;xrSession=null});
+  startAR.disabled=true;xrSession.requestAnimationFrame(onXRFrame)
  }catch(e){document.body.classList.remove("ar-mode");arVisual.classList.remove("on");setAR("AR kon niet starten: "+e.message,"bad");startAR.disabled=false}
 };
 function onXRSelect(){
- if(!reticlePose||placed.length>=2)return;
- let m=reticlePose.transform.matrix;
- placed.push({x:m[12],y:m[13],z:m[14]});
- if(placed.length===1){setAR("P00 geplaatst. Richt nu op de tweede fysieke markering (1000 mm verder) en tik voor P01.","good");arVisualMsg.textContent="P00 geplaatst";arVisualBottom.textContent="Richt op P01 (1000 mm) en tik";}
- else{
-  let a=placed[0],b=placed[1],d=Math.hypot(b.x-a.x,b.y-a.y,b.z-a.z)*1000;
-  setAR("P00 → P01 volgens AR: "+d.toFixed(0)+" mm. Loop nu rond en controleer of beide markeringen visueel blijven liggen.","good");arVisualMsg.textContent="P00 → P01: "+d.toFixed(0)+" mm";arVisualBottom.textContent="Loop rond en controleer stabiliteit";
- }
+ if(!reticlePose||placed.length>=2)return;let m=reticlePose.transform.matrix;placed.push({x:m[12],y:m[13],z:m[14]});
+ if(placed.length===1){arVisualMsg.textContent="P00 zichtbaar";arVisualBottom.textContent="Richt op P01 en tik"}
+ else{let a=placed[0],b=placed[1],d=Math.hypot(b.x-a.x,b.y-a.y,b.z-a.z)*1000;arVisualMsg.textContent="P00 → P01: "+d.toFixed(0)+" mm";arVisualBottom.textContent="Loop rond: P00 groen, P01 geel"}
 }
 function onXRFrame(t,frame){
- if(!xrSession)return;
- xrSession.requestAnimationFrame(onXRFrame);
- let pose=frame.getViewerPose(xrRef);
- if(!pose)return;
- let layer=xrSession.renderState.baseLayer;
- xrGL.bindFramebuffer(xrGL.FRAMEBUFFER,layer.framebuffer);
- xrGL.viewport(0,0,layer.framebufferWidth,layer.framebufferHeight);
- xrGL.clearColor(0,0,0,0);xrGL.clear(xrGL.COLOR_BUFFER_BIT|xrGL.DEPTH_BUFFER_BIT);
- let hits=frame.getHitTestResults(xrHitSource);
- reticlePose=hits.length?hits[0].getPose(xrRef):null;
- arCross.classList.toggle("hit",!!reticlePose);
+ if(!xrSession)return;xrSession.requestAnimationFrame(onXRFrame);let pose=frame.getViewerPose(xrRef);if(!pose)return;
+ let layer=xrSession.renderState.baseLayer;xrGL.bindFramebuffer(xrGL.FRAMEBUFFER,layer.framebuffer);xrGL.enable(xrGL.DEPTH_TEST);xrGL.clearColor(0,0,0,0);xrGL.clear(xrGL.COLOR_BUFFER_BIT|xrGL.DEPTH_BUFFER_BIT);
+ let hits=frame.getHitTestResults(xrHitSource);reticlePose=hits.length?hits[0].getPose(xrRef):null;arCross.classList.toggle("hit",!!reticlePose);
  if(placed.length===0)arVisualBottom.textContent=reticlePose?"Groen vizier — tik voor P00":"Beweeg rustig: oppervlak zoeken…";
- // This POC deliberately uses WebXR hit-test positions only.
- // Persistent rendered 3D markers are the next step after device validation.
+ for(let view of pose.views){let vp=layer.getViewport(view);xrGL.viewport(vp.x,vp.y,vp.width,vp.height);for(let i=0;i<placed.length;i++)drawMarker(view,placed[i],i);drawConnection(view)}
 }
-
 $("stopAR").onclick=()=>{if(xrSession)xrSession.end()};
 load();renderInputs();render();
 })();

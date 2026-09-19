@@ -1,23 +1,21 @@
-# TESTING — v0.6.2
+# TESTING — v0.6.3
+Static checks:
+- PASS v0.6.3 marker
+- PASS raw WebGL shader/program
+- PASS per-XR-view projection/view matrix
+- PASS P00/P01 persistent coordinates in local reference space
+- PASS 7 marker/object choices
+- PASS marker size control
+- PASS P00/P01 connection line
+- PASS clean AR mode retained
+- PASS no external JS/3D library
+- PASS flat 5-file ZIP
 
-Static gecontroleerd:
-- PASS v0.6.2 marker.
-- PASS body krijgt `ar-mode` bij succesvolle AR-start.
-- PASS header wordt tijdens AR verborgen.
-- PASS volledige normale main-interface wordt tijdens AR verborgen.
-- PASS AR HUD blijft zichtbaar.
-- PASS Stop-knop blijft klikbaar.
-- PASS `ar-mode` wordt na Stop verwijderd.
-- PASS rood/groen hit-testvizier behouden.
-- PASS P00/P01 workflow behouden.
-- PASS flat ZIP met 5 bestanden.
-
-Fysiek testen op Android:
-1. AR Test > Controleer AR > Start AR.
-2. Alleen camera + compacte HUD mogen zichtbaar zijn.
-3. Geen gewone menu's of kaarten mogen in beeld staan.
-4. Beweeg rustig over de vloer.
-5. Vizier moet bij een gevonden oppervlak rood -> groen gaan.
-6. Tik groen vizier voor P00.
-7. Richt op P01 en tik.
-8. Stop: normale app moet volledig terugkomen.
+Physical Android checks required:
+- camera + clean HUD
+- hit-test red -> green
+- P00 appears green after first tap
+- P01 appears yellow after second tap
+- line appears between P00/P01
+- markers remain at physical references while moving
+- assess drift after walking away and returning
