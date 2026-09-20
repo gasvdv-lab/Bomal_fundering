@@ -79,7 +79,7 @@ body.ar-mode{background:transparent!important;overflow:hidden}
 #visualHeightValue{min-width:92px;text-align:center;color:#fff;font-size:12px;font-weight:900}
 
 
-/* v0.7.14.0 compact AR controls */
+/* v0.7.14.1 compact AR controls */
 #mediaControls{position:absolute;right:8px;top:46px;z-index:16;display:flex;gap:5px;pointer-events:auto}
 #mediaControls button{min-width:42px;height:32px;padding:4px 7px;border-radius:9px;font-size:11px;font-weight:900;pointer-events:auto;touch-action:manipulation;background:rgba(8,17,24,.88);color:#fff;border:1px solid rgba(255,255,255,.28)}
 #videoBtn.recording{background:#b42318;border-color:#ff7b72}
@@ -99,7 +99,7 @@ body.ar-mode{background:transparent!important;overflow:hidden}
 
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.14.0 · Offset Zero Fix</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.14.1 · Offset Zero Fix</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -191,7 +191,7 @@ body.ar-mode{background:transparent!important;overflow:hidden}
 (()=>{"use strict";
 const KEY="bomal_fundering_state_v050", OLD=["bomal_fundering_state","bomal_fundering_v030"];
 const $=id=>document.getElementById(id);
-let s={cols:5,rows:3,x:[1200,1200,1200,1200],y:[1500,1500],active:[],labels:true,dims:false,a:null,b:null};
+let s={cols:3,rows:5,x:[1200,1200],y:[1500,1500,1500,1500],active:[],labels:true,dims:false,a:null,b:null};
 let view={scale:1,tx:0,ty:0},drag=null,moved=false,pointers=new Map(),pinch=null;
 
 function norm(){s.cols=Math.max(1,Math.min(20,+s.cols||1));s.rows=Math.max(1,Math.min(20,+s.rows||1));
@@ -373,6 +373,7 @@ async function toggleARVideo(){
  }
 }
 startAR.onclick=async()=>{
+ forceBomal3x5();
  if(!(await checkAR()))return;
  try{
   // Match the successful WebXR pattern: anchors + hit-test, with DOM overlay only as optional UI.
@@ -702,7 +703,21 @@ $("controlOkBtn").onclick=()=>{
 $("photoBtn").onclick=takeARPhoto;
 $("videoBtn").onclick=toggleARVideo;
 $("stopAR").onclick=()=>{if(xrSession)xrSession.end()};
-load();renderInputs();render();
+
+function forceBomal3x5(){
+ if(s.cols===5 && s.rows===3){
+  const dx=(Array.isArray(s.x)&&(+s.x[0]||0)>0)?+s.x[0]:1200;
+  const dy=(Array.isArray(s.y)&&(+s.y[0]||0)>0)?+s.y[0]:1500;
+  s.cols=3;s.rows=5;s.x=[dx,dx];s.y=[dy,dy,dy,dy];
+ }else if(s.cols!==3 || s.rows!==5){
+  s.cols=3;s.rows=5;
+  while(s.x.length<2)s.x.push(1200);s.x=s.x.slice(0,2);
+  while(s.y.length<4)s.y.push(1500);s.y=s.y.slice(0,4);
+ }
+ norm();
+}
+
+load();forceBomal3x5();save();renderInputs();render();
 })();
 </script>
 </body></html>

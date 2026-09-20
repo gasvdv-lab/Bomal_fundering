@@ -1,12 +1,20 @@
-# Bomal Fundering v0.7.14.0 — Compact AR + Foto/Video
+# Bomal Fundering v0.7.14.1 — 3×5 Raster Origin Fix
 
-Nieuw:
-- compacte AR-bediening;
-- 📷 foto-knop;
-- ● REC / ■ STOP videoknop;
-- opname gebruikt de browser Screen Capture API zodat het zichtbare AR-scherm kan worden vastgelegd;
-- bestanden worden lokaal gedownload;
-- bij niet-ondersteunde browsers verschijnt een duidelijke melding.
+Fundamentele rastertopologie gecorrigeerd.
 
-Belangrijk:
-WebXR geeft om privacyredenen het camerabeeld niet rechtstreeks aan JavaScript. Daarom gebruikt foto/video schermopname en kan Android/Chrome een systeemprompt tonen.
+Correct:
+P12 P13 P14
+P09 P10 P11
+P06 P07 P08
+P03 P04 P05
+P00 P01 P02
+
+Regels:
+- P00 is altijd de oorsprong.
+- P01/P02 = +X.
+- P03 = eerste punt in +Y en bepaalt alleen de richting.
+- P06/P09/P12 liggen verder in dezelfde +Y-richting.
+- P03 mag nooit de rasteroorsprong worden.
+- P00 blijft de master XRAnchor.
+- P03 blijft het richtingsanker.
+- Oude 5×3 opgeslagen state wordt bij laden automatisch naar 3×5 omgezet.

@@ -1,2 +1,2 @@
 # ROADMAP
-v0.7.14.0: fysiek testen van compacte HUD en schermfoto/video op Samsung Chrome. Daarna eventueel galerij/status per controlepunt.
+Eerst fysiek valideren dat het raster werkelijk bij P00 begint en P03 alleen de +Y-richting bepaalt.
