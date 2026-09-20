@@ -1,16 +1,19 @@
-# TESTING — v0.7.12.1
+# TESTING — v0.7.13.0
 Automatisch PASS:
 - JavaScript node --check
-- PRECISIE boven DIRECT
-- DIRECT-knop heeft eigen CSS
-- beide knoppen pointer-events/touch-action
-- beforexrselect guard
-- groene fullscreen-overlayfix behouden
+- controlepaneel aanwezig
+- ◀ / ▶ navigatie
+- blauwe gecontroleerde punten
+- amber huidig controlepunt
+- labels kleuren mee
+- geen extra XRAnchors
+- green-screen-fix behouden
 
 Fysiek:
-1. Start AR.
-2. Controleer twee aparte knoppen.
-3. Test P00 DIRECT.
-4. Undo.
-5. Test P00 PRECISIE.
-6. Plaats P03 met gewenste methode.
+1. Plaats P00 en P03.
+2. Wacht op MASTER RASTER GEANKERD.
+3. Kies punten met ◀ / ▶.
+4. Huidig punt moet amber zijn.
+5. Tik PUNT IN ORDE.
+6. Cirkel + kruis van dat punt moeten blauw worden.
+7. Controleer dat rastergeometrie niet beweegt.

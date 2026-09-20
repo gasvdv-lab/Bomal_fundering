@@ -1,8 +1,11 @@
-# Bomal Fundering v0.7.12.1 — Direct Button Layout Fix
+# Bomal Fundering v0.7.13.0 — Point Control Mode
 
-Fix:
-- PRECISIE-knop staat bovenaan.
-- DIRECT-knop staat er duidelijk onder.
-- Beide knoppen zijn apart klikbaar.
-- `beforexrselect` wordt geblokkeerd op AR-knoppen zodat WebXR de tap niet onderschept.
-- Anchorlogica van v0.7.12.0 blijft ongewijzigd.
+Nieuw in AR:
+- na MASTER RASTER GEANKERD verschijnt een controlepaneel;
+- met ◀ / ▶ kies je P00 t/m P14;
+- gekozen controlepunt wordt amber gemarkeerd;
+- `PUNT IN ORDE` markeert het punt als gecontroleerd;
+- gecontroleerde punten krijgen een blauwe cirkel + kruis;
+- opnieuw tikken op `IN ORDE` maakt het punt weer actief/niet-afgevinkt;
+- rasterlijnen blijven groen;
+- geen extra anchors en geen wijziging aan de geometrie.

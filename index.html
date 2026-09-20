@@ -47,6 +47,13 @@ background:#4ade80;color:#08110b;border:0;border-radius:14px;min-height:54px;fon
 box-shadow:0 3px 12px rgba(0,0,0,.35);touch-action:manipulation}
 #placeP00Btn:disabled{opacity:.45;background:#5b6570;color:#d7dde3}
 
+
+#controlPointPanel{position:absolute;left:10px;right:10px;bottom:190px;z-index:14;display:none;grid-template-columns:42px 1fr 1fr 42px;gap:6px;pointer-events:auto}
+#controlPointPanel button{min-height:42px;border-radius:10px;font-weight:900;pointer-events:auto;touch-action:manipulation}
+#controlPointBtn{background:#222b35;color:#fff;border:1px solid rgba(255,255,255,.28)}
+#controlOkBtn{background:#1f6feb;color:#fff;border:0}
+#controlPrevBtn,#controlNextBtn{background:#111820;color:#fff;border:1px solid rgba(255,255,255,.2)}
+
 #directPlaceBtn{position:absolute;left:10px;right:10px;bottom:68px;z-index:10;pointer-events:auto;
 background:#1f6feb;color:#fff;border:0;border-radius:14px;min-height:54px;font-size:17px;font-weight:900;
 box-shadow:0 3px 12px rgba(0,0,0,.35);touch-action:manipulation}
@@ -73,7 +80,7 @@ body.ar-mode{background:transparent!important;overflow:hidden}
 
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.12.1 · Offset Zero Fix</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.13.0 · Offset Zero Fix</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -148,6 +155,13 @@ body.ar-mode{background:transparent!important;overflow:hidden}
  <span id="visualHeightValue">OFFSET 0 mm</span>
  <button id="visualHeightPlus" type="button">+</button>
 </div>
+
+<div id="controlPointPanel">
+  <button id="controlPrevBtn">◀</button>
+  <button id="controlPointBtn">P00 CONTROLEREN</button>
+  <button id="controlOkBtn">✓ PUNT IN ORDE</button>
+  <button id="controlNextBtn">▶</button>
+</div>
 <div id="arVisualBottom">Zoek een oppervlak…</div></div>
 <script>
 (()=>{"use strict";
@@ -212,8 +226,10 @@ function end(e){pointers.delete(e.pointerId);if(pointers.size<2)pinch=null;if(!p
 // ---- v0.7.2.3 isolated TRUE WebXR P00 anchor test ----
 let lastHitResult=null;
 
-let rigidRasterFrame=null;
-let visualHeightOffset=0; // metres; visual overlay only, anchors remain untouched
+let rigidRasterFrame=null; controlPointIndex=null; checkedPoints.clear();
+let visualHeightOffset=0;
+let controlPointIndex=null;
+let checkedPoints=new Set(); // metres; visual overlay only, anchors remain untouched
 const VISUAL_HEIGHT_STEP=0.002;
 const VISUAL_HEIGHT_MIN=-0.020;
 const VISUAL_HEIGHT_MAX=0.050;
@@ -288,7 +304,7 @@ $("visualHeightControl").style.display="flex";
   arVisualMsg.textContent="BOMAL RASTER AR";arVisualBottom.textContent="Zoek een oppervlak — groen vizier = klaar om P00 te plaatsen";
   xrSession.addEventListener("end",()=>{
  visualHeightOffset=0;updateVisualHeightUI();$("visualHeightControl").style.display="none";setAR("AR-test beëindigd.","warn");startAR.disabled=false;document.body.classList.remove("ar-mode");arVisual.classList.remove("on");if(p00Anchor){
-  rigidRasterFrame=null;try{p00Anchor.delete()}catch(_){}}if(p03Anchor){
+  rigidRasterFrame=null; controlPointIndex=null; checkedPoints.clear();try{p00Anchor.delete()}catch(_){}}if(p03Anchor){
   rigidRasterFrame=null;try{p03Anchor.delete()}catch(_){}}p00Anchor=null;p03Anchor=null;if(xrCanvas)xrCanvas.remove();xrCanvas=null;lastHitResult=null;reticlePose=null;xrSession=null});
   startAR.disabled=true;xrSession.requestAnimationFrame(onXRFrame);
  }catch(e){document.body.classList.remove("ar-mode");arVisual.classList.remove("on");setAR("AR kon niet starten: "+e.message,"bad");startAR.disabled=false}
@@ -362,44 +378,60 @@ function localPoint(q){
  const x=q.x/1000,y=q.y/1000,o=visualHeightOffset,r=rigidRasterFrame;
  return[r.uxx*x+r.uyx*y+r.nx*o,r.uxy*x+r.uyy*y+r.ny*o,r.uxz*x+r.uyz*y+r.nz*o];
 }
+
+function drawVerts(view,verts,r,g,b,a){
+ if(!verts.length)return;
+ xrGL.useProgram(markerProgram);xrGL.bindBuffer(xrGL.ARRAY_BUFFER,markerBuf);
+ xrGL.bufferData(xrGL.ARRAY_BUFFER,new Float32Array(verts),xrGL.DYNAMIC_DRAW);
+ const at=xrGL.getAttribLocation(markerProgram,"p");xrGL.enableVertexAttribArray(at);xrGL.vertexAttribPointer(at,3,xrGL.FLOAT,false,0,0);
+ xrGL.uniformMatrix4fv(xrGL.getUniformLocation(markerProgram,"mvp"),false,mul4(view.projectionMatrix,view.transform.inverse.matrix));
+ const c=xrGL.getUniformLocation(markerProgram,"uColor");if(c)xrGL.uniform4f(c,r,g,b,a);
+ xrGL.drawArrays(xrGL.LINES,0,verts.length/3);
+}
 function drawFullRaster(view,p0){
  if(!rigidRasterFrame)return;
  const pts=coords().filter(q=>s.active[q.i]), M=p0.transform.matrix;
- const map=new Map(pts.map(q=>[q.i,q])),v=[];
+ const map=new Map(pts.map(q=>[q.i,q]));
+ const green=[],blue=[],focus=[];
  const W=q=>{const l=localPoint(q);return xform(M,l[0],l[1],l[2]);};
- const L=(a,b)=>v.push(...a,...b);
+ const L=(arr,a,b)=>arr.push(...a,...b);
+
+ // Raster lines remain green.
  for(const q of pts){
   const c=q.i%3,r=Math.floor(q.i/3);
-  if(c<2&&map.has(q.i+1))L(W(q),W(map.get(q.i+1)));
-  if(r<4&&map.has(q.i+3))L(W(q),W(map.get(q.i+3)));
+  if(c<2&&map.has(q.i+1))L(green,W(q),W(map.get(q.i+1)));
+  if(r<4&&map.has(q.i+3))L(green,W(q),W(map.get(q.i+3)));
  }
+
  const rr=.10,cc=.045,n=28,R=rigidRasterFrame;
  for(const q of pts){
-  const b=localPoint(q);let prev=null;
+  const b=localPoint(q);
+  const arr = checkedPoints.has(q.i) ? blue : (controlPointIndex===q.i ? focus : green);
+  let prev=null;
   for(let k=0;k<=n;k++){
    const a=k/n*Math.PI*2,ca=Math.cos(a),sa=Math.sin(a);
    const l=[b[0]+R.uxx*ca*rr+R.uyx*sa*rr,b[1]+R.uxy*ca*rr+R.uyy*sa*rr,b[2]+R.uxz*ca*rr+R.uyz*sa*rr];
-   const w=xform(M,...l);if(prev)L(prev,w);prev=w;
+   const w=xform(M,...l);if(prev)L(arr,prev,w);prev=w;
   }
   const A=[b[0]-R.uxx*cc,b[1]-R.uxy*cc,b[2]-R.uxz*cc],B=[b[0]+R.uxx*cc,b[1]+R.uxy*cc,b[2]+R.uxz*cc];
   const C=[b[0]-R.uyx*cc,b[1]-R.uyy*cc,b[2]-R.uyz*cc],D=[b[0]+R.uyx*cc,b[1]+R.uyy*cc,b[2]+R.uyz*cc];
-  L(xform(M,...A),xform(M,...B));L(xform(M,...C),xform(M,...D));
+  L(arr,xform(M,...A),xform(M,...B));L(arr,xform(M,...C),xform(M,...D));
  }
- if(!v.length)return;
- xrGL.useProgram(markerProgram);xrGL.bindBuffer(xrGL.ARRAY_BUFFER,markerBuf);
- xrGL.bufferData(xrGL.ARRAY_BUFFER,new Float32Array(v),xrGL.DYNAMIC_DRAW);
- const a=xrGL.getAttribLocation(markerProgram,"p");xrGL.enableVertexAttribArray(a);xrGL.vertexAttribPointer(a,3,xrGL.FLOAT,false,0,0);
- xrGL.uniformMatrix4fv(xrGL.getUniformLocation(markerProgram,"mvp"),false,mul4(view.projectionMatrix,view.transform.inverse.matrix));
- const c=xrGL.getUniformLocation(markerProgram,"uColor");if(c)xrGL.uniform4f(c,.1,1,.25,1.0);
- xrGL.drawArrays(xrGL.LINES,0,v.length/3);
+ drawVerts(view,green,.1,1,.25,1);
+ drawVerts(view,blue,.2,.55,1,1);
+ drawVerts(view,focus,1,.72,.15,1);
 }
+
 function updateMasterRasterLabels(view,p0){
  if(!rigidRasterFrame)return;
  const M=p0.transform.matrix,pv=mul4(view.projectionMatrix,view.transform.inverse.matrix);
  for(const q of coords().filter(q=>s.active[q.i])){
   const l=localPoint(q),w=xform(M,...l),c=mul4v(pv,[...w,1]),el=document.getElementById("arlbl"+q.i);
   if(!el)continue;if(c[3]<=0){el.style.display="none";continue;}
-  el.style.display="block";el.style.left=((c[0]/c[3]*.5+.5)*innerWidth)+"px";el.style.top=((-c[1]/c[3]*.5+.5)*innerHeight)+"px";
+  el.style.display="block";
+  if(checkedPoints.has(q.i)){el.style.borderColor="#3b82f6";el.style.color="#93c5fd";}
+  else if(controlPointIndex===q.i){el.style.borderColor="#f59e0b";el.style.color="#fcd34d";}
+  else{el.style.borderColor="#4ade80";el.style.color="#fff";}el.style.left=((c[0]/c[3]*.5+.5)*innerWidth)+"px";el.style.top=((-c[1]/c[3]*.5+.5)*innerHeight)+"px";
  }
 }
 
@@ -416,6 +448,25 @@ function syncPlacementButtons(){
   d.disabled=!ready || !kind;
   d.textContent=kind ? "● "+kind+" DIRECT VASTZETTEN" : "✓ DIRECT KLAAR";
  }
+}
+
+function activePointIndices(){return coords().filter(q=>s.active[q.i]).map(q=>q.i);}
+function syncControlPanel(){
+ const panel=$("controlPointPanel"),btn=$("controlPointBtn"),ok=$("controlOkBtn");
+ if(!panel)return;
+ if(!rigidRasterFrame){panel.style.display="none";return;}
+ panel.style.display="grid";
+ const arr=activePointIndices();
+ if(!arr.length){controlPointIndex=null;return;}
+ if(controlPointIndex===null || !arr.includes(controlPointIndex))controlPointIndex=arr[0];
+ btn.textContent="P"+String(controlPointIndex).padStart(2,"0")+" CONTROLEREN";
+ ok.textContent=checkedPoints.has(controlPointIndex)?"✓ IN ORDE":"✓ PUNT IN ORDE";
+}
+function stepControlPoint(dir){
+ const arr=activePointIndices();if(!arr.length)return;
+ if(controlPointIndex===null || !arr.includes(controlPointIndex))controlPointIndex=arr[0];
+ else controlPointIndex=arr[(arr.indexOf(controlPointIndex)+dir+arr.length)%arr.length];
+ syncControlPanel();
 }
 async function placeDirectAnchor(){
  if(!lastHitResult)return;
@@ -492,6 +543,7 @@ function onXRFrame(t,frame){
 $("placeP00Btn").onclick=placeP00;
 
  syncPlacementButtons();
+ syncControlPanel();
 };
 
 
@@ -541,12 +593,22 @@ $("undoARBtn").onclick=()=>{
 
 
 
-for(const id of ["placeP00Btn","directPlaceBtn","undoARBtn","stopAR"]){
+for(const id of ["placeP00Btn","directPlaceBtn","undoARBtn","stopAR","controlPrevBtn","controlPointBtn","controlOkBtn","controlNextBtn"]){
  const el=$(id);
  if(el) el.addEventListener("beforexrselect",e=>e.preventDefault());
 }
 $("directPlaceBtn").onclick=async()=>{
  await placeDirectAnchor();
+};
+
+$("controlPrevBtn").onclick=()=>stepControlPoint(-1);
+$("controlNextBtn").onclick=()=>stepControlPoint(1);
+$("controlPointBtn").onclick=()=>{syncControlPanel();};
+$("controlOkBtn").onclick=()=>{
+ if(controlPointIndex===null)return;
+ if(checkedPoints.has(controlPointIndex))checkedPoints.delete(controlPointIndex);
+ else checkedPoints.add(controlPointIndex);
+ syncControlPanel();
 };
 $("stopAR").onclick=()=>{if(xrSession)xrSession.end()};
 load();renderInputs();render();

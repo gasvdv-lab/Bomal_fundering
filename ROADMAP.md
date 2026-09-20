@@ -1,2 +1,2 @@
 # ROADMAP
-Eerst fysiek bevestigen dat PRECISIE en DIRECT beide zichtbaar en klikbaar zijn. Daarna P00/P03 en rondlooptest.
+v0.7.13.0: fysiek testen van puntcontrole en blauwe status. Volgende mogelijke stap: teller 0/15 → 15/15 en optionele afstandscontrole tussen twee punten.
