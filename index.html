@@ -79,7 +79,7 @@ body.ar-mode{background:transparent!important;overflow:hidden}
 #visualHeightValue{min-width:92px;text-align:center;color:#fff;font-size:12px;font-weight:900}
 
 
-/* v0.7.14.1 compact AR controls */
+/* v0.7.14.2 compact AR controls */
 #mediaControls{position:absolute;right:8px;top:46px;z-index:16;display:flex;gap:5px;pointer-events:auto}
 #mediaControls button{min-width:42px;height:32px;padding:4px 7px;border-radius:9px;font-size:11px;font-weight:900;pointer-events:auto;touch-action:manipulation;background:rgba(8,17,24,.88);color:#fff;border:1px solid rgba(255,255,255,.28)}
 #videoBtn.recording{background:#b42318;border-color:#ff7b72}
@@ -97,9 +97,17 @@ body.ar-mode{background:transparent!important;overflow:hidden}
 #arVisualMsg{top:8px!important;left:76px!important;right:140px!important;padding:7px 8px!important;font-size:11px!important;border-radius:9px!important}
 #arCross{width:42px!important;height:42px!important;border-width:2px!important}
 
+
+#arLegend{position:absolute;left:76px;top:43px;z-index:15;background:rgba(8,12,17,.72);padding:4px 7px;border-radius:8px;color:#fff;font-size:10px;font-weight:800;pointer-events:none}
+#arLegend .lg{display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 3px 0 6px;vertical-align:middle}
+#arLegend .p00{background:#f59e0b}
+#arLegend .p03{background:#22d3ee}
+#arLegend .normal{background:#e5eefb}
+#arLegend .ok{background:#3b82f6}
+
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.14.1 · Offset Zero Fix</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.14.2 · Offset Zero Fix</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -167,6 +175,8 @@ body.ar-mode{background:transparent!important;overflow:hidden}
 </section>
 
 <div id="arVisual"><div id="arLabels"></div><div id="arVisualMsg">AR starten…</div>
+<div id="arLegend"><span class="lg p00"></span>P00 <span class="lg p03"></span>P03 <span class="lg normal"></span>punt <span class="lg ok"></span>OK</div>
+
 <div id="mediaControls">
   <button id="photoBtn" type="button" title="Foto van scherm">📷</button>
   <button id="videoBtn" type="button" title="Video-opname">● REC</button>
@@ -477,39 +487,74 @@ function drawVerts(view,verts,r,g,b,a){
  const c=xrGL.getUniformLocation(markerProgram,"uColor");if(c)xrGL.uniform4f(c,r,g,b,a);
  xrGL.drawArrays(xrGL.LINES,0,verts.length/3);
 }
+
 function drawFullRaster(view,p0){
  if(!rigidRasterFrame)return;
  const pts=coords().filter(q=>s.active[q.i]), M=p0.transform.matrix;
  const map=new Map(pts.map(q=>[q.i,q]));
- const green=[],blue=[],focus=[];
+
+ const linesBase=[],linesX=[],linesY=[];
+ const normal=[],checked=[],focus=[],p00v=[],p03v=[];
+
  const W=q=>{const l=localPoint(q);return xform(M,l[0],l[1],l[2]);};
  const L=(arr,a,b)=>arr.push(...a,...b);
 
- // Raster lines remain green.
+ // Raster lines: neutral base with subtle X/Y differentiation.
  for(const q of pts){
   const c=q.i%3,r=Math.floor(q.i/3);
-  if(c<2&&map.has(q.i+1))L(green,W(q),W(map.get(q.i+1)));
-  if(r<4&&map.has(q.i+3))L(green,W(q),W(map.get(q.i+3)));
+  if(c<2&&map.has(q.i+1)){
+   const a=W(q),b=W(map.get(q.i+1));
+   L(linesBase,a,b);L(linesX,a,b);
+  }
+  if(r<4&&map.has(q.i+3)){
+   const a=W(q),b=W(map.get(q.i+3));
+   L(linesBase,a,b);L(linesY,a,b);
+  }
  }
 
  const rr=.10,cc=.045,n=28,R=rigidRasterFrame;
  for(const q of pts){
   const b=localPoint(q);
-  const arr = checkedPoints.has(q.i) ? blue : (controlPointIndex===q.i ? focus : green);
+  let arr=normal;
+  if(checkedPoints.has(q.i)) arr=checked;
+  else if(controlPointIndex===q.i) arr=focus;
+  else if(q.i===0) arr=p00v;
+  else if(q.i===3) arr=p03v;
+
   let prev=null;
   for(let k=0;k<=n;k++){
    const a=k/n*Math.PI*2,ca=Math.cos(a),sa=Math.sin(a);
-   const l=[b[0]+R.uxx*ca*rr+R.uyx*sa*rr,b[1]+R.uxy*ca*rr+R.uyy*sa*rr,b[2]+R.uxz*ca*rr+R.uyz*sa*rr];
-   const w=xform(M,...l);if(prev)L(arr,prev,w);prev=w;
+   const l=[
+    b[0]+R.uxx*ca*rr+R.uyx*sa*rr,
+    b[1]+R.uxy*ca*rr+R.uyy*sa*rr,
+    b[2]+R.uxz*ca*rr+R.uyz*sa*rr
+   ];
+   const w=xform(M,...l);
+   if(prev)L(arr,prev,w);
+   prev=w;
   }
-  const A=[b[0]-R.uxx*cc,b[1]-R.uxy*cc,b[2]-R.uxz*cc],B=[b[0]+R.uxx*cc,b[1]+R.uxy*cc,b[2]+R.uxz*cc];
-  const C=[b[0]-R.uyx*cc,b[1]-R.uyy*cc,b[2]-R.uyz*cc],D=[b[0]+R.uyx*cc,b[1]+R.uyy*cc,b[2]+R.uyz*cc];
-  L(arr,xform(M,...A),xform(M,...B));L(arr,xform(M,...C),xform(M,...D));
+
+  const A=[b[0]-R.uxx*cc,b[1]-R.uxy*cc,b[2]-R.uxz*cc];
+  const B=[b[0]+R.uxx*cc,b[1]+R.uxy*cc,b[2]+R.uxz*cc];
+  const C=[b[0]-R.uyx*cc,b[1]-R.uyy*cc,b[2]-R.uyz*cc];
+  const D=[b[0]+R.uyx*cc,b[1]+R.uyy*cc,b[2]+R.uyz*cc];
+  L(arr,xform(M,...A),xform(M,...B));
+  L(arr,xform(M,...C),xform(M,...D));
  }
- drawVerts(view,green,.1,1,.25,1);
- drawVerts(view,blue,.2,.55,1,1);
- drawVerts(view,focus,1,.72,.15,1);
+
+ // Lines first: light neutral + subtle axis color accents.
+ drawVerts(view,linesBase,.78,.82,.88,.55);  // light grey/white
+ drawVerts(view,linesX,.25,.60,1.00,.85);    // blue X
+ drawVerts(view,linesY,.25,.90,.55,.85);    // green Y
+
+ // Point markers.
+ drawVerts(view,normal,.90,.95,1.00,1.00);    // white/light blue
+ drawVerts(view,p00v,1.00,.68,.10,1.00);      // orange/yellow P00
+ drawVerts(view,p03v,.30,.90,1.00,1.00);      // cyan P03
+ drawVerts(view,focus,1.00,.72,.15,1.00);     // amber active control point
+ drawVerts(view,checked,.20,.55,1.00,1.00);   // blue checked points
 }
+
 
 function updateMasterRasterLabels(view,p0){
  if(!rigidRasterFrame)return;
@@ -520,7 +565,9 @@ function updateMasterRasterLabels(view,p0){
   el.style.display="block";
   if(checkedPoints.has(q.i)){el.style.borderColor="#3b82f6";el.style.color="#93c5fd";}
   else if(controlPointIndex===q.i){el.style.borderColor="#f59e0b";el.style.color="#fcd34d";}
-  else{el.style.borderColor="#4ade80";el.style.color="#fff";}el.style.left=((c[0]/c[3]*.5+.5)*innerWidth)+"px";el.style.top=((-c[1]/c[3]*.5+.5)*innerHeight)+"px";
+  else if(q.i===0){el.style.borderColor="#f59e0b";el.style.color="#fbbf24";}
+  else if(q.i===3){el.style.borderColor="#22d3ee";el.style.color="#67e8f9";}
+  else{el.style.borderColor="#cbd5e1";el.style.color="#f8fafc";}el.style.left=((c[0]/c[3]*.5+.5)*innerWidth)+"px";el.style.top=((-c[1]/c[3]*.5+.5)*innerHeight)+"px";
  }
 }
 
