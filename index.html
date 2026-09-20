@@ -78,9 +78,28 @@ body.ar-mode{background:transparent!important;overflow:hidden}
 #visualHeightControl button{width:42px;height:38px;padding:0;font-size:24px;font-weight:900;line-height:1}
 #visualHeightValue{min-width:92px;text-align:center;color:#fff;font-size:12px;font-weight:900}
 
+
+/* v0.7.14.0 compact AR controls */
+#mediaControls{position:absolute;right:8px;top:46px;z-index:16;display:flex;gap:5px;pointer-events:auto}
+#mediaControls button{min-width:42px;height:32px;padding:4px 7px;border-radius:9px;font-size:11px;font-weight:900;pointer-events:auto;touch-action:manipulation;background:rgba(8,17,24,.88);color:#fff;border:1px solid rgba(255,255,255,.28)}
+#videoBtn.recording{background:#b42318;border-color:#ff7b72}
+#stopAR{right:8px!important;top:8px!important;padding:6px 9px!important;min-height:32px!important;font-size:11px!important;border-radius:9px!important}
+#undoARBtn{left:8px!important;top:8px!important;padding:6px 9px!important;min-height:32px!important;font-size:11px!important;border-radius:9px!important}
+#visualHeightControl{right:8px!important;top:84px!important;padding:3px!important;gap:3px!important;border-radius:8px!important}
+#visualHeightControl button{width:30px!important;height:30px!important;font-size:18px!important}
+#visualHeightValue{min-width:72px!important;font-size:10px!important}
+#placeP00Btn,#directPlaceBtn{left:8px!important;right:8px!important;min-height:38px!important;font-size:13px!important;border-radius:10px!important;padding:6px 8px!important}
+#placeP00Btn{bottom:96px!important}
+#directPlaceBtn{bottom:52px!important}
+#controlPointPanel{left:8px!important;right:8px!important;bottom:140px!important;grid-template-columns:34px 1fr 1fr 34px!important;gap:4px!important}
+#controlPointPanel button{min-height:34px!important;font-size:11px!important;padding:4px 5px!important;border-radius:8px!important}
+#arVisualBottom{left:8px!important;right:8px!important;bottom:8px!important;padding:7px!important;font-size:11px!important;border-radius:9px!important}
+#arVisualMsg{top:8px!important;left:76px!important;right:140px!important;padding:7px 8px!important;font-size:11px!important;border-radius:9px!important}
+#arCross{width:42px!important;height:42px!important;border-width:2px!important}
+
 </style></head>
 <body>
-<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.13.1 · Offset Zero Fix</div></div><button id="newBtn">Nieuw</button></header>
+<header id="mainHeader"><div><h1>bomal_fundering</h1><div class="sub">v0.7.14.0 · Offset Zero Fix</div></div><button id="newBtn">Nieuw</button></header>
 <main id="normalMain" class="wrap">
 <div class="tabs"><button class="tab active" data-tab="input">Invoer</button><button class="tab" data-tab="raster">Raster</button><button class="tab" data-tab="geo">Geometrie</button><button class="tab" data-tab="ar">AR Test</button></div>
 <section id="inputPane" class="pane active">
@@ -147,7 +166,12 @@ body.ar-mode{background:transparent!important;overflow:hidden}
 </div>
 </section>
 
-<div id="arVisual"><div id="arLabels"></div><div id="arVisualMsg">AR starten…</div><button id="stopAR">Stop</button>
+<div id="arVisual"><div id="arLabels"></div><div id="arVisualMsg">AR starten…</div>
+<div id="mediaControls">
+  <button id="photoBtn" type="button" title="Foto van scherm">📷</button>
+  <button id="videoBtn" type="button" title="Video-opname">● REC</button>
+</div>
+<button id="stopAR">Stop</button>
  
  <button id="undoARBtn" disabled>↶ UNDO</button><div id="arCross"></div><button id="placeP00Btn" disabled>● P00 PRECISIE VASTZETTEN</button>
 <button id="directPlaceBtn" disabled>● P00 DIRECT VASTZETTEN</button><div id="visualHeightControl">
@@ -239,6 +263,7 @@ let pendingAnchorKind=null;
 const STABILITY_MS=850, STABILITY_MAX_SPREAD=0.018; // 18 mm max horizontal spread
 let xrSession=null,xrRef=null,xrViewer=null,xrHitSource=null,xrGL=null,xrCanvas=null;
 let reticlePose=null,p00Anchor=null,p03Anchor=null,anchorCreating=false,markerProgram=null,markerBuf=null;
+let screenStream=null,mediaRecorder=null,recordedChunks=[];
 const arSupport=$("arSupport"),startAR=$("startAR"),anchorSupport=$("anchorSupport");
 const arVisual=$("arVisual"),arCross=$("arCross"),arVisualMsg=$("arVisualMsg"),arVisualBottom=$("arVisualBottom");
 const directPlaceBtn=$("directPlaceBtn");
@@ -286,6 +311,67 @@ function drawP00(view,anchorPose){
 
 
 
+
+function downloadBlob(blob,name){
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+async function getScreenStream(){
+ if(screenStream && screenStream.getVideoTracks().some(t=>t.readyState==="live"))return screenStream;
+ if(!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia)throw new Error("Schermopname wordt op dit toestel/browser niet ondersteund.");
+ screenStream=await navigator.mediaDevices.getDisplayMedia({video:{frameRate:30},audio:false});
+ const t=screenStream.getVideoTracks()[0];
+ if(t)t.addEventListener("ended",()=>{screenStream=null;if(mediaRecorder&&mediaRecorder.state!=="inactive"){try{mediaRecorder.stop()}catch(_){}}});
+ return screenStream;
+}
+async function takeARPhoto(){
+ try{
+  const stream=await getScreenStream();
+  const video=document.createElement("video");
+  video.srcObject=stream;video.muted=true;video.playsInline=true;
+  await video.play();
+  await new Promise(r=>setTimeout(r,180));
+  const c=document.createElement("canvas");
+  c.width=video.videoWidth||innerWidth;c.height=video.videoHeight||innerHeight;
+  const ctx=c.getContext("2d");ctx.drawImage(video,0,0,c.width,c.height);
+  c.toBlob(blob=>{
+   if(blob)downloadBlob(blob,"bomal_AR_"+new Date().toISOString().replace(/[:.]/g,"-")+".png");
+  },"image/png");
+  arVisualBottom.textContent="📷 Foto opgeslagen.";
+ }catch(e){
+  arVisualBottom.textContent="Foto niet mogelijk: "+e.message;
+ }
+}
+async function toggleARVideo(){
+ const btn=$("videoBtn");
+ try{
+  if(mediaRecorder && mediaRecorder.state==="recording"){
+   mediaRecorder.stop();
+   btn.classList.remove("recording");btn.textContent="● REC";
+   arVisualBottom.textContent="Video wordt opgeslagen…";
+   return;
+  }
+  const stream=await getScreenStream();
+  recordedChunks=[];
+  const mime=MediaRecorder.isTypeSupported("video/webm;codecs=vp9")?"video/webm;codecs=vp9":
+             MediaRecorder.isTypeSupported("video/webm;codecs=vp8")?"video/webm;codecs=vp8":"video/webm";
+  mediaRecorder=new MediaRecorder(stream,{mimeType:mime});
+  mediaRecorder.ondataavailable=e=>{if(e.data&&e.data.size)recordedChunks.push(e.data)};
+  mediaRecorder.onstop=()=>{
+   const blob=new Blob(recordedChunks,{type:mediaRecorder.mimeType||"video/webm"});
+   downloadBlob(blob,"bomal_AR_"+new Date().toISOString().replace(/[:.]/g,"-")+".webm");
+   recordedChunks=[];
+   arVisualBottom.textContent="🎥 Video opgeslagen.";
+  };
+  mediaRecorder.start(500);
+  btn.classList.add("recording");btn.textContent="■ STOP";
+  arVisualBottom.textContent="🎥 Video-opname gestart.";
+ }catch(e){
+  btn.classList.remove("recording");btn.textContent="● REC";
+  arVisualBottom.textContent="Video niet mogelijk: "+e.message;
+ }
+}
 startAR.onclick=async()=>{
  if(!(await checkAR()))return;
  try{
@@ -303,6 +389,8 @@ $("visualHeightControl").style.display="flex";
   document.body.classList.add("ar-mode");arVisual.classList.add("on");
   arVisualMsg.textContent="BOMAL RASTER AR";arVisualBottom.textContent="Zoek een oppervlak — groen vizier = klaar om P00 te plaatsen";
   xrSession.addEventListener("end",()=>{
+ if(mediaRecorder&&mediaRecorder.state==="recording"){try{mediaRecorder.stop()}catch(_){}}
+ $("videoBtn").classList.remove("recording");$("videoBtn").textContent="● REC";
  visualHeightOffset=0;updateVisualHeightUI();$("visualHeightControl").style.display="none";setAR("AR-test beëindigd.","warn");startAR.disabled=false;document.body.classList.remove("ar-mode");arVisual.classList.remove("on");if(p00Anchor){
   rigidRasterFrame=null; controlPointIndex=null; checkedPoints.clear();try{p00Anchor.delete()}catch(_){}}if(p03Anchor){
   rigidRasterFrame=null;try{p03Anchor.delete()}catch(_){}}p00Anchor=null;p03Anchor=null;if(xrCanvas)xrCanvas.remove();xrCanvas=null;lastHitResult=null;reticlePose=null;xrSession=null});
@@ -593,7 +681,7 @@ $("undoARBtn").onclick=()=>{
 
 
 
-for(const id of ["placeP00Btn","directPlaceBtn","undoARBtn","stopAR","controlPrevBtn","controlPointBtn","controlOkBtn","controlNextBtn"]){
+for(const id of ["placeP00Btn","directPlaceBtn","undoARBtn","stopAR","controlPrevBtn","controlPointBtn","controlOkBtn","controlNextBtn","photoBtn","videoBtn"]){
  const el=$(id);
  if(el) el.addEventListener("beforexrselect",e=>e.preventDefault());
 }
@@ -610,6 +698,9 @@ $("controlOkBtn").onclick=()=>{
  else checkedPoints.add(controlPointIndex);
  syncControlPanel();
 };
+
+$("photoBtn").onclick=takeARPhoto;
+$("videoBtn").onclick=toggleARVideo;
 $("stopAR").onclick=()=>{if(xrSession)xrSession.end()};
 load();renderInputs();render();
 })();

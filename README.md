@@ -1,13 +1,12 @@
-# Bomal Fundering v0.7.13.1 — AR Start Runtime Fix
+# Bomal Fundering v0.7.14.0 — Compact AR + Foto/Video
 
-v0.7.13.0 bevatte één harde runtimefout:
-`checkedPoints.clear()` werd uitgevoerd vóór `checkedPoints` was aangemaakt.
-Daardoor stopte het volledige JavaScript bij het laden en reageerden Controleer AR / Start AR niet.
+Nieuw:
+- compacte AR-bediening;
+- 📷 foto-knop;
+- ● REC / ■ STOP videoknop;
+- opname gebruikt de browser Screen Capture API zodat het zichtbare AR-scherm kan worden vastgelegd;
+- bestanden worden lokaal gedownload;
+- bij niet-ondersteunde browsers verschijnt een duidelijke melding.
 
-Fix:
-- correcte initialisatievolgorde;
-- controlemodus behouden;
-- blauwe punten-status behouden;
-- PRECISIE/DIRECT behouden;
-- groene fullscreen-fix behouden;
-- alle inline JavaScript opnieuw met `node --check` gecontroleerd.
+Belangrijk:
+WebXR geeft om privacyredenen het camerabeeld niet rechtstreeks aan JavaScript. Daarom gebruikt foto/video schermopname en kan Android/Chrome een systeemprompt tonen.
